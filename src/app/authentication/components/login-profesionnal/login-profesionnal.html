@@ -1,0 +1,66 @@
+<div
+  class="w-[375px] border p-5 border-neutral-100 rounded shadow space-y-5 flex flex-col bg-white"
+>
+  <app-logo-component textHeader="Espace professionnel"></app-logo-component>
+  <div class="w-full flex flex-col">
+    <p class="text-lg font-semibold">{{ 'Connexion' }}</p>
+    <p class="text-xs text-neutral-500">{{ 'Accès réservé au personnel habilité.' }}</p>
+  </div>
+  <form class="space-y-4" (ngSubmit)="login()" [formGroup]="formGroup">
+    <div class="w-full flex flex-col space-y-1">
+      <label for="email" class="text-sm font-semibold text-neutral-800">{{
+        'Email professionnel'
+      }}</label>
+      <input
+        formControlName="email"
+        type="email"
+        id="email"
+        class="w-full border border-neutral-200 rounded p-2 text-sm placeholder:text-neutral-600 outline-none focus:border-blue-600 transition-colors duration-300"
+        autocomplete="email"
+        placeholder="{{ 'nom.prenom@personnel.com' }}"
+      />
+      @if (formGroup.get('email')?.invalid && formGroup.get('email')?.touched) {
+      <div class="w-full">
+        <small class="text-red-500"> {{ 'Veuillez entrer une adresse email valide.' }} </small>
+      </div>
+      }
+    </div>
+    <div class="w-full flex flex-col space-y-1">
+      <div class="flex justify-between items-center">
+        <label for="password" class="text-sm font-semibold text-neutral-800">{{
+          'Mot de passe'
+        }}</label>
+        <a
+          [routerLink]="['/authentication/forgot-password']"
+          class="text-sm text-blue-600 hover:text-blue-700 hover:cursor-pointer transition-colors duration-300 font-medium"
+          >{{ 'Mot de passe oublié?' }}</a
+        >
+      </div>
+      <input
+        formControlName="password"
+        type="password"
+        id="password"
+        class="w-full border border-neutral-200 rounded p-2 text-sm placeholder:text-neutral-600 outline-none focus:border-blue-600 transition-colors duration-300"
+        autocomplete="password"
+        placeholder="{{ '••••••••••••' }}"
+      />
+      @if (formGroup.get('password')?.invalid && formGroup.get('password')?.touched) {
+      <div class="w-full">
+        <small class="text-red-500">
+          {{ 'Le mot de passe doit contenir au moins 6 caractères.' }}
+        </small>
+      </div>
+      }
+    </div>
+
+    <app-button-component
+      label="Se connecter"
+      [disabled]="formGroup.invalid"
+      [loading]="loading"
+    ></app-button-component>
+  </form>
+
+  <div class="flex flex-col items-center space-y-2.5">
+    <p class="text-xs text-neutral-500 text-center">© 2025 Clinix. Tous droits réservés.</p>
+  </div>
+</div>

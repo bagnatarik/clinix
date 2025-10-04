@@ -1,0 +1,86 @@
+<ng-container *ngIf="consultation$ | async as c; else notFound">
+  <div class="space-y-6">
+    <div class="bg-white border border-neutral-300 rounded p-6">
+      <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-gray-800">Détails de la Consultation</h2>
+          <div class="mt-3 text-sm text-gray-700 space-y-1">
+            <div><span class="font-semibold">Patient :</span> {{ c.patient }}</div>
+            <div><span class="font-semibold">Médecin traitant :</span> {{ doctorName }}</div>
+          </div>
+        </div>
+        <div class="text-sm text-gray-600 text-left md:text-right">
+          <div>
+            <span class="font-semibold">Date & Heure :</span>
+            {{ c.date | date : 'dd-MM-yyyy' }} à 10:30
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Patient</label>
+          <input class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 text-sm" [value]="c.patient" readonly />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Médecin</label>
+          <input class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 text-sm" [value]="doctorName" readonly />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Date & Heure</label>
+          <input class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 text-sm" [value]="(c.date | date : 'dd-MM-yyyy') + ' à 10:30'" readonly />
+        </div>
+      </div>
+
+      <div class="mt-6">
+        <label class="block text-xs font-medium text-gray-500 mb-1">Motif de Consultation</label>
+        <textarea class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 text-sm" rows="4" [value]="c.motif" readonly></textarea>
+      </div>
+
+      <div class="mt-6">
+        <label class="block text-xs font-medium text-gray-500 mb-1">Notes Cliniques (Format SOAP)</label>
+        <textarea class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 text-sm" rows="6" placeholder="Sujetif, Objectif, Analyse, Plan" readonly></textarea>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="bg-white border border-neutral-300 rounded">
+        <div class="px-5 py-4 border-b border-neutral-300">
+          <h3 class="font-semibold text-gray-800">Diagnostics</h3>
+        </div>
+        <div class="p-5 space-y-3 text-sm text-gray-700">
+          <div class="flex justify-between items-center"><span>Appendicite aiguë (suspicion)</span><span class="text-gray-400">—</span></div>
+          <div class="flex justify-between items-center"><span>Diverticulite (à confirmer)</span><span class="text-gray-400">—</span></div>
+          <div class="flex justify-between items-center"><span>Colique néphrétiques</span><span class="text-gray-400">—</span></div>
+        </div>
+      </div>
+
+      <div class="bg-white border border-neutral-300 rounded">
+        <div class="px-5 py-4 border-b border-neutral-300">
+          <h3 class="font-semibold text-gray-800">Examens Demandés</h3>
+        </div>
+        <div class="p-5 space-y-3 text-sm text-gray-700">
+          <div class="flex justify-between items-center"><span>NFS, CRP</span><span class="text-gray-400">—</span></div>
+          <div class="flex justify-between items-center"><span>Échographie abdominale</span><span class="text-gray-400">—</span></div>
+          <div class="flex justify-between items-center"><span>Scanner abdominal</span><span class="text-gray-400">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white border border-neutral-300 rounded">
+      <div class="px-5 py-4 border-b border-neutral-300"><h3 class="font-semibold text-gray-800">Pièces Jointes</h3></div>
+      <div class="p-5 text-sm text-gray-700 space-y-3">
+        <div class="flex items-center gap-3"><span class="inline-block w-2.5 h-2.5 bg-green-500 rounded-full"></span> Radiographie_abdomen_Alice_2024.jpg</div>
+        <div class="flex items-center gap-3"><span class="inline-block w-2.5 h-2.5 bg-blue-500 rounded-full"></span> Resultats_sanguins_Alice_2024.pdf</div>
+      </div>
+    </div>
+  </div>
+</ng-container>
+
+<ng-template #notFound>
+  <div class="p-6 bg-white border rounded shadow">
+    <h2 class="text-lg font-semibold">Consultation introuvable</h2>
+    <p class="text-sm mt-2">Vérifiez l'identifiant dans l'URL ou retournez à la liste.</p>
+    <a class="inline-block mt-4 px-4 py-2 border rounded" [routerLink]="['/dashboard/doctor/consultations/list']">Retour à la liste</a>
+  </div>
+</ng-template>

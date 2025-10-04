@@ -1,0 +1,11 @@
+<app-data-table-component
+  [columns]="columns"
+  [data]="dataSource"
+  [tableName]="'Diagnostics'"
+  [newButtonLabel]="'Nouveau diagnostic'"
+  [showNewButton]="true"
+  (onNew)="addNew()"
+  (onEdit)="edit($event)"
+  (onDelete)="delete($event)"
+  (onRefresh)="refresh()"
+></app-data-table-component>

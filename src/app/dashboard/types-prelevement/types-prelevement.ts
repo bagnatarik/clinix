@@ -1,0 +1,82 @@
+import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { DataTableComponent } from '../../shared/data-table-component/data-table-component';
+import { Column } from '../../core/interfaces/column';
+import { toast } from 'ngx-sonner';
+
+@Component({
+  selector: 'app-types-prelevement',
+  imports: [DataTableComponent, FormsModule],
+  templateUrl: './types-prelevement.html',
+  styleUrl: './types-prelevement.css'
+})
+export class TypesPrelevement {
+  columns: Column[] = [
+    { key: 'id', label: 'ID', sortable: true },
+    { key: 'libelle', label: 'Libellé', sortable: true },
+    { key: 'actions', label: 'Actions', sortable: false },
+  ];
+
+  showCreateModal = false;
+  showEditModal = false;
+  showDeleteModal = false;
+
+  currentType: any = null;
+
+  typeForm = {
+    id: '',
+    libelle: '',
+  };
+
+  handleNew() {
+    this.typeForm = { id: '', libelle: '' };
+    this.showCreateModal = true;
+  }
+
+  handleRefresh() {
+    toast.info('Actualisation des types de prélèvements');
+  }
+
+  handleEdit(type: any) {
+    this.currentType = type;
+    this.typeForm = { ...type };
+    this.showEditModal = true;
+  }
+
+  handleDelete(type: any) {
+    this.currentType = type;
+    this.showDeleteModal = true;
+  }
+
+  handleRowClick(type: any) {
+    console.log('Row clicked:', type);
+  }
+
+  createType() {
+    const newItem = { ...this.typeForm };
+    if (!newItem.id) newItem.id = `TPR${Math.floor(Math.random() * 1000)}`;
+    this.types = [newItem, ...this.types];
+    this.showCreateModal = false;
+  }
+
+  updateType() {
+    if (this.currentType) {
+      const index = this.types.findIndex((t) => t.id === this.currentType.id);
+      if (index !== -1) this.types[index] = { ...this.currentType, ...this.typeForm };
+    }
+    this.showEditModal = false;
+  }
+
+  deleteType() {
+    if (this.currentType) {
+      this.types = this.types.filter((t) => t.id !== this.currentType.id);
+    }
+    this.showDeleteModal = false;
+  }
+
+  types = [
+    { id: 'SANG', libelle: 'Sang' },
+    { id: 'URIN', libelle: 'Urines' },
+    { id: 'SAL', libelle: 'Salive' },
+  ];
+}

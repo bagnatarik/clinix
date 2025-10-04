@@ -1,0 +1,406 @@
+@if (searchable) {
+<div
+  class="flex justify-between items-center mb-4 bg-white h-[75px] p-5 rounded-r border border-neutral-300"
+>
+  <div class="space-x-2 flex">
+    <button
+      (click)="onRefresh.emit()"
+      class="px-5 text-sm py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300 hover:cursor-pointer"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="lucide lucide-rotate-cw-icon lucide-rotate-cw size-4"
+      >
+        <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+        <path d="M21 3v5h-5" />
+      </svg>
+    </button>
+    @if (showNewButton) {
+    <button
+      (click)="onNew.emit()"
+      class="px-15 text-sm py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300 hover:cursor-pointer"
+    >
+      {{ newButtonLabel }}
+    </button>
+    }
+  </div>
+</div>
+}
+<div class="bg-white rounded-r p-5 border border-neutral-300 h-[calc(100%-25px)] flex flex-col">
+  <div class="w-full h-auto flex items-center justify-between mb-2">
+    <p class="font-semibold text-xl">{{ tableName }}</p>
+    <div class="relative flex items-center">
+      <input
+        type="text"
+        [(ngModel)]="search"
+        placeholder="Rechercher..."
+        class="peer pl-10 pr-4 py-1.5 border border-gray-300 rounded w-72 focus:border-blue-600 focus:outline-none text-sm placeholder:text-neutral-600 transition-all duration-300"
+      />
+      <p class="absolute flex items-center size-6 left-3">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="lucide lucide-search-icon lucide-search size-4 stroke-neutral-600 peer-focus:stroke-blue-600"
+        >
+          <path d="m21 21-4.34-4.34" />
+          <circle cx="11" cy="11" r="8" />
+        </svg>
+      </p>
+    </div>
+  </div>
+  <!-- Table -->
+  <div class="overflow-x-auto border border-gray-200 rounded flex-1">
+    <table class="min-w-full text-sm">
+      <thead class="bg-gray-50 text-gray-600 text-left">
+        <tr>
+          @for (col of columns; track col.key) {
+          <th
+            class="px-4 py-3 font-medium border-b border-gray-200 bg-neutral-50 select-none"
+            [class.cursor-pointer]="col.sortable"
+            (click)="col.sortable ? sort(col.key) : null"
+          >
+            <div class="flex items-center space-x-1">
+              <span class="text-sm text-gray-800">{{ col.label }}</span>
+              @if (col.key === sortKey) {
+              <span>
+                @if(sortAsc) {
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-arrow-up-narrow-wide-icon lucide-arrow-up-narrow-wide size-4 stroke-blue-600"
+                >
+                  <path d="m3 8 4-4 4 4" />
+                  <path d="M7 4v16" />
+                  <path d="M11 12h4" />
+                  <path d="M11 16h7" />
+                  <path d="M11 20h10" />
+                </svg>
+                } @else {
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-arrow-down-wide-narrow-icon lucide-arrow-down-wide-narrow size-4 stroke-blue-600"
+                >
+                  <path d="m3 16 4 4 4-4" />
+                  <path d="M7 20V4" />
+                  <path d="M11 4h10" />
+                  <path d="M11 8h7" />
+                  <path d="M11 12h4" />
+                </svg>
+                }
+              </span>
+              }
+            </div>
+          </th>
+          }
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        @for (row of filteredData; track row; let last = $last) { @if(last) {
+        <tr
+          class="hover:bg-gray-50 transition cursor-pointer border-b-0!"
+          (click)="onRowClick.emit(row)"
+        >
+          @for (col of columns; track col.key) {
+          <td class="px-4 py-3 border-b-0 border-gray-100">
+            <!-- Cas spécial : image -->
+            @if (col.key === 'image') {
+            <img [src]="row[col.key]" alt="img" class="h-10 w-10 rounded object-cover" />
+            }
+
+            <!-- Cas spécial : reviews -->
+            @else if (col.key === 'reviews') {
+            <div class="flex">
+              @for (star of [1,2,3,4,5]; track star) {
+              <span class="text-yellow-400">
+                {{ star <= row[col.key] ? '★' : '☆' }}
+              </span>
+              }
+            </div>
+            }
+
+            <!-- Cas spécial : status -->
+            @else if (col.key === 'statut') {
+            <span
+              class="px-2 py-1 text-xs font-semibold rounded-full"
+              [ngClass]="{
+                'bg-green-100 text-green-700': row[col.key] === 'Actif',
+                'bg-red-100 text-red-700': row[col.key] === 'Inactif',
+                'bg-yellow-100 text-yellow-700': row[col.key] === 'Bloqué'
+              }"
+            >
+              {{ row[col.key] }}
+            </span>
+            }
+
+            <!-- Cas spécial : actions -->
+            @else if (col.key === 'actions') {
+            <div class="flex space-x-2">
+              <button
+                (click)="onEdit.emit(row); $event.stopPropagation()"
+                class="p-2 rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition hover:cursor-pointer"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z"
+                  />
+                </svg>
+              </button>
+              <button
+                (click)="onDelete.emit(row); $event.stopPropagation()"
+                class="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition hover:cursor-pointer"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </button>
+              @if(manageUserAccount) {
+              <button
+                (click)="onViewProfile.emit(row); $event.stopPropagation()"
+                class="p-2 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition hover:cursor-pointer"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+              </button>
+              <button
+                (click)="onResetPassword.emit(row); $event.stopPropagation()"
+                class="p-2 rounded-full bg-yellow-100 text-yellow-600 hover:bg-yellow-200 transition hover:cursor-pointer"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
+                </svg>
+              </button>
+              }
+            </div>
+            }
+
+            <!-- Cas par défaut -->
+            @else {
+            {{ row[col.key] }}
+            }
+          </td>
+          }
+        </tr>
+        } @else {
+        <tr class="hover:bg-gray-50 transition cursor-pointer" (click)="onRowClick.emit(row)">
+          @for (col of columns; track col.key) {
+          <td class="px-4 py-3 border-b border-gray-100">
+            <!-- Cas spécial : image -->
+            @if (col.key === 'image') {
+            <img [src]="row[col.key]" alt="img" class="h-10 w-10 rounded object-cover" />
+            }
+
+            <!-- Cas spécial : reviews -->
+            @else if (col.key === 'reviews') {
+            <div class="flex">
+              @for (star of [1,2,3,4,5]; track star) {
+              <span class="text-yellow-400">
+                {{ star <= row[col.key] ? '★' : '☆' }}
+              </span>
+              }
+            </div>
+            }
+
+            <!-- Cas spécial : status -->
+            @else if (col.key === 'statut') {
+            <span
+              class="px-2 py-1 text-xs font-semibold rounded-full"
+              [ngClass]="{
+                'bg-green-100 text-green-700': row[col.key] === 'Actif',
+                'bg-red-100 text-red-700': row[col.key] === 'Inactif',
+                'bg-yellow-100 text-yellow-700': row[col.key] === 'Bloqué'
+              }"
+            >
+              {{ row[col.key] }}
+            </span>
+            }
+
+            <!-- Cas spécial : actions -->
+            @else if (col.key === 'actions') {
+            <div class="flex space-x-2">
+              <button
+                (click)="onEdit.emit(row); $event.stopPropagation()"
+                class="p-2 rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition hover:cursor-pointer"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z"
+                  />
+                </svg>
+              </button>
+              <button
+                (click)="onDelete.emit(row); $event.stopPropagation()"
+                class="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition hover:cursor-pointer"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </button>
+              @if(manageUserAccount) {
+              <button
+                (click)="onViewProfile.emit(row); $event.stopPropagation()"
+                class="p-2 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition hover:cursor-pointer"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+              </button>
+              <button
+                (click)="onResetPassword.emit(row); $event.stopPropagation()"
+                class="p-2 rounded-full bg-yellow-100 text-yellow-600 hover:bg-yellow-200 transition hover:cursor-pointer"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
+                </svg>
+              </button>
+              }
+            </div>
+            }
+
+            <!-- Cas par défaut -->
+            @else { @if (col.key === 'permissions') {
+            {{ row[col.key].join(', ') }}
+            } @else {
+            {{ row[col.key] }}
+            } }
+          </td>
+          }
+        </tr>
+        } }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  @if (paginated) {
+  <div class="flex flex-col items-center mt-6 space-y-3">
+    <!-- Pagination buttons -->
+    <div class="flex items-center space-x-1">
+      <!-- Previous -->
+      <button
+        (click)="goToPage(currentPage - 1)"
+        [disabled]="currentPage === 1"
+        class="hover:cursor-pointer px-3 py-2 rounded text-sm font-medium border transition disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-50 hover:border-blue-400 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+        [class.bg-white]="currentPage !== 1"
+        [class.border-gray-300]="currentPage !== 1"
+        [class.text-gray-600]="currentPage !== 1"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+      </button>
+
+      <!-- Page numbers -->
+      @for (page of getVisiblePages(); track page) {
+      <button
+        (click)="goToPage(page)"
+        class="px-4 py-2 rounded text-sm font-medium border transition focus:outline-none focus:ring-2 focus:ring-blue-300"
+        [class.bg-blue-500]="currentPage === page"
+        [class.text-white]="currentPage === page"
+        [class.border-blue-500]="currentPage === page"
+        [class.bg-white]="currentPage !== page"
+        [class.border-gray-300]="currentPage !== page"
+        [class.text-gray-700]="currentPage !== page"
+        [class.hover:bg-blue-50]="currentPage !== page"
+        [class.hover:border-blue-400]="currentPage !== page"
+        [class.hover:text-blue-600]="currentPage !== page"
+      >
+        {{ page }}
+      </button>
+      }
+
+      <!-- Next -->
+      <button
+        (click)="goToPage(currentPage + 1)"
+        [disabled]="currentPage === totalPages()"
+        class="hover:cursor-pointer px-3 py-2 rounded text-sm font-medium border transition disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-50 hover:border-blue-400 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+        [class.bg-white]="currentPage !== totalPages()"
+        [class.border-gray-300]="currentPage !== totalPages()"
+        [class.text-gray-600]="currentPage !== totalPages()"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Entries info -->
+    <span class="text-xs text-gray-500">
+      Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to
+      {{ currentPage * itemsPerPage < data.length ? currentPage * itemsPerPage : data.length }} of
+      {{ data.length }} entries
+    </span>
+  </div>
+  }
+</div>

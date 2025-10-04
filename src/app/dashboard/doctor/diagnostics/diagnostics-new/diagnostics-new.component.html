@@ -1,0 +1,32 @@
+<h2 class="text-xl font-semibold mb-4">Nouveau diagnostic</h2>
+
+<form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+  <div>
+    <label class="block text-sm font-medium">Patient</label>
+    <input type="text" class="mt-1 w-full border rounded px-3 py-2" formControlName="patient" placeholder="Nom du patient" />
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium">Date</label>
+    <input type="text" class="mt-1 w-full border rounded px-3 py-2" formControlName="date" placeholder="YYYY-MM-DD" />
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium">Résultat</label>
+    <input type="text" class="mt-1 w-full border rounded px-3 py-2" formControlName="resultat" placeholder="Résultat principal" />
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium">Statut</label>
+    <select class="mt-1 w-full border rounded px-3 py-2" formControlName="statut">
+      <option value="en attente">En attente</option>
+      <option value="confirmé">Confirmé</option>
+      <option value="annulé">Annulé</option>
+    </select>
+  </div>
+
+  <div class="flex gap-2">
+    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50" [disabled]="form.invalid">Enregistrer</button>
+    <a class="px-4 py-2 border rounded" [routerLink]="['/dashboard/doctor/diagnostics/list']">Annuler</a>
+  </div>
+</form>

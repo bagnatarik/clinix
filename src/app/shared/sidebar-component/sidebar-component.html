@@ -1,0 +1,71 @@
+<aside
+  class="w-[275px] border border-neutral-300 h-[calc(100vh-65px-40px)] fixed left-5 bg-white rounded-l-lg p-4 flex flex-col"
+>
+  <p class="font-semibold text-sm mb-2">{{ 'Acceuil' }}</p>
+  @for (item of menu; track item.slug) {
+  <div class="mb-1">
+    <button
+      (click)="item.children?.length ? toggle(item.slug) : navigate(item.route)"
+      class="w-full flex items-center justify-between px-3 py-2 hover:bg-gray-50 transition-colors hover:cursor-pointer"
+      [attr.aria-expanded]="!!open[item.slug]"
+      [attr.aria-controls]="'submenu-' + item.slug"
+    >
+      <div class="flex items-center gap-3">
+        <span
+          [class.text-blue-600]="isActiveParent(item) && !item.children"
+          [class.text-gray-800]="!(isActiveParent(item) && !item.children)"
+          [class.font-semibold]="isActiveParent(item) && !item.children"
+          class="text-gray-800 text-sm"
+          >{{ item.label }}</span
+        >
+      </div>
+
+      <div class="flex items-center">
+        @if (item.children?.length) {
+        <svg
+          [class.-rotate-90]="open[item.slug]"
+          class="size-3 transition-transform duration-200 text-gray-400"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+        }
+      </div>
+    </button>
+
+    @if (item.children?.length && open[item.slug]) {
+    <ul [id]="'submenu-' + item.slug" class="mt-1 ml-4 border-l border-transparent">
+      @for (c of item.children; track c.label) {
+      <li class="mb-0.5">
+        <a
+          [routerLink]="c.route"
+          routerLinkActive="text-indigo-600 font-semibold"
+          class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-50 text-sm text-gray-700"
+        >
+          <span class="truncate">{{ c.label }}</span>
+        </a>
+      </li>
+      }
+    </ul>
+    }
+  </div>
+  }
+
+  <div class="absolute bottom-4 left-4 w-[calc(275px-32px)]">
+    <p class="font-semibold text-sm mb-2">{{ 'Déconnexion' }}</p>
+    <button
+      class="text-sm border rounded w-full border-red-500 hover:cursor-pointer bg-red-500 hover:bg-red-600 duration-500 transition-colors text-white p-2"
+      (click)="logout()"
+    >
+      {{ 'Se déconnecter' }}
+    </button>
+  </div>
+</aside>
