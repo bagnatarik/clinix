@@ -75,13 +75,14 @@
         >
           {{ (userName || 'Utilisateur').charAt(0) }}
         </div>
-        <div class="flex flex-col">
+        <div class="flex flex-col gap-y-0.5">
           <span class="text-sm font-medium text-neutral-800">{{ userName || 'Utilisateur' }}</span>
           <span class="text-xs text-neutral-500">{{ userEmail || '' }}</span>
+          <span class="text-xs text-neutral-500">{{ getRoleFrench(userRole) || '' }}</span>
         </div>
       </div>
 
-      <div class="border-t border-neutral-200"></div>
+      <!-- <div class="border-t border-neutral-200"></div>
 
       <div class="flex flex-col gap-1">
         <a
@@ -96,7 +97,7 @@
         >
           Paramètres
         </a>
-      </div>
+      </div> -->
 
       <div class="border-t border-neutral-200"></div>
       <button

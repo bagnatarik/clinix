@@ -167,6 +167,17 @@
             <!-- Cas spécial : actions -->
             @else if (col.key === 'actions') {
             <div class="flex space-x-2">
+              @if(showViewButton) {
+              <button
+                (click)="onView.emit(row); $event.stopPropagation()"
+                class="p-2 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition hover:cursor-pointer"
+                title="Voir détails"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zm11 3a3 3 0 100-6 3 3 0 000 6z" />
+                </svg>
+              </button>
+              }
               <!-- Bouton + conditionnel (premier rendez-vous du patient) -->
               @if(row['isFirstForPatient']) {
               <button
@@ -282,6 +293,17 @@
             <!-- Cas spécial : actions -->
             @else if (col.key === 'actions') {
             <div class="flex space-x-2">
+              @if(showViewButton) {
+              <button
+                (click)="onView.emit(row); $event.stopPropagation()"
+                class="p-2 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition hover:cursor-pointer"
+                title="Voir détails"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zm11 3a3 3 0 100-6 3 3 0 000 6z" />
+                </svg>
+              </button>
+              }
               @if(showEditButton) {
               <button
                 (click)="onEdit.emit(row); $event.stopPropagation()"

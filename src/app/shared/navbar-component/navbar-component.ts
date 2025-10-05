@@ -12,6 +12,7 @@ import { CommonModule } from '@angular/common';
 export class NavbarComponent {
   userName: string | null = null;
   userEmail: string | null = null;
+  userRole: string | null = null;
   dropdownOpen = false;
 
   @ViewChild('profileMenu') profileMenuRef?: ElementRef<HTMLDivElement>;
@@ -28,6 +29,7 @@ export class NavbarComponent {
     const user = this.auth.getCurrentUser();
     this.userName = user?.name ?? null;
     this.userEmail = user?.email ?? null;
+    this.userRole = user?.role ?? null;
   }
 
   toggleDropdown() {
@@ -48,6 +50,24 @@ export class NavbarComponent {
     if (!menuEl || !triggerEl) return;
     if (!menuEl.contains(target) && !triggerEl.contains(target)) {
       this.dropdownOpen = false;
+    }
+  }
+
+  getRoleFrench(role: string | null): string {
+    if (!role) return '';
+    switch (role.toLowerCase()) {
+      case 'admin':
+        return 'Admin';
+      case 'doctor':
+        return 'Médecin';
+      case 'nurse':
+        return 'Infirmier';
+      case 'patient':
+        return 'Patient';
+      case 'laborant':
+        return 'Laborantin';
+      default:
+        return role.charAt(0).toUpperCase() + role.slice(1);
     }
   }
 }

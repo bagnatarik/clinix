@@ -98,13 +98,39 @@
       </div>
     </div>
 
+    <!-- Type & Coût -->
+    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Type de consultation</label>
+        <input
+          type="text"
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm placeholder:text-gray-600"
+          formControlName="typeConsultation"
+          placeholder="Suivi général, Urgence, Bilan..."
+        />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Coût</label>
+        <input
+          type="number"
+          step="0.01"
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm placeholder:text-gray-600"
+          formControlName="cout"
+          placeholder="300"
+        />
+      </div>
+    </div>
+
     <!-- Bouton dossier patient -->
     <div class="mt-6">
       <button
         type="button"
-        class="w-full px-5 py-2.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition hover:cursor-pointer text-sm"
+        class="w-full px-5 py-2.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm"
         (click)="toggleDossier()"
         [attr.aria-expanded]="showPatientDossier"
+        [disabled]="!form.get('patient')?.value"
+        [class.opacity-50]="!form.get('patient')?.value"
+        [class.cursor-not-allowed]="!form.get('patient')?.value"
       >
         Voir le dossier du patient
       </button>
@@ -216,24 +242,34 @@
     }
 
     <!-- Vital signs -->
-    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
       <div>
-        <label class="block text-xs font-medium text-gray-500 mb-1">Poids (kg)</label>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Poids</label>
         <input
           type="number"
           step="0.1"
           class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 placeholder:text-gray-600 focus:outline-none text-sm"
           placeholder="72.5"
+          formControlName="poids"
         />
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-500 mb-1">Température (°C)</label>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Température</label>
         <input
           type="number"
           step="0.1"
           class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm placeholder:text-gray-600"
           formControlName="temperature"
           placeholder="37.2"
+        />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Tension artérielle</label>
+        <input
+          type="text"
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm placeholder:text-gray-600"
+          formControlName="tension"
+          placeholder="12/8"
         />
       </div>
     </div>
@@ -247,13 +283,14 @@
         formControlName="motif"
       ></textarea>
     </div>
+
     <div class="mt-6">
-      <label class="block text-xs font-medium text-gray-500 mb-1">Motif de Consultation</label>
+      <label class="block text-xs font-medium text-gray-500 mb-1">Description</label>
       <textarea
         class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm placeholder:text-gray-600 resize-y"
         rows="4"
-        placeholder="Motif de la consultation du patient"
-        formControlName="motif"
+        placeholder="Détails de la consultation (examen, évolution, plan)"
+        formControlName="description"
       ></textarea>
     </div>
 
@@ -276,35 +313,129 @@
       <div class="px-5 py-4 border-b border-neutral-300">
         <h3 class="font-semibold text-gray-800">Diagnostics</h3>
       </div>
-      <div class="p-5 space-y-3 text-sm text-gray-700">
-        <div class="flex gap-2">
-          <input
-            #newDiag
-            type="text"
-            placeholder="Ajouter un diagnostic..."
-            class="flex-1 border border-neutral-300 rounded px-3 py-2"
-          />
+      <div class="p-5 space-y-4 text-sm text-gray-700">
+        <div class="flex justify-between items-center">
+          <div class="text-gray-600">Ajouter et lister des diagnostics cliniques</div>
           <button
             type="button"
-            (click)="addDiagnostic(newDiag)"
-            class="px-3 py-2 border rounded bg-neutral-100 hover:bg-neutral-200"
+            (click)="openDiagnosticModal()"
+            class="px-3 py-2 border rounded bg-blue-600 text-white hover:bg-blue-700 transition"
+            [disabled]="!form.get('patient')?.value"
+            [class.opacity-50]="!form.get('patient')?.value"
+            [class.cursor-not-allowed]="!form.get('patient')?.value"
           >
-            Ajouter
+            Ajouter un diagnostic
           </button>
         </div>
+
         <div class="space-y-2">
           <div
-            class="flex justify-between items-center"
+            class="flex justify-between items-start gap-4"
             *ngFor="let dg of diagnostics.controls; let i = index"
           >
-            <span>{{ dg.get('description')?.value }}</span>
-            <button
-              type="button"
-              (click)="removeDiagnostic(i)"
-              class="text-red-600 hover:underline"
-            >
-              Supprimer
-            </button>
+            <div class="flex-1">
+              <div class="font-medium text-gray-800">{{ dg.get('maladie')?.value }}</div>
+              <div class="text-xs text-gray-600">
+                Gravité: {{ dg.get('gravite')?.value || '—' }}
+              </div>
+              <div class="mt-1 text-gray-700">{{ dg.get('details')?.value }}</div>
+            </div>
+            <div class="flex items-center gap-3">
+              <button
+                type="button"
+                (click)="editDiagnostic(i)"
+                class="text-blue-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:no-underline"
+                [disabled]="!form.get('patient')?.value"
+              >
+                Modifier
+              </button>
+              <button
+                type="button"
+                (click)="removeDiagnostic(i)"
+                class="text-red-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:no-underline"
+                [disabled]="!form.get('patient')?.value"
+              >
+                Supprimer
+              </button>
+            </div>
+          </div>
+          <div *ngIf="diagnostics.length === 0" class="text-xs text-gray-500">Aucun diagnostic</div>
+        </div>
+      </div>
+
+      <!-- Modal ajout diagnostic -->
+      <div *ngIf="diagnosticModalOpen" class="fixed inset-0 z-50">
+        <div class="absolute inset-0 bg-black/30" (click)="closeDiagnosticModal()"></div>
+        <div
+          class="absolute inset-0 flex items-center justify-center p-4"
+          (click)="$event.stopPropagation()"
+        >
+          <div class="bg-white w-full max-w-xl border border-neutral-300 rounded shadow-lg">
+            <div class="px-5 py-4 border-b border-neutral-200 flex items-center justify-between">
+              <h4 class="font-semibold text-gray-800">
+                {{
+                  diagnosticEditIndex !== null ? 'Modifier un diagnostic' : 'Ajouter un diagnostic'
+                }}
+              </h4>
+              <button
+                type="button"
+                class="text-gray-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                (click)="closeDiagnosticModal()"
+                [disabled]="!form.get('patient')?.value"
+              >
+                ✕
+              </button>
+            </div>
+            <div class="p-5 space-y-4">
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Maladie</label>
+                <input
+                  type="text"
+                  class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm"
+                  [formControl]="$any(diagnosticForm.get('maladie'))"
+                  placeholder="Nom de la maladie"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Détails</label>
+                <textarea
+                  rows="3"
+                  class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm"
+                  [formControl]="$any(diagnosticForm.get('details'))"
+                  placeholder="Observations, contexte, examens..."
+                ></textarea>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1"
+                  >Niveau de gravité</label
+                >
+                <select
+                  class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm"
+                  [formControl]="$any(diagnosticForm.get('gravite'))"
+                >
+                  <option value="">—</option>
+                  <option *ngFor="let s of severityOptions" [value]="s">{{ s }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="px-5 py-4 border-t border-neutral-200 flex justify-end gap-2">
+              <button
+                type="button"
+                class="px-3 py-2 border rounded hover:bg-neutral-100 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                (click)="closeDiagnosticModal()"
+                [disabled]="!form.get('patient')?.value"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                class="px-3 py-2 border rounded bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                (click)="saveDiagnosticFromModal()"
+                [disabled]="!form.get('patient')?.value || diagnosticForm.invalid"
+              >
+                {{ diagnosticEditIndex !== null ? 'Mettre à jour' : 'Enregistrer' }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -312,17 +443,674 @@
 
     <div class="bg-white border border-neutral-300 rounded">
       <div class="px-5 py-4 border-b border-neutral-300">
-        <h3 class="font-semibold text-gray-800">Examens Demandés</h3>
+        <h3 class="font-semibold text-gray-800">Analyses Médicales</h3>
       </div>
-      <div class="p-5 space-y-3 text-sm text-gray-700">
+      <div class="p-5 space-y-4 text-sm text-gray-700">
         <div class="flex justify-between items-center">
-          <span>NFS, CRP</span><span class="text-gray-400">-</span>
+          <div class="text-gray-600">
+            Ajouter et lister des analyses médicales liées aux diagnostics
+          </div>
+          <button
+            type="button"
+            (click)="openAnalysisModal()"
+            class="px-3 py-2 border rounded bg-blue-600 text-white hover:bg-blue-700 transition"
+            [disabled]="!hasDiagnostics || !form.get('patient')?.value"
+            [class.opacity-50]="!hasDiagnostics || !form.get('patient')?.value"
+            [class.cursor-not-allowed]="!hasDiagnostics || !form.get('patient')?.value"
+          >
+            Demander une analyse médicale
+          </button>
         </div>
-        <div class="flex justify-between items-center">
-          <span>Échographie abdominale</span><span class="text-gray-400">-</span>
+
+        <div class="space-y-2">
+          <div
+            class="flex justify-between items-start gap-4"
+            *ngFor="let an of analyses.controls; let i = index"
+          >
+            <div class="flex-1">
+              <div class="font-medium text-gray-800">{{ an.get('nomAnalyse')?.value }}</div>
+              <div class="text-xs text-gray-600">
+                Type: {{ an.get('typeAnalyse')?.value || '—' }} • Diagnostic:
+                {{ an.get('diagnosticRef')?.value || '—' }}
+              </div>
+              <div class="text-xs text-gray-600">
+                Date: {{ an.get('dateAnalyse')?.value | date : 'dd/MM/yyyy' }}
+              </div>
+              <div class="mt-1 text-gray-700">{{ an.get('description')?.value }}</div>
+            </div>
+            <div class="flex items-center gap-3">
+              <button
+                type="button"
+                (click)="editAnalysis(i)"
+                class="text-blue-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:no-underline"
+                [disabled]="!form.get('patient')?.value"
+              >
+                Modifier
+              </button>
+              <button
+                type="button"
+                (click)="removeAnalysis(i)"
+                class="text-red-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:no-underline"
+                [disabled]="!form.get('patient')?.value"
+              >
+                Supprimer
+              </button>
+            </div>
+          </div>
+          <div *ngIf="analyses.length === 0" class="text-xs text-gray-500">Aucune analyse</div>
         </div>
-        <div class="flex justify-between items-center">
-          <span>Scanner abdominal</span><span class="text-gray-400">-</span>
+      </div>
+
+      <!-- Modal ajout analyse médicale -->
+      <div *ngIf="analysisModalOpen" class="fixed inset-0 z-50">
+        <div class="absolute inset-0 bg-black/30" (click)="closeAnalysisModal()"></div>
+        <div
+          class="absolute inset-0 flex items-center justify-center p-4"
+          (click)="$event.stopPropagation()"
+        >
+          <div class="bg-white w-full max-w-xl border border-neutral-300 rounded shadow-lg">
+            <div class="px-5 py-4 border-b border-neutral-200 flex items-center justify-between">
+              <h4 class="font-semibold text-gray-800">
+                {{
+                  analysisEditIndex !== null
+                    ? 'Modifier une analyse médicale'
+                    : 'Demander une analyse médicale'
+                }}
+              </h4>
+              <button
+                type="button"
+                class="text-gray-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                (click)="closeAnalysisModal()"
+                [disabled]="!form.get('patient')?.value"
+              >
+                ✕
+              </button>
+            </div>
+            <div class="p-5 space-y-4">
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Nom de l'analyse</label>
+                <input
+                  type="text"
+                  class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm"
+                  [formControl]="$any(analysisForm.get('nomAnalyse'))"
+                  placeholder="Ex: Numération formule sanguine"
+                />
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 mb-1"
+                    >Date de l'analyse</label
+                  >
+                  <input
+                    type="date"
+                    class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm"
+                    [formControl]="$any(analysisForm.get('dateAnalyse'))"
+                  />
+                </div>
+                <div class="relative">
+                  <label class="block text-xs font-medium text-gray-500 mb-1">Type d'analyse</label>
+                  <button
+                    type="button"
+                    class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 text-left text-sm flex items-center justify-between hover:bg-neutral-50"
+                    (click)="toggleAnalysisTypeDropdown()"
+                    [attr.aria-expanded]="analysisTypeDropdownOpen"
+                  >
+                    <span>{{ analysisForm.value.typeAnalyse || 'Sélectionner un type' }}</span>
+                    <svg
+                      class="size-4 text-neutral-500"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </button>
+                  @if (analysisTypeDropdownOpen) {
+                  <div
+                    class="absolute left-0 top-full mt-2 w-full bg-white border border-neutral-300 rounded shadow-sm p-2 z-50"
+                    (click)="$event.stopPropagation()"
+                    (mousedown)="$event.stopPropagation()"
+                  >
+                    <input
+                      type="text"
+                      [(ngModel)]="analysisTypeSearch"
+                      [ngModelOptions]="{ standalone: true }"
+                      placeholder="Rechercher un type..."
+                      class="w-full border border-neutral-300 rounded px-3 py-2 text-sm mb-2 focus:outline-none"
+                      (click)="$event.stopPropagation()"
+                      (mousedown)="$event.stopPropagation()"
+                      (keydown.enter)="$event.preventDefault()"
+                    />
+                    <div class="max-h-44 overflow-y-auto">
+                      <button
+                        type="button"
+                        class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
+                        *ngFor="let a of filteredAnalysisOptions; let i = index"
+                        (mouseenter)="analysisTypeActiveIndex = i"
+                        [class.bg-blue-50]="
+                          analysisTypeActiveIndex === i ||
+                          analysisForm.get('typeAnalyse')?.value === a
+                        "
+                        (click)="selectAnalysisType(a)"
+                      >
+                        {{ a }}
+                      </button>
+                      <div
+                        *ngIf="filteredAnalysisOptions.length === 0"
+                        class="px-3 py-2 text-xs text-neutral-500"
+                      >
+                        Aucun type trouvé
+                      </div>
+                    </div>
+                  </div>
+                  }
+                </div>
+              </div>
+              <div class="relative">
+                <label class="block text-xs font-medium text-gray-500 mb-1"
+                  >Diagnostic associé</label
+                >
+                <button
+                  type="button"
+                  class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 text-left text-sm flex items-center justify-between hover:bg-neutral-50"
+                  (click)="toggleDiagnosticSelectDropdown()"
+                  [attr.aria-expanded]="diagnosticSelectDropdownOpen"
+                >
+                  <span>{{
+                    analysisForm.value.diagnosticRef || 'Sélectionner un diagnostic'
+                  }}</span>
+                  <svg
+                    class="size-4 text-neutral-500"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </button>
+                @if (diagnosticSelectDropdownOpen) {
+                <div
+                  class="absolute left-0 top-full mt-2 w-full bg-white border border-neutral-300 rounded shadow-sm p-2 z-50"
+                  (click)="$event.stopPropagation()"
+                  (mousedown)="$event.stopPropagation()"
+                >
+                  <input
+                    type="text"
+                    [(ngModel)]="diagnosticSelectSearch"
+                    [ngModelOptions]="{ standalone: true }"
+                    placeholder="Rechercher un diagnostic..."
+                    class="w-full border border-neutral-300 rounded px-3 py-2 text-sm mb-2 focus:outline-none"
+                    (click)="$event.stopPropagation()"
+                    (mousedown)="$event.stopPropagation()"
+                    (keydown.enter)="$event.preventDefault()"
+                  />
+                  <div class="max-h-44 overflow-y-auto">
+                    <button
+                      type="button"
+                      class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
+                      *ngFor="let d of filteredDiagnosticsOptions; let i = index"
+                      (mouseenter)="diagnosticSelectActiveIndex = i"
+                      [class.bg-blue-50]="
+                        diagnosticSelectActiveIndex === i ||
+                        analysisForm.get('diagnosticRef')?.value === d
+                      "
+                      (click)="selectDiagnosticRef(d)"
+                    >
+                      {{ d }}
+                    </button>
+                    <div
+                      *ngIf="filteredDiagnosticsOptions.length === 0"
+                      class="px-3 py-2 text-xs text-neutral-500"
+                    >
+                      Aucun diagnostic trouvé
+                    </div>
+                  </div>
+                </div>
+                }
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Description</label>
+                <textarea
+                  rows="3"
+                  class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm"
+                  [formControl]="$any(analysisForm.get('description'))"
+                  placeholder="Détails ou justification de l'analyse..."
+                ></textarea>
+              </div>
+            </div>
+            <div class="px-5 py-4 border-t border-neutral-200 flex justify-end gap-2">
+              <button
+                type="button"
+                class="px-3 py-2 border rounded transition hover:bg-neutral-100 hover:cursor-pointer text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                (click)="closeAnalysisModal()"
+                [disabled]="!form.get('patient')?.value"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                class="px-3 py-2 border rounded bg-blue-600 text-white hover:bg-blue-700 transition hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                (click)="saveAnalysisFromModal()"
+                [disabled]="!form.get('patient')?.value || analysisForm.invalid"
+              >
+                {{ analysisEditIndex !== null ? 'Mettre à jour' : 'Enregistrer' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prescriptions -->
+  <div class="bg-white border border-neutral-300 rounded">
+    <div class="px-5 py-4 border-b border-neutral-300">
+      <h3 class="font-semibold text-gray-800">Prescriptions</h3>
+    </div>
+    <div class="p-5 space-y-4 text-sm text-gray-700">
+      <div class="flex justify-between items-center">
+        <div class="text-gray-600">Ajouter et lister des prescriptions liées aux diagnostics</div>
+        <button
+          type="button"
+          (click)="openPrescriptionModal()"
+          class="px-3 py-2 border rounded bg-blue-600 text-white hover:bg-blue-700 transition"
+          [disabled]="!hasDiagnostics || !form.get('patient')?.value"
+          [class.opacity-50]="!hasDiagnostics || !form.get('patient')?.value"
+          [class.cursor-not-allowed]="!hasDiagnostics || !form.get('patient')?.value"
+        >
+          Ajouter une prescription
+        </button>
+      </div>
+
+      <div class="space-y-2">
+        <div
+          class="flex justify-between items-start gap-4"
+          *ngFor="let pr of prescriptions.controls; let i = index"
+        >
+          <div class="flex-1">
+            <div class="text-xs text-gray-600">
+              Diagnostic: {{ pr.get('diagnosticRef')?.value || '—' }}
+            </div>
+            <div class="text-xs text-gray-600">
+              Date: {{ pr.get('date')?.value | date : 'dd/MM/yyyy' }}
+            </div>
+            <div class="text-xs text-gray-600">Motif: {{ pr.get('motif')?.value || '—' }}</div>
+            <div class="mt-1 text-gray-700">{{ pr.get('description')?.value }}</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <button
+              type="button"
+              (click)="editPrescription(i)"
+              class="text-blue-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:no-underline"
+              [disabled]="!form.get('patient')?.value"
+            >
+              Modifier
+            </button>
+            <button
+              type="button"
+              (click)="removePrescription(i)"
+              class="text-red-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:no-underline"
+              [disabled]="!form.get('patient')?.value"
+            >
+              Supprimer
+            </button>
+          </div>
+        </div>
+        <div *ngIf="prescriptions.length === 0" class="text-xs text-gray-500">
+          Aucune prescription
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal ajout prescription -->
+    <div *ngIf="prescriptionModalOpen" class="fixed inset-0 z-50">
+      <div class="absolute inset-0 bg-black/30" (click)="closePrescriptionModal()"></div>
+      <div
+        class="absolute inset-0 flex items-center justify-center p-4"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="bg-white w-full max-w-xl border border-neutral-300 rounded shadow-lg">
+          <div class="px-5 py-4 border-b border-neutral-200 flex items-center justify-between">
+            <h4 class="font-semibold text-gray-800">
+              {{
+                prescriptionEditIndex !== null
+                  ? 'Modifier une prescription'
+                  : 'Ajouter une prescription'
+              }}
+            </h4>
+            <button
+              type="button"
+              class="text-gray-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              (click)="closePrescriptionModal()"
+              [disabled]="!form.get('patient')?.value"
+            >
+              ✕
+            </button>
+          </div>
+          <div class="p-5 space-y-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-500 mb-1">Date</label>
+              <input
+                type="date"
+                class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm"
+                [formControl]="$any(prescriptionForm.get('date'))"
+              />
+            </div>
+            <div class="relative">
+              <label class="block text-xs font-medium text-gray-500 mb-1">Diagnostic associé</label>
+              <button
+                type="button"
+                class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 text-left text-sm flex items-center justify-between hover:bg-neutral-50"
+                (click)="togglePrescriptionDiagnosticSelectDropdown()"
+                [attr.aria-expanded]="prescriptionDiagnosticSelectDropdownOpen"
+              >
+                <span>{{
+                  prescriptionForm.value.diagnosticRef || 'Sélectionner un diagnostic'
+                }}</span>
+                <svg
+                  class="size-4 text-neutral-500"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </button>
+              @if (prescriptionDiagnosticSelectDropdownOpen) {
+              <div
+                class="absolute left-0 top-full mt-2 w-full bg-white border border-neutral-300 rounded shadow-sm p-2 z-50"
+                (click)="$event.stopPropagation()"
+                (mousedown)="$event.stopPropagation()"
+              >
+                <input
+                  type="text"
+                  [(ngModel)]="prescriptionDiagnosticSelectSearch"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="Rechercher un diagnostic..."
+                  class="w-full border border-neutral-300 rounded px-3 py-2 text-sm mb-2 focus:outline-none"
+                  (click)="$event.stopPropagation()"
+                  (mousedown)="$event.stopPropagation()"
+                  (keydown.enter)="$event.preventDefault()"
+                />
+                <div class="max-h-44 overflow-y-auto">
+                  <button
+                    type="button"
+                    class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
+                    *ngFor="let d of filteredDiagnosticsOptionsPrescription; let i = index"
+                    (mouseenter)="prescriptionDiagnosticSelectActiveIndex = i"
+                    [class.bg-blue-50]="
+                      prescriptionDiagnosticSelectActiveIndex === i ||
+                      prescriptionForm.get('diagnosticRef')?.value === d
+                    "
+                    (click)="selectPrescriptionDiagnosticRef(d)"
+                  >
+                    {{ d }}
+                  </button>
+                  <div
+                    *ngIf="filteredDiagnosticsOptionsPrescription.length === 0"
+                    class="px-3 py-2 text-xs text-neutral-500"
+                  >
+                    Aucun diagnostic trouvé
+                  </div>
+                </div>
+              </div>
+              }
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-500 mb-1">Motif</label>
+              <input
+                type="text"
+                class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm"
+                [formControl]="$any(prescriptionForm.get('motif'))"
+                placeholder="Motif de la prescription"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-500 mb-1">Description</label>
+              <textarea
+                rows="3"
+                class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm"
+                [formControl]="$any(prescriptionForm.get('description'))"
+                placeholder="Détails de la prescription..."
+              ></textarea>
+            </div>
+          </div>
+          <div class="px-5 py-4 border-t border-neutral-200 flex justify-end gap-2">
+            <button
+              type="button"
+              class="px-3 py-2 border rounded transition hover:bg-neutral-100 hover:cursor-pointer text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              (click)="closePrescriptionModal()"
+              [disabled]="!form.get('patient')?.value"
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              class="px-3 py-2 border rounded bg-blue-600 text-white hover:bg-blue-700 transition hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              (click)="savePrescriptionFromModal()"
+              [disabled]="!form.get('patient')?.value || prescriptionForm.invalid"
+            >
+              {{ prescriptionEditIndex !== null ? 'Mettre à jour' : 'Enregistrer' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hospitalisations -->
+  <div class="bg-white border border-neutral-300 rounded">
+    <div class="px-5 py-4 border-b border-neutral-300">
+      <h3 class="font-semibold text-gray-800">Hospitalisations</h3>
+    </div>
+    <div class="p-5 space-y-4 text-sm text-gray-700">
+      <div class="flex justify-between items-center">
+        <div class="text-gray-600">
+          Ajouter et lister des hospitalisations liées aux diagnostics
+        </div>
+        <button
+          type="button"
+          (click)="openHospitalisationModal()"
+          class="px-3 py-2 border rounded bg-blue-600 text-white hover:bg-blue-700 transition"
+          [disabled]="!hasDiagnostics || !form.get('patient')?.value"
+          [class.opacity-50]="!hasDiagnostics || !form.get('patient')?.value"
+          [class.cursor-not-allowed]="!hasDiagnostics || !form.get('patient')?.value"
+        >
+          Ajouter une hospitalisation
+        </button>
+      </div>
+
+      <div class="space-y-2">
+        <div
+          class="flex justify-between items-start gap-4"
+          *ngFor="let h of hospitalisations.controls; let i = index"
+        >
+          <div class="flex-1">
+            <div class="text-xs text-gray-600">
+              Diagnostic: {{ h.get('diagnosticRef')?.value || '—' }}
+            </div>
+            <div class="text-xs text-gray-600">
+              Admission: {{ h.get('dateAdmission')?.value | date : 'dd/MM/yyyy' }}
+            </div>
+            <div class="text-xs text-gray-600">
+              Sortie:
+              {{
+                h.get('dateSortie')?.value
+                  ? (h.get('dateSortie')?.value | date : 'dd/MM/yyyy')
+                  : '—'
+              }}
+            </div>
+            <div class="text-xs text-gray-600">Motif: {{ h.get('motif')?.value || '—' }}</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <button
+              type="button"
+              (click)="editHospitalisation(i)"
+              class="text-blue-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:no-underline"
+              [disabled]="!form.get('patient')?.value"
+            >
+              Modifier
+            </button>
+            <button
+              type="button"
+              (click)="removeHospitalisation(i)"
+              class="text-red-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:no-underline"
+              [disabled]="!form.get('patient')?.value"
+            >
+              Supprimer
+            </button>
+          </div>
+        </div>
+        <div *ngIf="hospitalisations.length === 0" class="text-xs text-gray-500">
+          Aucune hospitalisation
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal ajout hospitalisation -->
+    <div *ngIf="hospitalisationModalOpen" class="fixed inset-0 z-50">
+      <div class="absolute inset-0 bg-black/30" (click)="closeHospitalisationModal()"></div>
+      <div
+        class="absolute inset-0 flex items-center justify-center p-4"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="bg-white w-full max-w-xl border border-neutral-300 rounded shadow-lg">
+          <div class="px-5 py-4 border-b border-neutral-200 flex items-center justify-between">
+            <h4 class="font-semibold text-gray-800">
+              {{
+                hospitalisationEditIndex !== null
+                  ? 'Modifier une hospitalisation'
+                  : 'Ajouter une hospitalisation'
+              }}
+            </h4>
+            <button
+              type="button"
+              class="text-gray-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              (click)="closeHospitalisationModal()"
+              [disabled]="!form.get('patient')?.value"
+            >
+              ✕
+            </button>
+          </div>
+          <div class="p-5 space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Date d'admission</label>
+                <input
+                  type="date"
+                  class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm"
+                  [formControl]="$any(hospitalisationForm.get('dateAdmission'))"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Date de sortie</label>
+                <input
+                  type="date"
+                  class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm"
+                  [formControl]="$any(hospitalisationForm.get('dateSortie'))"
+                />
+              </div>
+            </div>
+            <div class="relative">
+              <label class="block text-xs font-medium text-gray-500 mb-1">Diagnostic associé</label>
+              <button
+                type="button"
+                class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 text-left text-sm flex items-center justify-between hover:bg-neutral-50"
+                (click)="toggleHospitalisationDiagnosticSelectDropdown()"
+                [attr.aria-expanded]="hospitalisationDiagnosticSelectDropdownOpen"
+              >
+                <span>{{
+                  hospitalisationForm.value.diagnosticRef || 'Sélectionner un diagnostic'
+                }}</span>
+                <svg
+                  class="size-4 text-neutral-500"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </button>
+              @if (hospitalisationDiagnosticSelectDropdownOpen) {
+              <div
+                class="absolute left-0 top-full mt-2 w-full bg-white border border-neutral-300 rounded shadow-sm p-2 z-50"
+                (click)="$event.stopPropagation()"
+                (mousedown)="$event.stopPropagation()"
+              >
+                <input
+                  type="text"
+                  [(ngModel)]="hospitalisationDiagnosticSelectSearch"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="Rechercher un diagnostic..."
+                  class="w-full border border-neutral-300 rounded px-3 py-2 text-sm mb-2 focus:outline-none"
+                  (click)="$event.stopPropagation()"
+                  (mousedown)="$event.stopPropagation()"
+                  (keydown.enter)="$event.preventDefault()"
+                />
+                <div class="max-h-44 overflow-y-auto">
+                  <button
+                    type="button"
+                    class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
+                    *ngFor="let d of filteredDiagnosticsOptionsHospitalisation; let i = index"
+                    (mouseenter)="hospitalisationDiagnosticSelectActiveIndex = i"
+                    [class.bg-blue-50]="
+                      hospitalisationDiagnosticSelectActiveIndex === i ||
+                      hospitalisationForm.get('diagnosticRef')?.value === d
+                    "
+                    (click)="selectHospitalisationDiagnosticRef(d)"
+                  >
+                    {{ d }}
+                  </button>
+                  <div
+                    *ngIf="filteredDiagnosticsOptionsHospitalisation.length === 0"
+                    class="px-3 py-2 text-xs text-neutral-500"
+                  >
+                    Aucun diagnostic trouvé
+                  </div>
+                </div>
+              </div>
+              }
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-500 mb-1">Motif</label>
+              <input
+                type="text"
+                class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm"
+                [formControl]="$any(hospitalisationForm.get('motif'))"
+                placeholder="Motif d'hospitalisation"
+              />
+            </div>
+          </div>
+          <div class="px-5 py-4 border-t border-neutral-200 flex justify-end gap-2">
+            <button
+              type="button"
+              class="px-3 py-2 border rounded transition hover:bg-neutral-100 hover:cursor-pointer text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              (click)="closeHospitalisationModal()"
+              [disabled]="!form.get('patient')?.value"
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              class="px-3 py-2 border rounded bg-blue-600 text-white hover:bg-blue-700 transition hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              (click)="saveHospitalisationFromModal()"
+              [disabled]="!form.get('patient')?.value || hospitalisationForm.invalid"
+            >
+              {{ hospitalisationEditIndex !== null ? 'Mettre à jour' : 'Enregistrer' }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -346,23 +1134,13 @@
   </div>
 
   <div class="flex flex-col md:flex-row gap-3 md:gap-4 justify-between items-center text-sm">
-    <button
-      type="submit"
-      class="px-5 py-2.5 border border-neutral-200 rounded text-gray-800 bg-neutral-100 hover:bg-neutral-200 transition hover:cursor-pointer"
-    >
-      Enregistrer brouillon
-    </button>
     <div class="flex gap-3">
       <button
-        class="px-5 py-2.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition hover:cursor-pointer"
+        class="px-5 py-2.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        [disabled]="!form.get('patient')?.value"
       >
         Finaliser & signer
       </button>
-      <a
-        class="px-5 py-2.5 border border-neutral-200 rounded text-gray-800 bg-neutral-100 hover:bg-neutral-200 transition"
-        [routerLink]="['/dashboard/doctor/ordonnances/new']"
-        >Imprimer ordonnance</a
-      >
     </div>
   </div>
 </form>

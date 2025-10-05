@@ -16,19 +16,52 @@ import { Column } from '../../../../core/interfaces/column';
 export class DiagnosticsListComponent implements OnInit {
   columns: Column[] = [
     { key: 'id', label: 'ID', sortable: true },
-    { key: 'patient', label: 'Patient', sortable: true },
-    { key: 'date', label: 'Date', sortable: true },
-    { key: 'resultat', label: 'Résultat', sortable: true },
-    { key: 'statut', label: 'Statut', sortable: true },
+    { key: 'maladie', label: 'Maladie', sortable: true },
+    { key: 'details', label: 'Détails', sortable: true },
+    { key: 'gravite', label: 'Niveau de gravité', sortable: true },
     { key: 'actions', label: 'Actions', sortable: false },
   ];
-  dataSource: Diagnostic[] = [];
+  dataSource: Array<Diagnostic & { maladie?: string; details?: string; gravite?: string }> = [];
+
+  // Modal de confirmation de suppression
+  confirmDeleteOpen = false;
+  toDelete: (Diagnostic & { maladie?: string; details?: string; gravite?: string }) | null = null;
 
   constructor(private service: DiagnosticsService, private router: Router) {}
 
   ngOnInit(): void { this.refresh(); }
-  refresh() { this.service.getAll().subscribe((data) => (this.dataSource = data)); }
+  refresh() {
+    this.service.getAll().subscribe((data) => (
+      this.dataSource = data.map((d) => ({
+        ...d,
+        // Fallbacks: map depuis les champs existants si les nouveaux ne sont pas présents
+        maladie: (d as any).maladie || d.resultat || '—',
+        details: (d as any).details || d.resultat || '—',
+        gravite: (d as any).gravite || '—',
+      }))
+    ));
+  }
   addNew() { this.router.navigate(['/dashboard/doctor/diagnostics/new']); }
   edit(row: Diagnostic) {}
-  delete(row: Diagnostic) { this.service.delete(row.id).subscribe(() => this.refresh()); }
+  // Ouvre le modal de confirmation au lieu de supprimer directement
+  delete(row: Diagnostic & { maladie?: string }) {
+    this.toDelete = row;
+    this.confirmDeleteOpen = true;
+  }
+
+  // Confirme la suppression et rafraîchit la liste
+  confirmDelete() {
+    if (!this.toDelete) return;
+    this.service.delete(this.toDelete.id).subscribe(() => {
+      this.confirmDeleteOpen = false;
+      this.toDelete = null;
+      this.refresh();
+    });
+  }
+
+  // Annule la suppression
+  cancelDelete() {
+    this.confirmDeleteOpen = false;
+    this.toDelete = null;
+  }
 }

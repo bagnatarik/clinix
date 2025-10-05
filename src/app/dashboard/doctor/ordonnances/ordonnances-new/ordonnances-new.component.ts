@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators, FormGroup, FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, FormGroup, FormsModule, FormArray } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { OrdonnancesService } from '../ordonnances.service';
 import { AuthenticationService } from '../../../../authentication/services/authentication-service';
+import { ProduitsService } from '../../../produits/produits.service';
+import { Produit } from '../../../../core/interfaces/admin';
 
 @Component({
   selector: 'app-ordonnances-new',
@@ -25,19 +27,36 @@ export class OrdonnancesNewComponent implements OnInit {
   patientDropdownOpen = false;
   activeIndex: number = -1;
 
+  // Options et états pour dropdown produit par ligne
+  produitsOptions: Produit[] = [];
+  productDropdownOpen = false;
+  openProductIndex: number | null = null;
+  productSearch: string = '';
+  productActiveIndex: number = -1;
+
   constructor(
     private fb: FormBuilder,
     private service: OrdonnancesService,
     private router: Router,
-    private auth: AuthenticationService
+    private auth: AuthenticationService,
+    private produitsService: ProduitsService,
   ) {
     this.form = this.fb.group({
       patient: ['', Validators.required],
       date: ['', Validators.required],
-      contenu: ['', Validators.required],
+      libelle: ['', Validators.required],
+      coutTotal: [0, Validators.required],
       statut: ['brouillon', Validators.required],
+      produits: this.fb.array([]),
     });
     this.doctorName = this.auth.getCurrentUser()?.name ?? 'Dr. Anne Mercier';
+
+    // Date automatique (format YYYY-MM-DD pour input type="date")
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    this.form.get('date')?.setValue(`${yyyy}-${mm}-${dd}`);
   }
 
   // Affichage du dossier patient
@@ -59,10 +78,27 @@ export class OrdonnancesNewComponent implements OnInit {
   ngOnInit(): void {
     this.form.get('patient')?.valueChanges.subscribe((value) => {
       this.updatePatientDossier((value as string) || '');
+      if (!value) {
+        this.showPatientDossier = false;
+      }
     });
+
+    // Recalcule du coût total à chaque changement de produits
+    this.produits.valueChanges.subscribe(() => {
+      this.recalcTotal();
+    });
+    // Initialiser avec un produit vide pour guider l’utilisateur
+    this.addProduct();
+
+    // Charger les options de produits pour le dropdown
+    this.produitsService.getAll().subscribe((list) => (this.produitsOptions = list));
   }
 
-  toggleDossier(): void { this.showPatientDossier = !this.showPatientDossier; }
+  toggleDossier(): void {
+    const hasPatient = !!this.form.get('patient')?.value;
+    if (!hasPatient) return;
+    this.showPatientDossier = !this.showPatientDossier;
+  }
 
   // Dropdown Consultations-like
   get filteredPatients(): string[] {
@@ -128,11 +164,81 @@ export class OrdonnancesNewComponent implements OnInit {
     }
   }
 
+  // Gestion des produits dynamiques
+  get produits(): FormArray {
+    return this.form.get('produits') as FormArray;
+  }
+
+  private newProductGroup() {
+    return this.fb.group({
+      nom: ['', Validators.required],
+      description: [''],
+      cout: [0, [Validators.min(0)]],
+      prixProduit: [0, [Validators.required, Validators.min(0)]],
+    });
+  }
+
+  addProduct() {
+    if (!this.form.get('patient')?.value) return;
+    this.produits.push(this.newProductGroup());
+    this.recalcTotal();
+  }
+
+  removeProduct(index: number) {
+    if (index < 0 || index >= this.produits.length) return;
+    this.produits.removeAt(index);
+    this.recalcTotal();
+  }
+
+  recalcTotal() {
+    const produits = this.produits.getRawValue() as Array<{ prixProduit?: number; cout?: number }>;
+    const total = produits.reduce((sum, p) => sum + (Number(p.prixProduit) || Number(p.cout) || 0), 0);
+    this.form.get('coutTotal')?.setValue(total);
+  }
+
+  // Dropdown produit helpers
+  get filteredProduits(): Produit[] {
+    const q = this.productSearch.trim().toLowerCase();
+    if (!q) return this.produitsOptions;
+    return this.produitsOptions.filter(
+      (p) => p.nom.toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q)
+    );
+  }
+
+  toggleProductDropdown(index: number): void {
+    if (this.openProductIndex !== index || !this.productDropdownOpen) {
+      this.openProductIndex = index;
+      this.productDropdownOpen = true;
+    } else {
+      this.productDropdownOpen = false;
+      this.openProductIndex = null;
+    }
+    if (this.productDropdownOpen) {
+      const currentName = (this.produits.at(index).get('nom')?.value as string) || '';
+      const list = this.filteredProduits;
+      const idx = list.findIndex((p) => p.nom === currentName);
+      this.productActiveIndex = idx >= 0 ? idx : list.length ? 0 : -1;
+    }
+  }
+
+  selectProduit(index: number, p: Produit): void {
+    const group = this.produits.at(index) as FormGroup;
+    group.get('nom')?.setValue(p.nom);
+    group.get('description')?.setValue(p.description || '');
+    group.get('cout')?.setValue(p.cout || 0);
+    group.get('prixProduit')?.setValue(p.cout || 0);
+    this.productDropdownOpen = false;
+    this.openProductIndex = null;
+    this.recalcTotal();
+  }
+
   submit() {
     if (this.form.invalid) return;
-    const { patient, date, contenu, statut } = this.form.value;
+    const { patient, date, libelle, coutTotal, statut } = this.form.value;
+    const produits = this.produits.getRawValue();
+    const payload = { patient: patient!, date: date!, libelle: libelle!, coutTotal: coutTotal!, produits, statut: statut! };
     this.service
-      .create({ patient: patient!, date: date!, contenu: contenu!, statut: statut! as any })
+      .create(payload)
       .subscribe(() => this.router.navigate(['/dashboard/doctor/ordonnances/list']));
   }
 }

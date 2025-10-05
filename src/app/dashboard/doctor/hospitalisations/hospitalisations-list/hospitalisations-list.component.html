@@ -3,9 +3,26 @@
   [data]="dataSource"
   [tableName]="'Hospitalisations'"
   [newButtonLabel]="'Nouvelle hospitalisation'"
-  [showNewButton]="true"
+  [showNewButton]="false"
+  [showEditButton]="false"
   (onNew)="addNew()"
   (onEdit)="edit($event)"
   (onDelete)="delete($event)"
   (onRefresh)="refresh()"
 ></app-data-table-component>
+<!-- Modal de confirmation de suppression -->
+<div *ngIf="confirmDeleteOpen" class="fixed inset-0 z-50 flex items-center justify-center">
+  <div class="absolute inset-0 bg-black/50" (click)="cancelDelete()"></div>
+  <div class="relative bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+    <div class="text-lg font-semibold mb-3">Confirmer la suppression</div>
+    <div class="text-sm text-gray-700 mb-5">
+      Êtes-vous sûr de vouloir supprimer l’hospitalisation
+      <span class="font-medium">{{ toDelete?.id }}</span>
+      — {{ toDelete?.patient }} ({{ toDelete?.admissionDate }}) ?
+    </div>
+    <div class="flex justify-end gap-3">
+      <button type="button" class="px-4 py-2 rounded border border-gray-300 text-gray-700" (click)="cancelDelete()">Annuler</button>
+      <button type="button" class="px-4 py-2 rounded bg-red-600 text-white" (click)="confirmDelete()">Supprimer</button>
+    </div>
+  </div>
+</div>

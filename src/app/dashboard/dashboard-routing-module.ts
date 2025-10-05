@@ -332,6 +332,16 @@ export const routes: Routes = [
           ),
       },
 
+      {
+        path: 'doctor/ordonnances/:id',
+        canActivate: [roleGuard],
+        data: { roles: ['doctor'] },
+        loadComponent: () =>
+          import('./doctor/ordonnances/ordonnances-view/ordonnances-view.component').then(
+            (m) => m.OrdonnancesViewComponent
+          ),
+      },
+
       // Docteur - Rendez-vous
       {
         path: 'doctor/rendezvous',

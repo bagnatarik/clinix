@@ -19,6 +19,12 @@ export class InMemoryDatabaseService {
       date: '2025-10-03',
       motif: 'Contrôle de routine',
       statut: 'planifiée',
+      typeConsultation: 'Suivi général',
+      description: 'Bilan clinique et prévention',
+      cout: 300,
+      poids: 72.5,
+      temperature: 37.2,
+      tension: '12/8',
     },
     {
       id: 'CONS-002',
@@ -26,6 +32,12 @@ export class InMemoryDatabaseService {
       date: '2025-10-04',
       motif: 'Douleur abdominale',
       statut: 'terminée',
+      typeConsultation: 'Urgence',
+      description: 'Douleur abdominale aiguë avec fièvre',
+      cout: 450,
+      poids: 80.0,
+      temperature: 38.5,
+      tension: '13/9',
     },
   ];
 
@@ -34,6 +46,11 @@ export class InMemoryDatabaseService {
       id: 'DIAG-001',
       patient: 'Alice Dubois',
       date: '2025-10-03',
+      // Nouvelles colonnes alignées avec l’UI
+      maladie: 'Hypertension',
+      details: 'NFS normale; TA élevée, céphalées',
+      gravite: 'modéré',
+      // Compatibilité rétroactive
       resultat: 'NFS normale',
       statut: 'confirmé',
     },
@@ -41,6 +58,9 @@ export class InMemoryDatabaseService {
       id: 'DIAG-002',
       patient: 'Jean Dupont',
       date: '2025-10-04',
+      maladie: 'Infection',
+      details: 'CRP élevée',
+      gravite: 'sévère',
       resultat: 'CRP élevée',
       statut: 'en attente',
     },
@@ -52,6 +72,8 @@ export class InMemoryDatabaseService {
       patient: 'Alice Dubois',
       date: '2025-10-03',
       details: 'Paracétamol 500mg',
+      motif: 'Contrôle de routine',
+      description: 'Paracétamol 500mg',
       statut: 'validée',
     },
     {
@@ -59,6 +81,8 @@ export class InMemoryDatabaseService {
       patient: 'Jean Dupont',
       date: '2025-10-04',
       details: 'Ibuprofène 200mg',
+      motif: 'Douleur abdominale',
+      description: 'Ibuprofène 200mg',
       statut: 'brouillon',
     },
   ];
@@ -70,6 +94,10 @@ export class InMemoryDatabaseService {
       admissionDate: '2025-10-05',
       service: 'Chirurgie',
       statut: 'en cours',
+      dischargeDate: '2025-10-07',
+      motif: 'Surveillance post-opératoire',
+      diagnostique: 'Appendicite aiguë',
+      chambre: 'A-101',
     },
     {
       id: 'HOSP-002',
@@ -77,6 +105,10 @@ export class InMemoryDatabaseService {
       admissionDate: '2025-10-06',
       service: 'Médecine Interne',
       statut: 'sorti',
+      dischargeDate: '2025-10-08',
+      motif: 'Observation clinique',
+      diagnostique: 'CRP élevée',
+      chambre: 'B-201',
     },
   ];
 
@@ -85,15 +117,25 @@ export class InMemoryDatabaseService {
       id: 'ORD-001',
       patient: 'Alice Dubois',
       date: '2025-10-03',
-      contenu: 'Antibiotiques 7j',
       statut: 'signée',
+      libelle: 'Antibiotiques 7 jours',
+      coutTotal: 20.5,
+      produits: [
+        { nom: 'Amoxicilline', description: '500 mg 3x/j', prixProduit: 12.0 },
+        { nom: 'Probiotiques', description: 'Soutien flore', prixProduit: 8.5 },
+      ],
     },
     {
       id: 'ORD-002',
       patient: 'Jean Dupont',
       date: '2025-10-04',
-      contenu: 'Vitamine D 3 mois',
       statut: 'brouillon',
+      libelle: 'Vitamine D 3 mois',
+      coutTotal: 15.0,
+      produits: [
+        { nom: 'Vitamine D3', description: '1000 UI quotidienne', prixProduit: 9.0 },
+        { nom: 'Calcium', description: '500 mg', prixProduit: 6.0 },
+      ],
     },
   ];
 
@@ -277,6 +319,9 @@ export class InMemoryDatabaseService {
   // Ordonnances
   getOrdonnances(): Observable<Ordonnance[]> {
     return of([...this.ordonnances]);
+  }
+  getOrdonnanceById(id: string): Observable<Ordonnance | null> {
+    return of(this.ordonnances.find((x) => x.id === id) || null);
   }
   createOrdonnance(item: Omit<Ordonnance, 'id'>): Observable<Ordonnance> {
     const id = `ORD-${String(this.ordonnances.length + 1).padStart(3, '0')}`;

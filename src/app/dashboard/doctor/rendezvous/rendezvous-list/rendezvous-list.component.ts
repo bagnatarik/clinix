@@ -20,10 +20,6 @@ type Rendezvous = {
   imports: [CommonModule, RouterModule, DataTableComponent],
   template: `
     <div class="space-y-4">
-      <div class="flex items-center justify-between">
-        <h2 class="text-xl font-bold text-gray-800">Mes rendez-vous</h2>
-      </div>
-
       <app-data-table-component
         [tableName]="'Rendez-vous'"
         [columns]="columns"

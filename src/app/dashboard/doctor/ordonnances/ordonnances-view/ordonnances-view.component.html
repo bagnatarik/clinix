@@ -1,0 +1,252 @@
+<ng-container *ngIf="ordonnance$ | async as o; else notFound">
+  <div class="space-y-6">
+    <div class="bg-white border border-neutral-300 rounded p-6">
+      @if (o.statut === 'signée') {
+      <div class="mb-3">
+        <button
+          type="button"
+          class="px-10 py-2 text-xs rounded bg-blue-600 text-white hover:bg-blue-700 flex items-center cursor-pointer justify-center gap-x-2"
+          (click)="printOrdonnance()"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-printer-icon lucide-printer size-4"
+          >
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+            <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6" />
+            <rect x="6" y="14" width="12" height="8" rx="1" />
+          </svg>
+          <span>Imprimer</span>
+        </button>
+      </div>
+      }
+      <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-gray-800">Détails de l'ordonnance</h2>
+          <div class="mt-3 text-sm text-gray-700 space-y-1">
+            <div><span class="font-semibold">Patient :</span> {{ o.patient }}</div>
+            <div><span class="font-semibold">Identifiant :</span> {{ o.id }}</div>
+          </div>
+        </div>
+        <div class="text-sm text-gray-600 text-left md:text-left">
+          <div><span class="font-semibold">Date :</span> {{ o.date | date : 'dd-MM-yyyy' }}</div>
+          <div><span class="font-semibold">Statut :</span> {{ o.statut }}</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Libellé</label>
+          <input
+            type="text"
+            class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 text-sm"
+            [value]="o.libelle || ''"
+            disabled
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Coût total</label>
+          <input
+            type="number"
+            class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 text-sm"
+            [value]="o.coutTotal || 0"
+            disabled
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      <app-data-table-component
+        [tableName]="'Produits'"
+        [columns]="o.statut === 'signée' ? productColumnsSigned : productColumns"
+        [data]="o.produits || []"
+        [searchable]="true"
+        [paginated]="false"
+        [itemsPerPage]="10"
+        [newButtonLabel]="'Ajouter produit'"
+        [showNewButton]="o.statut !== 'signée'"
+        [showEditButton]="false"
+        (onNew)="addProduct()"
+        (onDelete)="deleteProduct($event)"
+      ></app-data-table-component>
+    </div>
+
+    @if (o.statut !== 'signée') {
+    <div class="mt-6 flex justify-end">
+      <button
+        type="button"
+        (click)="updateOrdonnance()"
+        class="px-10 py-3 cursor-pointer text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
+      >
+        Mettre à jour
+      </button>
+    </div>
+    } @if (showProductModal) {
+    <div
+      class="fixed inset-0 bg-black/10 flex items-center justify-center z-50"
+      (click)="closeProductModal()"
+    >
+      <div class="bg-white rounded p-5 w-96 shadow-md max-h-5xl" (click)="$event.stopPropagation()">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-medium text-gray-800">
+            {{ editingIndex !== null ? 'Modifier' : 'Ajouter' }} un produit
+          </h2>
+          <button
+            (click)="closeProductModal()"
+            class="text-gray-400 hover:text-gray-600 hover:cursor-pointer"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="size-4"
+            >
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <form [formGroup]="productForm" class="space-y-3">
+          <div class="relative">
+            <label class="block text-xs font-medium text-gray-600 mb-1">Produit</label>
+            <button
+              #produitTrigger
+              type="button"
+              class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 text-left text-sm flex items-center justify-between hover:bg-neutral-50"
+              (click)="toggleProduitDropdown()"
+              [attr.aria-expanded]="produitDropdownOpen"
+            >
+              <span>
+                {{ getProduitName(productForm.value.produitId) || 'Sélectionner un produit' }}
+              </span>
+              <svg
+                class="size-4 text-neutral-500"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+
+            @if (produitDropdownOpen) {
+            <div
+              #produitMenu
+              class="absolute left-0 top-full mt-2 w-full bg-white border border-neutral-300 rounded shadow-sm p-2 z-50"
+              (click)="$event.stopPropagation()"
+              (mousedown)="$event.stopPropagation()"
+            >
+              <input
+                type="text"
+                #produitSearchInput
+                [(ngModel)]="produitSearch"
+                [ngModelOptions]="{ standalone: true }"
+                placeholder="Rechercher un produit..."
+                class="w-full border border-neutral-300 rounded px-3 py-2 text-sm mb-2 focus:outline-none"
+                (click)="$event.stopPropagation()"
+                (mousedown)="$event.stopPropagation()"
+                (keydown.enter)="$event.preventDefault()"
+              />
+
+              <div class="max-h-44 overflow-y-auto">
+                <button
+                  type="button"
+                  class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
+                  *ngFor="let p of filteredProduits; let i = index"
+                  (mouseenter)="produitActiveIndex = i"
+                  [class.bg-blue-50]="
+                    produitActiveIndex === i || productForm.get('produitId')?.value === p.id
+                  "
+                  (click)="selectProduit(p)"
+                >
+                  {{ p.nom }} — {{ p.cout }}€
+                </button>
+
+                <div
+                  *ngIf="filteredProduits.length === 0"
+                  class="px-3 py-2 text-xs text-neutral-500"
+                >
+                  Aucun produit trouvé
+                </div>
+              </div>
+            </div>
+            }
+          </div>
+        </form>
+
+        <div class="flex justify-end space-x-2 mt-5">
+          <button
+            (click)="closeProductModal()"
+            class="px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded hover:bg-gray-50"
+          >
+            Annuler
+          </button>
+          <button
+            (click)="saveProduct()"
+            [disabled]="productForm.invalid"
+            class="px-3 py-1.5 text-xs font-medium text-white bg-blue-500 rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Enregistrer
+          </button>
+        </div>
+      </div>
+    </div>
+    } @if (showDeleteModal) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-black/30" (click)="cancelDelete()"></div>
+      <div
+        class="relative bg-white border border-neutral-300 rounded-lg shadow-lg w-full max-w-md p-6"
+      >
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-800">Confirmation</h3>
+          <button
+            type="button"
+            class="text-neutral-500 hover:text-neutral-700"
+            (click)="cancelDelete()"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="text-sm text-gray-700">
+          <p>Voulez-vous vraiment supprimer ce produit de l'ordonnance ?</p>
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-4">
+          <button type="button" class="px-3 py-1.5 text-xs rounded border" (click)="cancelDelete()">
+            Annuler
+          </button>
+          <button
+            type="button"
+            class="px-3 py-1.5 text-xs rounded bg-red-600 text-white hover:bg-red-700"
+            (click)="confirmDelete()"
+          >
+            Supprimer
+          </button>
+        </div>
+      </div>
+    </div>
+    }
+  </div>
+</ng-container>
+
+<ng-template #notFound>
+  <div class="text-sm text-gray-600">Ordonnance introuvable.</div>
+</ng-template>

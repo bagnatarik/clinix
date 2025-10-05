@@ -37,10 +37,11 @@ import { HospitalisationsService } from '../../../doctor/hospitalisations/hospit
 export class HospitalisationsListNurseComponent implements OnInit {
   columns: Column[] = [
     { key: 'id', label: 'ID', sortable: true },
-    { key: 'patient', label: 'Patient', sortable: true },
     { key: 'admissionDate', label: 'Date d’admission', sortable: true },
-    { key: 'service', label: 'Service', sortable: true },
-    { key: 'statut', label: 'Statut', sortable: true },
+    { key: 'dischargeDate', label: 'Date de sortie', sortable: true },
+    { key: 'motif', label: 'Motif', sortable: true },
+    { key: 'diagnostique', label: 'Diagnostique', sortable: true },
+    { key: 'chambre', label: 'Chambre', sortable: true },
     { key: 'actions', label: 'Actions', sortable: false },
   ];
 

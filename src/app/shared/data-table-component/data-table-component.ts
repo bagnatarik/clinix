@@ -21,6 +21,7 @@ export class DataTableComponent {
   @Input() showNewButton: boolean = true;
   @Input() manageUserAccount: boolean = false;
   @Input() showEditButton: boolean = true;
+  @Input() showViewButton: boolean = false;
 
   @Output() onNew = new EventEmitter<void>();
   @Output() onRefresh = new EventEmitter<void>();
@@ -30,6 +31,7 @@ export class DataTableComponent {
   @Output() onViewProfile = new EventEmitter<any>();
   @Output() onResetPassword = new EventEmitter<any>();
   @Output() onFirstAppointmentAction = new EventEmitter<any>();
+  @Output() onView = new EventEmitter<any>();
 
   search: string = '';
   sortKey: string = '';

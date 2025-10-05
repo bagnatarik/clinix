@@ -26,37 +26,52 @@ export const MENUS_BY_ROLE: MenusByRole = {
       ],
     },
     {
-      label: 'Prescriptions',
+      label: 'Mes prescriptions',
       slug: 'doctor-prescriptions',
-      route: '/dashboard/doctor/prescriptions',
-      children: [
-        { label: 'Mes prescriptions', route: '/dashboard/doctor/prescriptions/list' },
-        { label: 'Nouvelle prescription', route: '/dashboard/doctor/prescriptions/new' },
-      ],
+      route: '/dashboard/doctor/prescriptions/list',
     },
+    // {
+    //   label: 'Prescriptions',
+    //   slug: 'doctor-prescriptions',
+    //   route: '/dashboard/doctor/prescriptions',
+    //   children: [
+    //     { label: 'Mes prescriptions', route: '/dashboard/doctor/prescriptions/list' },
+    //     { label: 'Nouvelle prescription', route: '/dashboard/doctor/prescriptions/new' },
+    //   ],
+    // },
     {
       label: 'Rendez-vous',
       slug: 'doctor-rendezvous',
-      route: '/dashboard/doctor/rendezvous',
-      children: [{ label: 'Mes rendez-vous', route: '/dashboard/doctor/rendezvous/list' }],
+      route: '/dashboard/doctor/rendezvous/list',
+      // children: [{ label: 'Mes rendez-vous', route: '/dashboard/doctor/rendezvous/list' }],
     },
+    // {
+    //   label: 'Diagnostics',
+    //   slug: 'doctor-diagnostics',
+    //   route: '/dashboard/doctor/diagnostics',
+    //   children: [
+    //     { label: 'Historique diagnostics', route: '/dashboard/doctor/diagnostics/list' },
+    //     { label: 'Ajouter un diagnostic', route: '/dashboard/doctor/diagnostics/new' },
+    //   ],
+    // },
     {
-      label: 'Diagnostics',
+      label: 'Historique diagnostics',
       slug: 'doctor-diagnostics',
-      route: '/dashboard/doctor/diagnostics',
-      children: [
-        { label: 'Historique diagnostics', route: '/dashboard/doctor/diagnostics/list' },
-        { label: 'Ajouter un diagnostic', route: '/dashboard/doctor/diagnostics/new' },
-      ],
+      route: '/dashboard/doctor/diagnostics/list',
     },
+    // {
+    //   label: 'Hospitalisations',
+    //   slug: 'doctor-hospitalisations',
+    //   route: '/dashboard/doctor/hospitalisations',
+    //   children: [
+    //     { label: 'Suivi hospitalisations', route: '/dashboard/doctor/hospitalisations/list' },
+    //     { label: 'Nouvelle hospitalisation', route: '/dashboard/doctor/hospitalisations/new' },
+    //   ],
+    // },
     {
-      label: 'Hospitalisations',
+      label: 'Suivi hospitalisations',
       slug: 'doctor-hospitalisations',
-      route: '/dashboard/doctor/hospitalisations',
-      children: [
-        { label: 'Suivi hospitalisations', route: '/dashboard/doctor/hospitalisations/list' },
-        { label: 'Nouvelle hospitalisation', route: '/dashboard/doctor/hospitalisations/new' },
-      ],
+      route: '/dashboard/doctor/hospitalisations/list',
     },
     {
       label: 'Ordonnances',

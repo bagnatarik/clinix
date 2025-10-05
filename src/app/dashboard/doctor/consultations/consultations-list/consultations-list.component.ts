@@ -16,10 +16,14 @@ import { Column } from '../../../../core/interfaces/column';
 export class ConsultationsListComponent implements OnInit {
   columns: Column[] = [
     { key: 'id', label: 'ID', sortable: true },
-    { key: 'patient', label: 'Patient', sortable: true },
     { key: 'date', label: 'Date', sortable: true },
-    { key: 'motif', label: 'Motif', sortable: true },
+    { key: 'typeConsultation', label: 'Type consultation', sortable: true },
+    { key: 'description', label: 'Description', sortable: true },
     { key: 'statut', label: 'Statut', sortable: true },
+    { key: 'cout', label: 'Coût', sortable: true },
+    { key: 'poids', label: 'Poids', sortable: true },
+    { key: 'temperature', label: 'Température', sortable: true },
+    { key: 'tension', label: 'Tension', sortable: true },
     { key: 'actions', label: 'Actions', sortable: false },
   ];
   dataSource: Consultation[] = [];

@@ -16,13 +16,19 @@ import { Column } from '../../../../core/interfaces/column';
 export class HospitalisationsListComponent implements OnInit {
   columns: Column[] = [
     { key: 'id', label: 'ID', sortable: true },
-    { key: 'patient', label: 'Patient', sortable: true },
     { key: 'admissionDate', label: 'Date d’admission', sortable: true },
-    { key: 'service', label: 'Service', sortable: true },
-    { key: 'statut', label: 'Statut', sortable: true },
+    { key: 'dischargeDate', label: 'Date de sortie', sortable: true },
+    { key: 'motif', label: 'Motif', sortable: true },
+    { key: 'chambre', label: 'Chambre', sortable: true },
+    { key: 'typeChambre', label: 'Type de chambre', sortable: true },
+    { key: 'etage', label: 'Étage', sortable: true },
     { key: 'actions', label: 'Actions', sortable: false },
   ];
   dataSource: Hospitalisation[] = [];
+
+  // Modal de confirmation de suppression
+  confirmDeleteOpen = false;
+  toDelete: Hospitalisation | null = null;
 
   constructor(private service: HospitalisationsService, private router: Router) {}
 
@@ -30,5 +36,25 @@ export class HospitalisationsListComponent implements OnInit {
   refresh() { this.service.getAll().subscribe((data) => (this.dataSource = data)); }
   addNew() { this.router.navigate(['/dashboard/doctor/hospitalisations/new']); }
   edit(row: Hospitalisation) {}
-  delete(row: Hospitalisation) { this.service.delete(row.id).subscribe(() => this.refresh()); }
+  // Ouvre le modal au lieu de supprimer directement
+  delete(row: Hospitalisation) {
+    this.toDelete = row;
+    this.confirmDeleteOpen = true;
+  }
+
+  // Confirme la suppression et rafraîchit
+  confirmDelete() {
+    if (!this.toDelete) return;
+    this.service.delete(this.toDelete.id).subscribe(() => {
+      this.confirmDeleteOpen = false;
+      this.toDelete = null;
+      this.refresh();
+    });
+  }
+
+  // Annule la suppression
+  cancelDelete() {
+    this.confirmDeleteOpen = false;
+    this.toDelete = null;
+  }
 }
