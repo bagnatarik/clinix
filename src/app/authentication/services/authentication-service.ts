@@ -37,6 +37,20 @@ export class AuthenticationService {
       role: 'patient' as Role,
     },
     {
+      id: '5',
+      email: 'nurse@clinix.com',
+      password: 'nurse123',
+      name: 'Nurse User',
+      role: 'nurse' as Role,
+    },
+    {
+      id: '6',
+      email: 'laborant@clinix.com',
+      password: 'laborant123',
+      name: 'Laborant User',
+      role: 'laborant' as Role,
+    },
+    {
       id: '4',
       email: 'tarikbagnapro@gmail.com',
       password: 'azertyuiop',
@@ -116,5 +130,17 @@ export class AuthenticationService {
       return JSON.parse(userInfo) as UserInfo;
     }
     return null;
+  }
+
+  // Expose all users (sans mot de passe) pour alimenter des sélecteurs
+  getAllUsers(): Observable<Array<{ id: string; email: string; name: string; role: Role }>> {
+    return of(
+      this.mockUsers.map((u) => ({
+        id: u.id,
+        email: u.email,
+        name: u.name,
+        role: (u.role as string).toLowerCase() as Role,
+      }))
+    );
   }
 }

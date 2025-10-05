@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DataTableComponent } from '../../shared/data-table-component/data-table-component';
 import { Column } from '../../core/interfaces/column';
@@ -10,13 +10,12 @@ import { Departement } from '../../core/interfaces/admin';
   selector: 'app-departements',
   imports: [DataTableComponent, FormsModule],
   templateUrl: './departements.html',
-  styleUrl: './departements.css'
+  styleUrl: './departements.css',
 })
-export class Departements {
+export class Departements implements OnInit {
   columns: Column[] = [
     { key: 'id', label: 'ID', sortable: true },
     { key: 'libelle', label: 'Libellé département', sortable: true },
-    { key: 'nbPersonnels', label: 'Nombre de personnels', sortable: true },
     { key: 'actions', label: 'Actions', sortable: false },
   ];
 
@@ -29,11 +28,10 @@ export class Departements {
   deptForm = {
     id: '',
     libelle: '',
-    nbPersonnels: 0,
   };
 
   handleNew() {
-    this.deptForm = { id: '', libelle: '', nbPersonnels: 0 };
+    this.deptForm = { id: '', libelle: '' };
     this.showCreateModal = true;
   }
 
@@ -41,14 +39,20 @@ export class Departements {
 
   departements: Departement[] = [];
 
-  handleRefresh() { this.refresh(); }
+  handleRefresh() {
+    this.refresh();
+  }
   private refresh() {
     this.service.getAll().subscribe((list) => (this.departements = list));
   }
 
+  ngOnInit(): void {
+    this.refresh();
+  }
+
   handleEdit(dept: any) {
     this.currentDept = dept;
-    this.deptForm = { ...dept };
+    this.deptForm = { id: dept.id ?? '', libelle: dept.libelle ?? '' };
     this.showEditModal = true;
   }
 
@@ -62,24 +66,20 @@ export class Departements {
   }
 
   createDept() {
-    const { id, libelle, nbPersonnels } = this.deptForm;
-    this.service
-      .create({ id: id || undefined, libelle: libelle!, nbPersonnels: Number(nbPersonnels) })
-      .subscribe(() => {
-        this.showCreateModal = false;
-        this.refresh();
-      });
+    const { libelle } = this.deptForm;
+    this.service.create({ id: 'UNID', libelle: libelle! }).subscribe(() => {
+      this.showCreateModal = false;
+      this.refresh();
+    });
   }
 
   updateDept() {
     if (this.currentDept) {
-      const { libelle, nbPersonnels } = this.deptForm;
-      this.service
-        .update(this.currentDept.id, { libelle, nbPersonnels: Number(nbPersonnels) })
-        .subscribe(() => {
-          this.showEditModal = false;
-          this.refresh();
-        });
+      const { libelle } = this.deptForm;
+      this.service.update(this.currentDept.id, { libelle }).subscribe(() => {
+        this.showEditModal = false;
+        this.refresh();
+      });
     } else {
       this.showEditModal = false;
     }

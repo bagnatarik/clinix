@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { toast } from 'ngx-sonner';
 import { Column } from '../../core/interfaces/column';
 import { DataTableComponent } from '../../shared/data-table-component/data-table-component';
@@ -12,12 +12,10 @@ import { Specialite } from '../../core/interfaces/admin';
   templateUrl: './specialites.html',
   styleUrl: './specialites.css',
 })
-export class Specialites {
+export class Specialites implements OnInit {
   columns: Column[] = [
     { key: 'id', label: 'ID', sortable: true },
-    { key: 'libelle', label: 'Libellé spécialité', sortable: true },
-    { key: 'description', label: 'Description', sortable: true },
-    { key: 'nbPersonnel', label: 'Nombre de personnels associés', sortable: true },
+    { key: 'libelle', label: 'Libellé', sortable: true },
     { key: 'actions', label: 'Actions', sortable: false },
   ];
 
@@ -32,10 +30,13 @@ export class Specialites {
   // Form model for create/edit
   specialiteForm = {
     libelle: '',
-    description: '',
   };
 
   constructor(private service: SpecialitesService) {}
+
+  ngOnInit() {
+    this.refresh();
+  }
 
   specialites: Specialite[] = [];
 
@@ -45,7 +46,7 @@ export class Specialites {
 
   // Event handlers
   handleNew() {
-    this.specialiteForm = { libelle: '', description: '' };
+    this.specialiteForm = { libelle: '' };
     this.showCreateModal = true;
   }
 
@@ -53,10 +54,7 @@ export class Specialites {
 
   handleEdit(specialite: any) {
     this.currentSpecialite = specialite;
-    this.specialiteForm = {
-      libelle: specialite.libelle,
-      description: specialite.description,
-    };
+    this.specialiteForm = { libelle: specialite.libelle };
     this.showEditModal = true;
   }
 
@@ -72,8 +70,10 @@ export class Specialites {
 
   // CRUD operations
   createSpecialite() {
-    const { libelle, description } = this.specialiteForm;
-    this.service.create({ libelle: libelle!, description: description!, nbPersonnel: 0 }).subscribe(() => {
+    const { libelle } = this.specialiteForm;
+    // L'id est généré côté backend; on n'envoie que le libellé
+    // Description par défaut vide pour compatibilité avec le service
+    this.service.create({ libelle: libelle!, description: '', nbPersonnel: 0 }).subscribe(() => {
       toast.success('Spécialité créée avec succès');
       this.showCreateModal = false;
       this.refresh();
@@ -82,9 +82,9 @@ export class Specialites {
 
   updateSpecialite() {
     if (this.currentSpecialite) {
-      const { libelle, description } = this.specialiteForm;
+      const { libelle } = this.specialiteForm;
       this.service
-        .update(this.currentSpecialite.id, { libelle, description })
+        .update(this.currentSpecialite.id, { libelle })
         .subscribe(() => {
           toast.success('Spécialité mise à jour avec succès');
           this.showEditModal = false;

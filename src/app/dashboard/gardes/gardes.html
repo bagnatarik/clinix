@@ -19,7 +19,7 @@
   class="fixed inset-0 bg-black/10 flex items-center justify-center z-50"
   (click)="showCreateModal = false"
 >
-  <div class="bg-white rounded p-5 w-[560px] shadow-md" (click)="$event.stopPropagation()">
+  <div class="bg-white rounded p-5 w-96 shadow-md" (click)="$event.stopPropagation()">
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-lg font-medium text-gray-800">Ajouter une garde</h2>
       <button
@@ -45,36 +45,10 @@
     </div>
     <div class="grid grid-cols-2 gap-3">
       <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">ID</label>
-        <input
-          type="text"
-          [(ngModel)]="gardeForm.id"
-          class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm"
-        />
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Personnel</label>
-        <input
-          type="text"
-          [(ngModel)]="gardeForm.personnel"
-          placeholder="Ex: Dr. Ndiaye"
-          class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm"
-        />
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Département</label>
-        <input
-          type="text"
-          [(ngModel)]="gardeForm.departement"
-          placeholder="Ex: Urgences"
-          class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm"
-        />
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Date</label>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Date début</label>
         <input
           type="date"
-          [(ngModel)]="gardeForm.date"
+          [(ngModel)]="gardeForm.dateDebut"
           class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm"
         />
       </div>
@@ -87,23 +61,20 @@
         />
       </div>
       <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Date fin</label>
+        <input
+          type="date"
+          [(ngModel)]="gardeForm.dateFin"
+          class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm"
+        />
+      </div>
+      <div>
         <label class="block text-xs font-medium text-gray-600 mb-1">Heure fin</label>
         <input
           type="time"
           [(ngModel)]="gardeForm.heureFin"
           class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm"
         />
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Statut</label>
-        <select
-          [(ngModel)]="gardeForm.statut"
-          class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm"
-        >
-          <option value="planifiée">planifiée</option>
-          <option value="en cours">en cours</option>
-          <option value="terminée">terminée</option>
-        </select>
       </div>
     </div>
     <div class="flex justify-end space-x-2 mt-5">
@@ -127,7 +98,7 @@
   class="fixed inset-0 bg-black/10 flex items-center justify-center z-50"
   (click)="showEditModal = false"
 >
-  <div class="bg-white rounded p-5 w-[560px] shadow-md" (click)="$event.stopPropagation()">
+  <div class="bg-white rounded p-5 w-96 shadow-md" (click)="$event.stopPropagation()">
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-lg font-medium text-gray-800">Modifier la garde</h2>
       <button
@@ -153,34 +124,10 @@
     </div>
     <div class="grid grid-cols-2 gap-3">
       <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">ID</label>
-        <input
-          type="text"
-          [(ngModel)]="gardeForm.id"
-          class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm"
-        />
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Personnel</label>
-        <input
-          type="text"
-          [(ngModel)]="gardeForm.personnel"
-          class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm"
-        />
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Département</label>
-        <input
-          type="text"
-          [(ngModel)]="gardeForm.departement"
-          class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm"
-        />
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Date</label>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Date début</label>
         <input
           type="date"
-          [(ngModel)]="gardeForm.date"
+          [(ngModel)]="gardeForm.dateDebut"
           class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm"
         />
       </div>
@@ -193,23 +140,20 @@
         />
       </div>
       <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Date fin</label>
+        <input
+          type="date"
+          [(ngModel)]="gardeForm.dateFin"
+          class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm"
+        />
+      </div>
+      <div>
         <label class="block text-xs font-medium text-gray-600 mb-1">Heure fin</label>
         <input
           type="time"
           [(ngModel)]="gardeForm.heureFin"
           class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm"
         />
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Statut</label>
-        <select
-          [(ngModel)]="gardeForm.statut"
-          class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm"
-        >
-          <option value="planifiée">planifiée</option>
-          <option value="en cours">en cours</option>
-          <option value="terminée">terminée</option>
-        </select>
       </div>
     </div>
     <div class="flex justify-end space-x-2 mt-5">
@@ -233,7 +177,7 @@
   class="fixed inset-0 bg-black/10 flex items-center justify-center z-50"
   (click)="showDeleteModal = false"
 >
-  <div class="bg-white rounded p-5 w-[560px] shadow-md" (click)="$event.stopPropagation()">
+  <div class="bg-white rounded p-5 w-96 shadow-md" (click)="$event.stopPropagation()">
     <div class="flex justify-between items-center mb-3">
       <h2 class="text-lg font-medium text-gray-800">Supprimer la garde</h2>
       <button

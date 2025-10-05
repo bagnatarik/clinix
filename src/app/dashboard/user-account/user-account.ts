@@ -24,23 +24,55 @@ export class UserAccount {
     { key: 'actions', label: 'Actions', sortable: true },
   ];
 
+  // Table des rôles (id, libellé)
+  roles: Array<{ id: string; libelle: string }> = [
+    { id: 'admin', libelle: 'Admin' },
+    { id: 'doctor', libelle: 'Docteur' },
+    { id: 'nurse', libelle: 'Infirmière' },
+    { id: 'laborant', libelle: 'Laborantin' },
+    { id: 'patient', libelle: 'Patient' },
+  ];
+
   // Modals visibility
   showCreateModal = false;
   showEditModal = false;
   showDeleteModal = false;
+  showViewModal = false;
+  showResetPasswordModal = false;
 
   // Current user being edited or deleted
   currentUser: any = null;
 
   // Form model for create/edit
   userForm = {
-    name: '',
     email: '',
+    password: '',
+    sexe: '',
+    nom: '',
+    prenom: '',
+    telephone: '',
+    adresse: '',
+    role: '',
+  };
+
+  // Formulaire pour changement de mot de passe
+  passwordForm = {
+    newPassword: '',
+    confirmPassword: '',
   };
 
   // Event handlers
   handleNew() {
-    this.userForm = { name: '', email: '' };
+    this.userForm = {
+      email: '',
+      password: this.generatePassword(),
+      sexe: '',
+      nom: '',
+      prenom: '',
+      telephone: '',
+      adresse: '',
+      role: '',
+    };
     this.showCreateModal = true;
   }
   handleRefresh() {
@@ -49,8 +81,28 @@ export class UserAccount {
 
   handleEdit(user: any) {
     this.currentUser = user;
-    this.userForm = { name: user.name, email: user.email };
+    this.userForm = {
+      email: user.email || '',
+      password: '',
+      sexe: user.sexe || '',
+      nom: user.nom || '',
+      prenom: user.prenom || '',
+      telephone: user.telephone || '',
+      adresse: user.adresse || '',
+      role: this.roleIdFromLabel(user.role || ''),
+    };
     this.showEditModal = true;
+  }
+
+  handleViewProfile(user: any) {
+    this.currentUser = user;
+    this.showViewModal = true;
+  }
+
+  handleResetPassword(user: any) {
+    this.currentUser = user;
+    this.passwordForm = { newPassword: '', confirmPassword: '' };
+    this.showResetPasswordModal = true;
   }
 
   handleDelete(user: any) {
@@ -65,12 +117,21 @@ export class UserAccount {
 
   // CRUD operations
   createUser() {
-    // const newId = Math.max(...this.users.map((u) => u.id)) + 1;
-    // this.users.push({
-    //   id: newId,
-    //   name: this.userForm.name,
-    //   email: this.userForm.email,
-    // });
+    const id = this.generateId(this.userForm.nom, this.userForm.prenom);
+    const dateCreation = this.todayFr();
+    this.users.push({
+      id,
+      nom: this.userForm.nom,
+      prenom: this.userForm.prenom,
+      email: this.userForm.email,
+      telephone: this.userForm.telephone,
+      adresse: this.userForm.adresse,
+      sexe: this.userForm.sexe,
+      role: this.roleLabel(this.userForm.role),
+      statut: 'Actif',
+      dateCreation,
+    });
+    toast.success('Utilisateur créé');
     this.showCreateModal = false;
   }
 
@@ -79,9 +140,13 @@ export class UserAccount {
       const index = this.users.findIndex((u) => u.id === this.currentUser.id);
       if (index !== -1) {
         this.users[index] = {
-          ...this.currentUser,
-          name: this.userForm.name,
+          ...this.users[index],
+          nom: this.userForm.nom,
+          prenom: this.userForm.prenom,
           email: this.userForm.email,
+          telephone: this.userForm.telephone,
+          adresse: this.userForm.adresse,
+          role: this.roleLabel(this.userForm.role),
         };
       }
     }
@@ -95,6 +160,58 @@ export class UserAccount {
     this.showDeleteModal = false;
   }
 
+  closeView() {
+    this.showViewModal = false;
+  }
+
+  resetPassword() {
+    const { newPassword, confirmPassword } = this.passwordForm;
+    if (!newPassword || newPassword.length < 8) {
+      toast.error('Le mot de passe doit comporter au moins 8 caractères');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('Les mots de passe ne correspondent pas');
+      return;
+    }
+    // Simulation de la mise à jour côté serveur
+    toast.success(`Mot de passe mis à jour pour l’utilisateur ${this.currentUser?.id || ''}`);
+    this.showResetPasswordModal = false;
+  }
+
+  generatePassword(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789@$!%*?&';
+    let pass = '';
+    for (let i = 0; i < 10; i++) pass += chars[Math.floor(Math.random() * chars.length)];
+    toast.info('Mot de passe généré avec succès');
+    return pass;
+  }
+
+  roleLabel(roleId: string): string {
+    const found = this.roles.find((r) => r.id === roleId);
+    return found?.libelle || roleId || '';
+  }
+
+  roleIdFromLabel(label: string): string {
+    const found = this.roles.find((r) => r.libelle === label);
+    return found?.id || '';
+  }
+
+  generateId(nom: string, prenom: string): string {
+    const n = (nom || '').toUpperCase().padEnd(3, 'X').slice(0, 3);
+    const p = (prenom || '').toUpperCase().padEnd(2, 'X').slice(0, 2);
+    const num = String(Math.floor(Math.random() * 100)).padStart(2, '0');
+    return `${n}${p}${num}`;
+  }
+
+  todayFr(): string {
+    const d = new Date();
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  }
+
   users = [
     {
       id: 'DOEJO00',
@@ -105,6 +222,8 @@ export class UserAccount {
       role: 'Admin',
       statut: 'Actif',
       dateCreation: '01-01-2023',
+      sexe: 'Homme',
+      adresse: '123 Rue de la Santé, Lomé',
     },
     {
       id: 'SMIAL01',
@@ -115,6 +234,8 @@ export class UserAccount {
       role: 'Docteur',
       statut: 'Actif',
       dateCreation: '02-01-2023',
+      sexe: 'Femme',
+      adresse: '456 Avenue des Fleurs, Sokodé',
     },
     {
       id: 'JOHBO02',
@@ -125,6 +246,8 @@ export class UserAccount {
       role: 'Infirmière',
       statut: 'Inactif',
       dateCreation: '03-01-2023',
+      sexe: 'Homme',
+      adresse: '789 Boulevard du Marché, Kara',
     },
     {
       id: 'BROCH03',
@@ -135,6 +258,8 @@ export class UserAccount {
       role: 'Patient',
       statut: 'Actif',
       dateCreation: '04-01-2023',
+      sexe: 'Homme',
+      adresse: '321 Rue de l’Église, Kpalimé',
     },
     {
       id: 'DAVDA04',
@@ -145,6 +270,8 @@ export class UserAccount {
       role: 'Laborantin',
       statut: 'Actif',
       dateCreation: '05-01-2023',
+      sexe: 'Homme',
+      adresse: '654 Avenue de la Paix, Atakpamé',
     },
     {
       id: 'WILEV05',
@@ -155,6 +282,8 @@ export class UserAccount {
       role: 'Docteur',
       statut: 'Actif',
       dateCreation: '06-01-2023',
+      sexe: 'Femme',
+      adresse: '987 Rue du Stade, Tsévié',
     },
     {
       id: 'MILFR06',
@@ -165,6 +294,8 @@ export class UserAccount {
       role: 'Infirmière',
       statut: 'Inactif',
       dateCreation: '07-01-2023',
+      sexe: 'Homme',
+      adresse: '147 Boulevard de l’Indépendance, Aného',
     },
     {
       id: 'TAYGR07',
@@ -175,6 +306,8 @@ export class UserAccount {
       role: 'Patient',
       statut: 'Actif',
       dateCreation: '08-01-2023',
+      sexe: 'Femme',
+      adresse: '258 Rue des Ecoles, Dapaong',
     },
     {
       id: 'ANDHE08',
@@ -185,6 +318,8 @@ export class UserAccount {
       role: 'Admin',
       statut: 'Actif',
       dateCreation: '09-01-2023',
+      sexe: 'Femme',
+      adresse: '369 Avenue du Cinéma, Mango',
     },
     {
       id: 'THOIV09',
@@ -195,6 +330,8 @@ export class UserAccount {
       role: 'Laborantin',
       statut: 'Actif',
       dateCreation: '10-01-2023',
+      sexe: 'Homme',
+      adresse: '741 Rue du Marché, Bassar',
     },
     {
       id: 'JACJU10',
@@ -205,6 +342,8 @@ export class UserAccount {
       role: 'Docteur',
       statut: 'Inactif',
       dateCreation: '11-01-2023',
+      sexe: 'Femme',
+      adresse: '852 Boulevard des Arts, Amlamé',
     },
     {
       id: 'WHIKA11',
@@ -215,6 +354,8 @@ export class UserAccount {
       role: 'Infirmière',
       statut: 'Actif',
       dateCreation: '12-01-2023',
+      sexe: 'Homme',
+      adresse: '963 Rue de la Gare, Notsé',
     },
     {
       id: 'HARLI12',
@@ -225,6 +366,8 @@ export class UserAccount {
       role: 'Patient',
       statut: 'Actif',
       dateCreation: '13-01-2023',
+      sexe: 'Homme',
+      adresse: '159 Avenue de la Liberté, Sotouboua',
     },
     {
       id: 'MARMIA13',
@@ -235,6 +378,8 @@ export class UserAccount {
       role: 'Admin',
       statut: 'Actif',
       dateCreation: '14-01-2023',
+      sexe: 'Femme',
+      adresse: '357 Rue du Pont, Tchamba',
     },
     {
       id: 'THONO14',
@@ -245,6 +390,8 @@ export class UserAccount {
       role: 'Laborantin',
       statut: 'Inactif',
       dateCreation: '15-01-2023',
+      sexe: 'Femme',
+      adresse: '486 Boulevard du Lac, Badou',
     },
     {
       id: 'GAROS15',
@@ -255,6 +402,8 @@ export class UserAccount {
       role: 'Docteur',
       statut: 'Actif',
       dateCreation: '16-01-2023',
+      sexe: 'Homme',
+      adresse: '572 Rue des Palmiers, Kandé',
     },
     {
       id: 'MARPH16',
@@ -265,6 +414,8 @@ export class UserAccount {
       role: 'Infirmière',
       statut: 'Actif',
       dateCreation: '17-01-2023',
+      sexe: 'Femme',
+      adresse: '618 Avenue du Soleil, Pagouda',
     },
     {
       id: 'ROBQU17',
@@ -275,6 +426,8 @@ export class UserAccount {
       role: 'Patient',
       statut: 'Actif',
       dateCreation: '18-01-2023',
+      sexe: 'Homme',
+      adresse: '834 Rue de la Montagne, Tabligbo',
     },
     {
       id: 'CLARA18',
@@ -285,6 +438,8 @@ export class UserAccount {
       role: 'Admin',
       statut: 'Inactif',
       dateCreation: '19-01-2023',
+      sexe: 'Femme',
+      adresse: '925 Boulevard de la Mer, Agbodrafo',
     },
     {
       id: 'LEWSA19',
@@ -295,6 +450,8 @@ export class UserAccount {
       role: 'Laborantin',
       statut: 'Actif',
       dateCreation: '20-01-2023',
+      sexe: 'Homme',
+      adresse: '113 Rue du Bois, Zio',
     },
     {
       id: 'LEETA20',
@@ -305,6 +462,8 @@ export class UserAccount {
       role: 'Docteur',
       statut: 'Actif',
       dateCreation: '21-01-2023',
+      sexe: 'Femme',
+      adresse: '246 Avenue des Roses, Vogan',
     },
     {
       id: 'WALUM21',
@@ -315,6 +474,8 @@ export class UserAccount {
       role: 'Infirmière',
       statut: 'Actif',
       dateCreation: '22-01-2023',
+      sexe: 'Femme',
+      adresse: '379 Rue du Temple, Kpagouda',
     },
     {
       id: 'HALVI22',
@@ -325,6 +486,8 @@ export class UserAccount {
       role: 'Patient',
       statut: 'Actif',
       dateCreation: '23-01-2023',
+      sexe: 'Homme',
+      adresse: '508 Boulevard des Sports, Tohoun',
     },
     {
       id: 'ALLWE23',
@@ -335,6 +498,8 @@ export class UserAccount {
       role: 'Admin',
       statut: 'Inactif',
       dateCreation: '24-01-2023',
+      sexe: 'Femme',
+      adresse: '642 Rue de l’Hôpital, Lokossa',
     },
     {
       id: 'YOUXA24',
@@ -345,6 +510,8 @@ export class UserAccount {
       role: 'Laborantin',
       statut: 'Actif',
       dateCreation: '25-01-2023',
+      sexe: 'Homme',
+      adresse: '775 Avenue des Acacias, Aneho',
     },
     {
       id: 'HERYA25',
@@ -355,6 +522,8 @@ export class UserAccount {
       role: 'Docteur',
       statut: 'Actif',
       dateCreation: '26-01-2023',
+      sexe: 'Femme',
+      adresse: '881 Rue du Coq, Grand-Popo',
     },
     {
       id: 'KINZA26',
@@ -365,6 +534,8 @@ export class UserAccount {
       role: 'Infirmière',
       statut: 'Actif',
       dateCreation: '27-01-2023',
+      sexe: 'Homme',
+      adresse: '999 Boulevard des Lions, Ouidah',
     },
     {
       id: 'WRIAB27',
@@ -375,6 +546,8 @@ export class UserAccount {
       role: 'Patient',
       statut: 'Inactif',
       dateCreation: '28-01-2023',
+      sexe: 'Femme',
+      adresse: '112 Rue des Étoiles, Cotonou',
     },
     {
       id: 'LOPBR28',
@@ -385,6 +558,8 @@ export class UserAccount {
       role: 'Admin',
       statut: 'Actif',
       dateCreation: '29-01-2023',
+      sexe: 'Homme',
+      adresse: '334 Avenue du Rêve, Parakou',
     },
     {
       id: 'HILCA29',
@@ -395,6 +570,8 @@ export class UserAccount {
       role: 'Laborantin',
       statut: 'Actif',
       dateCreation: '30-01-2023',
+      sexe: 'Femme',
+      adresse: '557 Rue du Parc, Natitingou',
     },
     {
       id: 'GREDE30',
@@ -405,6 +582,8 @@ export class UserAccount {
       role: 'Docteur',
       statut: 'Actif',
       dateCreation: '31-01-2023',
+      sexe: 'Homme',
+      adresse: '778 Boulevard du Moulin, Djougou',
     },
     {
       id: 'ADAEL31',
@@ -415,6 +594,8 @@ export class UserAccount {
       role: 'Infirmière',
       statut: 'Inactif',
       dateCreation: '01-02-2023',
+      sexe: 'Femme',
+      adresse: '990 Rue du Souvenir, Bohicon',
     },
     {
       id: 'BAKFI32',
@@ -425,6 +606,8 @@ export class UserAccount {
       role: 'Patient',
       statut: 'Actif',
       dateCreation: '02-02-2023',
+      sexe: 'Homme',
+      adresse: '221 Avenue du Vent, Abomey',
     },
     {
       id: 'GONGI33',
@@ -435,6 +618,8 @@ export class UserAccount {
       role: 'Admin',
       statut: 'Actif',
       dateCreation: '03-02-2023',
+      sexe: 'Femme',
+      adresse: '443 Rue du Pont, Savalou',
     },
     {
       id: 'NELHA34',
@@ -445,6 +630,8 @@ export class UserAccount {
       role: 'Laborantin',
       statut: 'Actif',
       dateCreation: '04-02-2023',
+      sexe: 'Homme',
+      adresse: '666 Boulevard du Temps, Dogbo',
     },
     {
       id: 'CARIR35',
@@ -455,6 +642,8 @@ export class UserAccount {
       role: 'Docteur',
       statut: 'Inactif',
       dateCreation: '05-02-2023',
+      sexe: 'Femme',
+      adresse: '884 Rue de la Lune, Cové',
     },
     {
       id: 'MITJA36',
@@ -465,6 +654,8 @@ export class UserAccount {
       role: 'Infirmière',
       statut: 'Actif',
       dateCreation: '06-02-2023',
+      sexe: 'Homme',
+      adresse: '115 Avenue du Soleil, Glazoué',
     },
     {
       id: 'PERKA37',
@@ -475,6 +666,8 @@ export class UserAccount {
       role: 'Patient',
       statut: 'Actif',
       dateCreation: '07-02-2023',
+      sexe: 'Femme',
+      adresse: '339 Rue des Nuages, Bembéréké',
     },
     {
       id: 'ROBLE38',
@@ -485,6 +678,8 @@ export class UserAccount {
       role: 'Admin',
       statut: 'Actif',
       dateCreation: '08-02-2023',
+      sexe: 'Homme',
+      adresse: '558 Boulevard des Rêves, Tchaourou',
     },
     {
       id: 'TURMA39',
@@ -495,6 +690,8 @@ export class UserAccount {
       role: 'Laborantin',
       statut: 'Inactif',
       dateCreation: '09-02-2023',
+      sexe: 'Femme',
+      adresse: '772 Rue de l’Espoir, Kétou',
     },
   ];
 }

@@ -30,6 +30,6 @@ export class PrescriptionsListComponent implements OnInit {
 
   refresh() { this.service.getAll().subscribe((data) => (this.dataSource = data)); }
   addNew() { this.router.navigate(['/dashboard/doctor/prescriptions/new']); }
-  edit(row: Prescription) {}
+  edit(row: Prescription) { this.router.navigate(['/dashboard/doctor/prescriptions', row.id]); }
   delete(row: Prescription) { this.service.delete(row.id).subscribe(() => this.refresh()); }
 }

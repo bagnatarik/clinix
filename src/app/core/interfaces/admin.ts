@@ -1,7 +1,6 @@
 export interface Departement {
   id: string;
   libelle: string;
-  nbPersonnels: number;
   updatedBy?: string;
 }
 
@@ -29,15 +28,16 @@ export interface Personnel {
   specialite: string;
   departement: string;
   profession: string;
+  // Optionnel: planning associé au personnel
+  planning?: string;
   adresse: string;
   updatedBy?: string;
 }
 
 export interface Produit {
   id: string;
-  libelle: string;
+  nom: string;
   description: string;
-  prix: number;
-  quantite: number;
+  cout: number;
   updatedBy?: string;
 }

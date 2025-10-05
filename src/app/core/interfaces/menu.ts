@@ -35,6 +35,12 @@ export const MENUS_BY_ROLE: MenusByRole = {
       ],
     },
     {
+      label: 'Rendez-vous',
+      slug: 'doctor-rendezvous',
+      route: '/dashboard/doctor/rendezvous',
+      children: [{ label: 'Mes rendez-vous', route: '/dashboard/doctor/rendezvous/list' }],
+    },
+    {
       label: 'Diagnostics',
       slug: 'doctor-diagnostics',
       route: '/dashboard/doctor/diagnostics',
@@ -69,6 +75,60 @@ export const MENUS_BY_ROLE: MenusByRole = {
       slug: 'dashboard',
       route: '/dashboard/home',
     },
+    {
+      label: 'Patients',
+      slug: 'infirmier-patients',
+      route: '/dashboard/infirmier/patients',
+      children: [
+        { label: 'Liste patients', route: '/dashboard/infirmier/patients/list' },
+        { label: 'Nouveau patient', route: '/dashboard/infirmier/patients/new' },
+      ],
+    },
+    {
+      label: 'Rendez-vous',
+      slug: 'infirmier-rendezvous',
+      route: '/dashboard/infirmier/rendezvous',
+      children: [
+        { label: 'Mes rendez-vous', route: '/dashboard/infirmier/rendezvous/list' },
+        { label: 'Nouveau rendez-vous', route: '/dashboard/infirmier/rendezvous/new' },
+      ],
+    },
+    {
+      label: 'Prélèvements',
+      slug: 'infirmier-prelevements',
+      route: '/dashboard/infirmier/prelevements',
+      children: [
+        { label: 'Mes prélèvements', route: '/dashboard/infirmier/prelevements/list' },
+        { label: 'Nouveau prélèvement', route: '/dashboard/infirmier/prelevements/new' },
+      ],
+    },
+    {
+      label: 'Traitements',
+      slug: 'infirmier-traitements',
+      route: '/dashboard/infirmier/traitements',
+      children: [
+        { label: 'Suivi traitements', route: '/dashboard/infirmier/traitements/list' },
+        { label: 'Ajouter traitement', route: '/dashboard/infirmier/traitements/new' },
+      ],
+    },
+    {
+      label: 'Hospitalisations',
+      slug: 'infirmier-hospitalisations',
+      route: '/dashboard/infirmier/hospitalisations',
+      children: [
+        { label: 'Mes hospitalisations', route: '/dashboard/infirmier/hospitalisations/list' },
+        { label: 'Attribuer chambre', route: '/dashboard/infirmier/hospitalisations/new' },
+      ],
+    },
+    {
+      label: 'Facturation',
+      slug: 'infirmier-facturation',
+      route: '/dashboard/infirmier/facturation',
+      children: [
+        { label: 'Liste factures', route: '/dashboard/infirmier/facturation/list' },
+        { label: 'Nouvelle facture', route: '/dashboard/infirmier/facturation/new' },
+      ],
+    },
   ],
 
   laborant: [
@@ -76,6 +136,47 @@ export const MENUS_BY_ROLE: MenusByRole = {
       label: 'Dashboard',
       slug: 'dashboard',
       route: '/dashboard/home',
+    },
+    // {
+    //   label: 'Diagnostics',
+    //   slug: 'laborant-diagnostics',
+    //   route: '/dashboard/doctor/diagnostics',
+    //   children: [
+    //     { label: 'Historique diagnostics', route: '/dashboard/doctor/diagnostics/list' },
+    //     { label: 'Ajouter un diagnostic', route: '/dashboard/doctor/diagnostics/new' },
+    //   ],
+    // },
+    {
+      label: 'Prélèvements',
+      slug: 'laborant-prelevements',
+      route: '/dashboard/laborant/prelevements',
+      children: [
+        { label: 'Mes prélèvements', route: '/dashboard/laborant/prelevements/list' },
+        { label: 'Nouveau prélèvement', route: '/dashboard/laborant/prelevements/new' },
+      ],
+    },
+    {
+      label: 'Analyses',
+      slug: 'laborant-analyses',
+      route: '/dashboard/laborant/analyses',
+      children: [
+        { label: 'Historique analyses', route: '/dashboard/laborant/analyses/list' },
+        { label: 'Nouvelle analyse', route: '/dashboard/laborant/analyses/new' },
+      ],
+    },
+    {
+      label: "Résultats d'analyses",
+      slug: 'laborant-resultats-analyses',
+      route: '/dashboard/laborant/resultats-analyses',
+      children: [
+        { label: 'Historique résultats', route: '/dashboard/laborant/resultats-analyses/list' },
+        { label: 'Publier un résultat', route: '/dashboard/laborant/resultats-analyses/new' },
+      ],
+    },
+    {
+      label: 'Types de prélèvements',
+      slug: 'laborant-types-prelevements',
+      route: '/dashboard/types-prelevements',
     },
   ],
 
@@ -168,6 +269,11 @@ export const MENUS_BY_ROLE: MenusByRole = {
       route: '/dashboard/produits',
     },
     {
+      label: 'Analyses',
+      slug: 'admin-analyses',
+      route: '/dashboard/analyses',
+    },
+    {
       label: 'Types de prélèvements',
       slug: 'types-prelevements',
       route: '/dashboard/types-prelevements',
@@ -181,14 +287,15 @@ export const MENUS_BY_ROLE: MenusByRole = {
         { label: 'Planning', route: '/dashboard/planning' },
       ],
     },
-    {
-      label: 'Gestion des antécédants',
-      slug: 'antecedants',
-      route: '/dashboard/gestion-antecedants',
-      children: [
-        { label: "Types d'antécédant", route: '/dashboard/types-antecedant' },
-        { label: 'Antécédants', route: '/dashboard/antecedants' },
-      ],
-    },
+    { label: "Types d'antécédant", slug: 'antecedants', route: '/dashboard/types-antecedant' },
+    // {
+    //   label: 'Gestion des antécédants',
+    //   slug: 'antecedants',
+    //   route: '/dashboard/gestion-antecedants',
+    //   children: [
+    //     { label: "Types d'antécédant", route: '/dashboard/types-antecedant' },
+    //     { label: 'Antécédants', route: '/dashboard/antecedants' },
+    //   ],
+    // },
   ],
 };

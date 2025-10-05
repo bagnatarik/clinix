@@ -16,7 +16,7 @@
 
 @if (showCreateModal) {
 <div class="fixed inset-0 bg-black/10 flex items-center justify-center z-50" (click)="showCreateModal = false">
-  <div class="bg-white rounded p-5 w-[520px] shadow-md" (click)="$event.stopPropagation()">
+  <div class="bg-white rounded p-5 w-96 shadow-md" (click)="$event.stopPropagation()">
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-lg font-medium text-gray-800">Ajouter une chambre</h2>
       <button (click)="showCreateModal = false" class="text-gray-400 hover:text-gray-600 hover:cursor-pointer">
@@ -27,29 +27,143 @@
       </button>
     </div>
     <div class="grid grid-cols-2 gap-3">
+      
       <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">ID</label>
-        <input type="text" [(ngModel)]="roomForm.id" class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm" />
+        <label class="block text-xs font-medium text-gray-600 mb-1">Nombre de lits</label>
+        <input type="number" [(ngModel)]="roomForm.nbLits" class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm" />
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Numéro chambre</label>
-        <input type="text" [(ngModel)]="roomForm.numero" class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm" />
+        <label class="block text-xs font-medium text-gray-600 mb-1">Coût</label>
+        <input type="number" [(ngModel)]="roomForm.cout" class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm" />
       </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Étages (lié à ETAGES)</label>
-        <input type="text" [(ngModel)]="roomForm.etageLabel" placeholder="Ex: Étage 1" class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm" />
+      <div class="col-span-2">
+        <div class="relative">
+          <label class="block text-xs font-medium text-gray-500 mb-1">Étage</label>
+          <button
+            #etageTrigger
+            type="button"
+            class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 text-left text-sm flex items-center justify-between hover:bg-neutral-50"
+            (click)="toggleEtageDropdown()"
+            [attr.aria-expanded]="etageDropdownOpen"
+          >
+            <span>{{ roomForm.etageLabel || 'Sélectionner un étage' }}</span>
+            <svg
+              class="size-4 text-neutral-500"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+
+          @if (etageDropdownOpen) {
+          <div
+            #etageMenu
+            class="absolute left-0 top-full mt-2 w-full bg-white border border-neutral-300 rounded shadow-sm p-2 z-50"
+            (click)="$event.stopPropagation()"
+            (mousedown)="$event.stopPropagation()"
+          >
+            <input
+              type="text"
+              #etageSearchInput
+              [(ngModel)]="etageSearch"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="Rechercher un étage..."
+              class="w-full border border-neutral-300 rounded px-3 py-2 text-sm mb-2 focus:outline-none"
+              (click)="$event.stopPropagation()"
+              (mousedown)="$event.stopPropagation()"
+              (keydown.enter)="$event.preventDefault()"
+            />
+
+            <div class="max-h-44 overflow-y-auto">
+              <button
+                type="button"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
+                *ngFor="let e of filteredEtages; let i = index"
+                (mouseenter)="activeEtageIndex = i"
+                [class.bg-blue-50]="activeEtageIndex === i || roomForm.etageId === e.id"
+                (click)="selectEtage(e)"
+              >
+                {{ e.label }}
+              </button>
+
+              <div *ngIf="filteredEtages.length === 0" class="px-3 py-2 text-xs text-neutral-500">
+                Aucun étage trouvé
+              </div>
+            </div>
+          </div>
+          }
+        </div>
       </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Type de chambre</label>
-        <input type="text" [(ngModel)]="roomForm.typeLabel" placeholder="Ex: Standard" class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm" />
+
+      <div class="col-span-2">
+        <div class="relative">
+          <label class="block text-xs font-medium text-gray-500 mb-1">Type de chambre</label>
+          <button
+            #typeTrigger
+            type="button"
+            class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 text-left text-sm flex items-center justify-between hover:bg-neutral-50"
+            (click)="toggleTypeDropdown()"
+            [attr.aria-expanded]="typeDropdownOpen"
+          >
+            <span>{{ roomForm.typeLabel || 'Sélectionner un type' }}</span>
+            <svg
+              class="size-4 text-neutral-500"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+
+          @if (typeDropdownOpen) {
+          <div
+            #typeMenu
+            class="absolute left-0 top-full mt-2 w-full bg-white border border-neutral-300 rounded shadow-sm p-2 z-50"
+            (click)="$event.stopPropagation()"
+            (mousedown)="$event.stopPropagation()"
+          >
+            <input
+              type="text"
+              #typeSearchInput
+              [(ngModel)]="typeSearch"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="Rechercher un type..."
+              class="w-full border border-neutral-300 rounded px-3 py-2 text-sm mb-2 focus:outline-none"
+              (click)="$event.stopPropagation()"
+              (mousedown)="$event.stopPropagation()"
+              (keydown.enter)="$event.preventDefault()"
+            />
+
+            <div class="max-h-44 overflow-y-auto">
+              <button
+                type="button"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
+                *ngFor="let t of filteredTypes; let i = index"
+                (mouseenter)="activeTypeIndex = i"
+                [class.bg-blue-50]="activeTypeIndex === i || roomForm.typeId === t.id"
+                (click)="selectType(t)"
+              >
+                {{ t.label }}
+              </button>
+
+              <div *ngIf="filteredTypes.length === 0" class="px-3 py-2 text-xs text-neutral-500">
+                Aucun type trouvé
+              </div>
+            </div>
+          </div>
+          }
+        </div>
       </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Statut</label>
-        <select [(ngModel)]="roomForm.statut" class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm">
-          <option value="libre">libre</option>
-          <option value="occupée">occupée</option>
-        </select>
-      </div>
+      
     </div>
     <div class="flex justify-end space-x-2 mt-5">
       <button (click)="showCreateModal = false" class="px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded hover:bg-gray-50">Annuler</button>
@@ -61,7 +175,7 @@
 
 @if (showEditModal) {
 <div class="fixed inset-0 bg-black/10 flex items-center justify-center z-50" (click)="showEditModal = false">
-  <div class="bg-white rounded p-5 w-[520px] shadow-md" (click)="$event.stopPropagation()">
+  <div class="bg-white rounded p-5 w-96 shadow-md" (click)="$event.stopPropagation()">
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-lg font-medium text-gray-800">Modifier une chambre</h2>
       <button (click)="showEditModal = false" class="text-gray-400 hover:text-gray-600 hover:cursor-pointer">
@@ -72,29 +186,143 @@
       </button>
     </div>
     <div class="grid grid-cols-2 gap-3">
+      
       <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">ID</label>
-        <input type="text" [(ngModel)]="roomForm.id" class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm" />
+        <label class="block text-xs font-medium text-gray-600 mb-1">Nombre de lits</label>
+        <input type="number" [(ngModel)]="roomForm.nbLits" class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm" />
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Numéro chambre</label>
-        <input type="text" [(ngModel)]="roomForm.numero" class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm" />
+        <label class="block text-xs font-medium text-gray-600 mb-1">Coût</label>
+        <input type="number" [(ngModel)]="roomForm.cout" class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm" />
       </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Étages (lié à ETAGES)</label>
-        <input type="text" [(ngModel)]="roomForm.etageLabel" class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm" />
+      <div class="col-span-2">
+        <div class="relative">
+          <label class="block text-xs font-medium text-gray-500 mb-1">Étage</label>
+          <button
+            #etageTrigger
+            type="button"
+            class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 text-left text-sm flex items-center justify-between hover:bg-neutral-50"
+            (click)="toggleEtageDropdown()"
+            [attr.aria-expanded]="etageDropdownOpen"
+          >
+            <span>{{ roomForm.etageLabel || 'Sélectionner un étage' }}</span>
+            <svg
+              class="size-4 text-neutral-500"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+
+          @if (etageDropdownOpen) {
+          <div
+            #etageMenu
+            class="absolute left-0 top-full mt-2 w-full bg-white border border-neutral-300 rounded shadow-sm p-2 z-50"
+            (click)="$event.stopPropagation()"
+            (mousedown)="$event.stopPropagation()"
+          >
+            <input
+              type="text"
+              #etageSearchInput
+              [(ngModel)]="etageSearch"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="Rechercher un étage..."
+              class="w-full border border-neutral-300 rounded px-3 py-2 text-sm mb-2 focus:outline-none"
+              (click)="$event.stopPropagation()"
+              (mousedown)="$event.stopPropagation()"
+              (keydown.enter)="$event.preventDefault()"
+            />
+
+            <div class="max-h-44 overflow-y-auto">
+              <button
+                type="button"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
+                *ngFor="let e of filteredEtages; let i = index"
+                (mouseenter)="activeEtageIndex = i"
+                [class.bg-blue-50]="activeEtageIndex === i || roomForm.etageId === e.id"
+                (click)="selectEtage(e)"
+              >
+                {{ e.label }}
+              </button>
+
+              <div *ngIf="filteredEtages.length === 0" class="px-3 py-2 text-xs text-neutral-500">
+                Aucun étage trouvé
+              </div>
+            </div>
+          </div>
+          }
+        </div>
       </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Type de chambre</label>
-        <input type="text" [(ngModel)]="roomForm.typeLabel" class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm" />
+
+      <div class="col-span-2">
+        <div class="relative">
+          <label class="block text-xs font-medium text-gray-500 mb-1">Type de chambre</label>
+          <button
+            #typeTrigger
+            type="button"
+            class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 text-left text-sm flex items-center justify-between hover:bg-neutral-50"
+            (click)="toggleTypeDropdown()"
+            [attr.aria-expanded]="typeDropdownOpen"
+          >
+            <span>{{ roomForm.typeLabel || 'Sélectionner un type' }}</span>
+            <svg
+              class="size-4 text-neutral-500"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+
+          @if (typeDropdownOpen) {
+          <div
+            #typeMenu
+            class="absolute left-0 top-full mt-2 w-full bg-white border border-neutral-300 rounded shadow-sm p-2 z-50"
+            (click)="$event.stopPropagation()"
+            (mousedown)="$event.stopPropagation()"
+          >
+            <input
+              type="text"
+              #typeSearchInput
+              [(ngModel)]="typeSearch"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="Rechercher un type..."
+              class="w-full border border-neutral-300 rounded px-3 py-2 text-sm mb-2 focus:outline-none"
+              (click)="$event.stopPropagation()"
+              (mousedown)="$event.stopPropagation()"
+              (keydown.enter)="$event.preventDefault()"
+            />
+
+            <div class="max-h-44 overflow-y-auto">
+              <button
+                type="button"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
+                *ngFor="let t of filteredTypes; let i = index"
+                (mouseenter)="activeTypeIndex = i"
+                [class.bg-blue-50]="activeTypeIndex === i || roomForm.typeId === t.id"
+                (click)="selectType(t)"
+              >
+                {{ t.label }}
+              </button>
+
+              <div *ngIf="filteredTypes.length === 0" class="px-3 py-2 text-xs text-neutral-500">
+                Aucun type trouvé
+              </div>
+            </div>
+          </div>
+          }
+        </div>
       </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Statut</label>
-        <select [(ngModel)]="roomForm.statut" class="w-full px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm">
-          <option value="libre">libre</option>
-          <option value="occupée">occupée</option>
-        </select>
-      </div>
+      
     </div>
     <div class="flex justify-end space-x-2 mt-5">
       <button (click)="showEditModal = false" class="px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded hover:bg-gray-50">Annuler</button>

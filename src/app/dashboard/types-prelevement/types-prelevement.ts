@@ -24,12 +24,11 @@ export class TypesPrelevement {
   currentType: any = null;
 
   typeForm = {
-    id: '',
     libelle: '',
   };
 
   handleNew() {
-    this.typeForm = { id: '', libelle: '' };
+    this.typeForm = { libelle: '' };
     this.showCreateModal = true;
   }
 
@@ -39,7 +38,7 @@ export class TypesPrelevement {
 
   handleEdit(type: any) {
     this.currentType = type;
-    this.typeForm = { ...type };
+    this.typeForm = { libelle: type.libelle };
     this.showEditModal = true;
   }
 
@@ -53,8 +52,10 @@ export class TypesPrelevement {
   }
 
   createType() {
-    const newItem = { ...this.typeForm };
-    if (!newItem.id) newItem.id = `TPR${Math.floor(Math.random() * 1000)}`;
+    const newItem = {
+      id: `TPR${Math.floor(Math.random() * 1000)}`,
+      libelle: this.typeForm.libelle
+    };
     this.types = [newItem, ...this.types];
     this.showCreateModal = false;
   }

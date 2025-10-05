@@ -1,5 +1,5 @@
 <nav
-  class="h-[65px] w-full border-b border-neutral-300 bg-white flex items-center justify-between p-5 fixed top-0"
+  class="h-[65px] w-full border-b border-neutral-300 bg-white flex items-center justify-between p-5 fixed top-0 z-50"
 >
   <div class="flex gap-x-2 items-center">
     <button class="size-5 flex items-center justify-center hover:cursor-pointer">
@@ -44,15 +44,68 @@
     </a>
   </div>
 
-  <div>
-    <div class="flex items-center gap-x-2">
-      <button
-        class="px-3 py-2 border border-neutral-200 bg-neutral-100 rounded text-xs text-neutral-700 hover:bg-neutral-200 transition-colors"
-        (click)="logout()"
-        title="Se déconnecter"
+  <div class="relative">
+    <button
+      #profileTrigger
+      class="flex items-center gap-x-3 px-2 py-1 rounded hover:bg-neutral-100 transition-colors hover:cursor-pointer"
+      (click)="toggleDropdown()"
+      aria-haspopup="true"
+      [attr.aria-expanded]="dropdownOpen"
+      title="Profil"
+    >
+      <div
+        class="size-10 rounded-full bg-neutral-200 flex items-center justify-center text-xs text-neutral-700"
       >
-        Déconnexion
+        {{ (userName || 'Utilisateur').charAt(0) }}
+      </div>
+      <div class="flex flex-col text-left">
+        <span class="text-sm font-medium text-neutral-800">{{ userName || 'Utilisateur' }}</span>
+        <span class="text-xs text-neutral-500">{{ userEmail || '' }}</span>
+      </div>
+    </button>
+
+    @if (dropdownOpen) {
+    <div
+      #profileMenu
+      class="absolute right-0 top-13 w-70 bg-white border border-neutral-300 rounded p-3 space-y-3 z-50"
+    >
+      <div class="flex items-center gap-x-2">
+        <div
+          class="size-8 rounded-full bg-neutral-200 flex items-center justify-center text-xs text-neutral-700"
+        >
+          {{ (userName || 'Utilisateur').charAt(0) }}
+        </div>
+        <div class="flex flex-col">
+          <span class="text-sm font-medium text-neutral-800">{{ userName || 'Utilisateur' }}</span>
+          <span class="text-xs text-neutral-500">{{ userEmail || '' }}</span>
+        </div>
+      </div>
+
+      <div class="border-t border-neutral-200"></div>
+
+      <div class="flex flex-col gap-1">
+        <a
+          class="text-sm text-neutral-700 hover:text-blue-600 cursor-pointer hover:bg-gray-100 transition-colors duration-300 py-3 px-2"
+          (click)="goToProfile()"
+        >
+          Voir mon profil
+        </a>
+        <a
+          class="text-sm text-neutral-700 hover:text-blue-600 cursor-pointer hover:bg-gray-100 transition-colors duration-300 py-3 px-2"
+          (click)="toggleDropdown()"
+        >
+          Paramètres
+        </a>
+      </div>
+
+      <div class="border-t border-neutral-200"></div>
+      <button
+        class="w-full px-3 py-2 text-sm border rounded hover:cursor-pointer border-red-500 bg-red-500 hover:bg-red-600 text-white transition-colors"
+        (click)="logout()"
+      >
+        Se déconnecter
       </button>
     </div>
+    }
   </div>
 </nav>

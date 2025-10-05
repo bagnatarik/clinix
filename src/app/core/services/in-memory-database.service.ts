@@ -99,9 +99,9 @@ export class InMemoryDatabaseService {
 
   // Admin: Départements
   private departements: Departement[] = [
-    { id: 'CARD', libelle: 'Cardiologie', nbPersonnels: 12 },
-    { id: 'ONC', libelle: 'Oncologie', nbPersonnels: 8 },
-    { id: 'PED', libelle: 'Pédiatrie', nbPersonnels: 15 },
+    { id: 'CARD', libelle: 'Cardiologie' },
+    { id: 'ONC', libelle: 'Oncologie' },
+    { id: 'PED', libelle: 'Pédiatrie' },
   ];
 
   // Admin: Professions
@@ -172,9 +172,9 @@ export class InMemoryDatabaseService {
 
   // Admin: Produits
   private produits: Produit[] = [
-    { id: 'PRD001', libelle: 'Seringue', description: 'Seringue stérile 5ml', prix: 1.5, quantite: 200 },
-    { id: 'PRD002', libelle: 'Gants', description: 'Gants nitrile taille M', prix: 0.2, quantite: 1000 },
-    { id: 'PRD003', libelle: 'Masque', description: 'Masque chirurgical', prix: 0.5, quantite: 500 },
+    { id: 'PRD001', nom: 'Seringue', description: 'Seringue stérile 5ml', cout: 1.5 },
+    { id: 'PRD002', nom: 'Gants', description: 'Gants nitrile taille M', cout: 0.2 },
+    { id: 'PRD003', nom: 'Masque', description: 'Masque chirurgical', cout: 0.5 },
   ];
 
   // Consultations
@@ -227,6 +227,9 @@ export class InMemoryDatabaseService {
   // Prescriptions
   getPrescriptions(): Observable<Prescription[]> {
     return of([...this.prescriptions]);
+  }
+  getPrescriptionById(id: string): Observable<Prescription | null> {
+    return of(this.prescriptions.find((x) => x.id === id) || null);
   }
   createPrescription(item: Omit<Prescription, 'id'>): Observable<Prescription> {
     const id = `PRES-${String(this.prescriptions.length + 1).padStart(3, '0')}`;

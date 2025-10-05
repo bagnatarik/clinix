@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { toast } from 'ngx-sonner';
 import { Column } from '../../core/interfaces/column';
 import { DataTableComponent } from '../../shared/data-table-component/data-table-component';
@@ -12,11 +12,10 @@ import { Profession } from '../../core/interfaces/admin';
   templateUrl: './professions.html',
   styleUrl: './professions.css'
 })
-export class Professions {
+export class Professions implements OnInit {
   columns: Column[] = [
     { key: 'id', label: 'ID', sortable: true },
     { key: 'libelle', label: 'Libellé profession', sortable: true },
-    { key: 'nbPersonnels', label: 'Nombre de personnels associés', sortable: true },
     { key: 'actions', label: 'Actions', sortable: false },
   ];
 
@@ -39,6 +38,10 @@ export class Professions {
 
   private refresh() {
     this.service.getAll().subscribe((data) => (this.professions = data));
+  }
+
+  ngOnInit(): void {
+    this.refresh();
   }
 
   // Event handlers

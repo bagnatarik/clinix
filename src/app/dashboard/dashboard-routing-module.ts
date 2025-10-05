@@ -98,7 +98,7 @@ export const routes: Routes = [
         path: 'types-prelevements',
         component: TypesPrelevement,
         canActivate: [roleGuard],
-        data: { roles: ['admin'] },
+        data: { roles: ['admin', 'laborant'] },
       },
       { path: 'gardes', component: Gardes, canActivate: [roleGuard], data: { roles: ['admin'] } },
       {
@@ -119,6 +119,55 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['admin'] },
       },
+
+      // Admin - Analyses single-page (menu /dashboard/analyses)
+      {
+        path: 'analyses',
+        canActivate: [roleGuard],
+        data: { roles: ['admin'] },
+        loadComponent: () =>
+          import('./admin/analyses/analyses-list/analyses-list.component').then(
+            (m) => m.AnalysesListAdminComponent
+          ),
+      },
+
+      // Admin - Analyses (catalogue)
+      // {
+      //   path: 'admin/analyses',
+      //   canActivate: [roleGuard],
+      //   data: { roles: ['admin'] },
+      //   loadComponent: () =>
+      //     import('./admin/analyses/analyses-list/analyses-list.component').then(
+      //       (m) => m.AnalysesListAdminComponent
+      //     ),
+      // },
+      // {
+      //   path: 'admin/analyses/list',
+      //   canActivate: [roleGuard],
+      //   data: { roles: ['admin'] },
+      //   loadComponent: () =>
+      //     import('./admin/analyses/analyses-list/analyses-list.component').then(
+      //       (m) => m.AnalysesListAdminComponent
+      //     ),
+      // },
+      // {
+      //   path: 'admin/analyses/new',
+      //   canActivate: [roleGuard],
+      //   data: { roles: ['admin'] },
+      //   loadComponent: () =>
+      //     import('./admin/analyses/analyses-new/analyses-new.component').then(
+      //       (m) => m.AnalysesNewAdminComponent
+      //     ),
+      // },
+      // {
+      //   path: 'admin/analyses/:id/edit',
+      //   canActivate: [roleGuard],
+      //   data: { roles: ['admin'] },
+      //   loadComponent: () =>
+      //     import('./admin/analyses/analyses-edit/analyses-edit.component').then(
+      //       (m) => m.AnalysesEditAdminComponent
+      //     ),
+      // },
 
       {
         path: 'doctor/consultations',
@@ -186,11 +235,21 @@ export const routes: Routes = [
           ),
       },
 
+      {
+        path: 'doctor/prescriptions/:id',
+        canActivate: [roleGuard],
+        data: { roles: ['doctor'] },
+        loadComponent: () =>
+          import('./doctor/prescriptions/prescriptions-view/prescriptions-view.component').then(
+            (m) => m.PrescriptionsViewComponent
+          ),
+      },
+
       // Docteur - Diagnostics
       {
         path: 'doctor/diagnostics',
         canActivate: [roleGuard],
-        data: { roles: ['doctor'] },
+        data: { roles: ['doctor', 'laborant'] },
         loadComponent: () =>
           import('./doctor/diagnostics/diagnostics-list/diagnostics-list.component').then(
             (m) => m.DiagnosticsListComponent
@@ -199,7 +258,7 @@ export const routes: Routes = [
       {
         path: 'doctor/diagnostics/list',
         canActivate: [roleGuard],
-        data: { roles: ['doctor'] },
+        data: { roles: ['doctor', 'laborant'] },
         loadComponent: () =>
           import('./doctor/diagnostics/diagnostics-list/diagnostics-list.component').then(
             (m) => m.DiagnosticsListComponent
@@ -208,7 +267,7 @@ export const routes: Routes = [
       {
         path: 'doctor/diagnostics/new',
         canActivate: [roleGuard],
-        data: { roles: ['doctor'] },
+        data: { roles: ['doctor', 'laborant'] },
         loadComponent: () =>
           import('./doctor/diagnostics/diagnostics-new/diagnostics-new.component').then(
             (m) => m.DiagnosticsNewComponent
@@ -219,7 +278,7 @@ export const routes: Routes = [
       {
         path: 'doctor/hospitalisations',
         canActivate: [roleGuard],
-        data: { roles: ['doctor'] },
+        data: { roles: ['doctor', 'nurse'] },
         loadComponent: () =>
           import(
             './doctor/hospitalisations/hospitalisations-list/hospitalisations-list.component'
@@ -228,7 +287,7 @@ export const routes: Routes = [
       {
         path: 'doctor/hospitalisations/list',
         canActivate: [roleGuard],
-        data: { roles: ['doctor'] },
+        data: { roles: ['doctor', 'nurse'] },
         loadComponent: () =>
           import(
             './doctor/hospitalisations/hospitalisations-list/hospitalisations-list.component'
@@ -237,7 +296,7 @@ export const routes: Routes = [
       {
         path: 'doctor/hospitalisations/new',
         canActivate: [roleGuard],
-        data: { roles: ['doctor'] },
+        data: { roles: ['doctor', 'nurse'] },
         loadComponent: () =>
           import(
             './doctor/hospitalisations/hospitalisations-new/hospitalisations-new.component'
@@ -270,6 +329,323 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./doctor/ordonnances/ordonnances-new/ordonnances-new.component').then(
             (m) => m.OrdonnancesNewComponent
+          ),
+      },
+
+      // Docteur - Rendez-vous
+      {
+        path: 'doctor/rendezvous',
+        canActivate: [roleGuard],
+        data: { roles: ['doctor'] },
+        loadComponent: () =>
+          import('./doctor/rendezvous/rendezvous-list/rendezvous-list.component').then(
+            (m) => m.DoctorRendezvousListComponent
+          ),
+      },
+      {
+        path: 'doctor/rendezvous/list',
+        canActivate: [roleGuard],
+        data: { roles: ['doctor'] },
+        loadComponent: () =>
+          import('./doctor/rendezvous/rendezvous-list/rendezvous-list.component').then(
+            (m) => m.DoctorRendezvousListComponent
+          ),
+      },
+
+      // Infirmier - Prélèvements
+      {
+        path: 'infirmier/prelevements',
+        canActivate: [roleGuard],
+        data: { roles: ['nurse'] },
+        loadComponent: () =>
+          import('./nurse/prelevements/prelevements-list/prelevements-list.component').then(
+            (m) => m.PrelevementsListComponent
+          ),
+      },
+      {
+        path: 'infirmier/prelevements/list',
+        canActivate: [roleGuard],
+        data: { roles: ['nurse'] },
+        loadComponent: () =>
+          import('./nurse/prelevements/prelevements-list/prelevements-list.component').then(
+            (m) => m.PrelevementsListComponent
+          ),
+      },
+      {
+        path: 'infirmier/prelevements/new',
+        canActivate: [roleGuard],
+        data: { roles: ['nurse'] },
+        loadComponent: () =>
+          import('./nurse/prelevements/prelevements-new/prelevements-new.component').then(
+            (m) => m.PrelevementsNewComponent
+          ),
+      },
+
+      // Infirmier - Traitements
+      {
+        path: 'infirmier/traitements',
+        canActivate: [roleGuard],
+        data: { roles: ['nurse'] },
+        loadComponent: () =>
+          import('./nurse/traitements/traitements-list/traitements-list.component').then(
+            (m) => m.TraitementsListComponent
+          ),
+      },
+      {
+        path: 'infirmier/traitements/list',
+        canActivate: [roleGuard],
+        data: { roles: ['nurse'] },
+        loadComponent: () =>
+          import('./nurse/traitements/traitements-list/traitements-list.component').then(
+            (m) => m.TraitementsListComponent
+          ),
+      },
+      {
+        path: 'infirmier/traitements/new',
+        canActivate: [roleGuard],
+        data: { roles: ['nurse'] },
+        loadComponent: () =>
+          import('./nurse/traitements/traitements-new/traitements-new.component').then(
+            (m) => m.TraitementsNewComponent
+          ),
+      },
+
+      // Infirmier - Hospitalisations
+      {
+        path: 'infirmier/hospitalisations',
+        canActivate: [roleGuard],
+        data: { roles: ['nurse'] },
+        loadComponent: () =>
+          import(
+            './nurse/hospitalisations/hospitalisations-list/hospitalisations-list.component'
+          ).then((m) => m.HospitalisationsListNurseComponent),
+      },
+      {
+        path: 'infirmier/hospitalisations/list',
+        canActivate: [roleGuard],
+        data: { roles: ['nurse'] },
+        loadComponent: () =>
+          import(
+            './nurse/hospitalisations/hospitalisations-list/hospitalisations-list.component'
+          ).then((m) => m.HospitalisationsListNurseComponent),
+      },
+      {
+        path: 'infirmier/hospitalisations/new',
+        canActivate: [roleGuard],
+        data: { roles: ['nurse'] },
+        loadComponent: () =>
+          import(
+            './nurse/hospitalisations/hospitalisations-new/hospitalisations-new.component'
+          ).then((m) => m.HospitalisationsNewNurseComponent),
+      },
+
+      // Infirmier - Facturation
+      {
+        path: 'infirmier/facturation',
+        canActivate: [roleGuard],
+        data: { roles: ['nurse'] },
+        loadComponent: () =>
+          import('./nurse/facturation/factures-list/factures-list.component').then(
+            (m) => m.FacturesListNurseComponent
+          ),
+      },
+      {
+        path: 'infirmier/facturation/list',
+        canActivate: [roleGuard],
+        data: { roles: ['nurse'] },
+        loadComponent: () =>
+          import('./nurse/facturation/factures-list/factures-list.component').then(
+            (m) => m.FacturesListNurseComponent
+          ),
+      },
+      {
+        path: 'infirmier/facturation/new',
+        canActivate: [roleGuard],
+        data: { roles: ['nurse'] },
+        loadComponent: () =>
+          import('./nurse/facturation/factures-new/factures-new.component').then(
+            (m) => m.FacturesNewNurseComponent
+          ),
+      },
+      {
+        path: 'infirmier/facturation/:id',
+        canActivate: [roleGuard],
+        data: { roles: ['nurse'] },
+        loadComponent: () =>
+          import('./nurse/facturation/factures-view/factures-view.component').then(
+            (m) => m.FacturesViewNurseComponent
+          ),
+      },
+
+      // Infirmier - Rendez-vous
+      {
+        path: 'infirmier/rendezvous',
+        canActivate: [roleGuard],
+        data: { roles: ['nurse'] },
+        loadComponent: () =>
+          import('./nurse/rendezvous/rendezvous-list/rendezvous-list.component').then(
+            (m) => m.RendezvousListComponent
+          ),
+      },
+      {
+        path: 'infirmier/rendezvous/list',
+        canActivate: [roleGuard],
+        data: { roles: ['nurse'] },
+        loadComponent: () =>
+          import('./nurse/rendezvous/rendezvous-list/rendezvous-list.component').then(
+            (m) => m.RendezvousListComponent
+          ),
+      },
+      {
+        path: 'infirmier/rendezvous/new',
+        canActivate: [roleGuard],
+        data: { roles: ['nurse'] },
+        loadComponent: () =>
+          import('./nurse/rendezvous/rendezvous-new/rendezvous-new.component').then(
+            (m) => m.RendezvousNewComponent
+          ),
+      },
+
+      // Infirmier - Patients
+      {
+        path: 'infirmier/patients',
+        canActivate: [roleGuard],
+        data: { roles: ['nurse'] },
+        loadComponent: () =>
+          import('./nurse/patients/patients-list/patients-list.component').then(
+            (m) => m.PatientsListNurseComponent
+          ),
+      },
+      {
+        path: 'infirmier/patients/list',
+        canActivate: [roleGuard],
+        data: { roles: ['nurse'] },
+        loadComponent: () =>
+          import('./nurse/patients/patients-list/patients-list.component').then(
+            (m) => m.PatientsListNurseComponent
+          ),
+      },
+      {
+        path: 'infirmier/patients/new',
+        canActivate: [roleGuard],
+        data: { roles: ['nurse'] },
+        loadComponent: () =>
+          import('./nurse/patients/patients-new/patients-new.component').then(
+            (m) => m.PatientsNewNurseComponent
+          ),
+      },
+      {
+        path: 'infirmier/patients/:id/edit',
+        canActivate: [roleGuard],
+        data: { roles: ['nurse'] },
+        loadComponent: () =>
+          import('./nurse/patients/patients-edit/patients-edit.component').then(
+            (m) => m.PatientsEditNurseComponent
+          ),
+      },
+
+      // Laborant - Analyses
+      {
+        path: 'laborant/analyses',
+        canActivate: [roleGuard],
+        data: { roles: ['laborant'] },
+        loadComponent: () =>
+          import('./laborant/analyses/analyses-list/analyses-list.component').then(
+            (m) => m.AnalysesListLaborantComponent
+          ),
+      },
+      {
+        path: 'laborant/analyses/list',
+        canActivate: [roleGuard],
+        data: { roles: ['laborant'] },
+        loadComponent: () =>
+          import('./laborant/analyses/analyses-list/analyses-list.component').then(
+            (m) => m.AnalysesListLaborantComponent
+          ),
+      },
+      {
+        path: 'laborant/analyses/new',
+        canActivate: [roleGuard],
+        data: { roles: ['laborant'] },
+        loadComponent: () =>
+          import('./laborant/analyses/analyses-new/analyses-new.component').then(
+            (m) => m.AnalysesNewLaborantComponent
+          ),
+      },
+      {
+        path: 'laborant/analyses/:id',
+        canActivate: [roleGuard],
+        data: { roles: ['laborant'] },
+        loadComponent: () =>
+          import('./laborant/analyses/analyses-view/analyses-view.component').then(
+            (m) => m.AnalysesViewLaborantComponent
+          ),
+      },
+
+      // Laborant - Prélèvements
+      {
+        path: 'laborant/prelevements',
+        canActivate: [roleGuard],
+        data: { roles: ['laborant'] },
+        loadComponent: () =>
+          import('./laborant/prelevements/prelevements-list/prelevements-list.component').then(
+            (m) => m.PrelevementsListLaborantComponent
+          ),
+      },
+      {
+        path: 'laborant/prelevements/list',
+        canActivate: [roleGuard],
+        data: { roles: ['laborant'] },
+        loadComponent: () =>
+          import('./laborant/prelevements/prelevements-list/prelevements-list.component').then(
+            (m) => m.PrelevementsListLaborantComponent
+          ),
+      },
+      {
+        path: 'laborant/prelevements/new',
+        canActivate: [roleGuard],
+        data: { roles: ['laborant'] },
+        loadComponent: () =>
+          import('./laborant/prelevements/prelevements-new/prelevements-new.component').then(
+            (m) => m.PrelevementsNewLaborantComponent
+          ),
+      },
+
+      // Laborant - Résultats d’analyses
+      {
+        path: 'laborant/resultats-analyses',
+        canActivate: [roleGuard],
+        data: { roles: ['laborant'] },
+        loadComponent: () =>
+          import('./laborant/resultats-analyses/resultats-list/resultats-list.component').then(
+            (m) => m.ResultatsListLaborantComponent
+          ),
+      },
+      {
+        path: 'laborant/resultats-analyses/list',
+        canActivate: [roleGuard],
+        data: { roles: ['laborant'] },
+        loadComponent: () =>
+          import('./laborant/resultats-analyses/resultats-list/resultats-list.component').then(
+            (m) => m.ResultatsListLaborantComponent
+          ),
+      },
+      {
+        path: 'laborant/resultats-analyses/new',
+        canActivate: [roleGuard],
+        data: { roles: ['laborant'] },
+        loadComponent: () =>
+          import('./laborant/resultats-analyses/resultats-new/resultats-new.component').then(
+            (m) => m.ResultatsNewLaborantComponent
+          ),
+      },
+      {
+        path: 'laborant/resultats-analyses/:id',
+        canActivate: [roleGuard],
+        data: { roles: ['laborant'] },
+        loadComponent: () =>
+          import('./laborant/resultats-analyses/resultats-view/resultats-view.component').then(
+            (m) => m.ResultatsViewLaborantComponent
           ),
       },
     ],

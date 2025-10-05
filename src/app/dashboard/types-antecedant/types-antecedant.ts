@@ -24,12 +24,11 @@ export class TypesAntecedant {
   currentType: any = null;
 
   typeForm = {
-    id: '',
     libelle: '',
   };
 
   handleNew() {
-    this.typeForm = { id: '', libelle: '' };
+    this.typeForm = { libelle: '' };
     this.showCreateModal = true;
   }
 
@@ -39,7 +38,7 @@ export class TypesAntecedant {
 
   handleEdit(type: any) {
     this.currentType = type;
-    this.typeForm = { ...type };
+    this.typeForm = { libelle: type.libelle };
     this.showEditModal = true;
   }
 
@@ -53,8 +52,10 @@ export class TypesAntecedant {
   }
 
   createType() {
-    const newItem = { ...this.typeForm };
-    if (!newItem.id) newItem.id = `TAN${Math.floor(Math.random() * 1000)}`;
+    const newItem = {
+      id: `TAN${Math.floor(Math.random() * 1000)}`,
+      libelle: this.typeForm.libelle
+    };
     this.typesAntecedant = [newItem, ...this.typesAntecedant];
     this.showCreateModal = false;
   }

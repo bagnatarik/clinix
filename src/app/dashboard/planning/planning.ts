@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataTableComponent } from '../../shared/data-table-component/data-table-component';
 import { Column } from '../../core/interfaces/column';
@@ -6,17 +7,16 @@ import { toast } from 'ngx-sonner';
 
 @Component({
   selector: 'app-planning',
-  imports: [DataTableComponent, FormsModule],
+  imports: [DataTableComponent, FormsModule, CommonModule],
   templateUrl: './planning.html',
   styleUrl: './planning.css',
 })
 export class Planning {
   columns: Column[] = [
     { key: 'id', label: 'ID', sortable: true },
-    { key: 'dateDebut', label: 'Date début', sortable: true },
-    { key: 'dateFin', label: 'Date fin', sortable: true },
-    { key: 'personnel', label: 'Personnel assigné', sortable: true },
-    { key: 'type', label: 'Type', sortable: true },
+    { key: 'description', label: 'Description', sortable: true },
+    { key: 'garde', label: 'Garde', sortable: true },
+    { key: 'personnel', label: 'Personnel', sortable: true },
     { key: 'actions', label: 'Actions', sortable: false },
   ];
 
@@ -27,21 +27,43 @@ export class Planning {
   currentItem: any = null;
 
   planningForm = {
-    id: '',
-    dateDebut: '',
-    dateFin: '',
+    description: '',
+    garde: '',
     personnel: '',
-    type: 'consultation',
   };
+
+  // Dropdown states and search
+  gardeDropdownOpen = false;
+  personnelDropdownOpen = false;
+  gardeSearch = '';
+  personnelSearch = '';
+  gardeActiveIndex = -1;
+  personnelActiveIndex = -1;
+
+  // Options sources (placeholder lists; can be wired to services)
+  gardesOptions: string[] = ['Garde matin', 'Garde soir', 'Garde nuit'];
+  personnelsOptions: string[] = ['Dr. Ndiaye', 'Infirmier Diop', 'Dr. Ba'];
+
+  get filteredGardes() {
+    const q = (this.gardeSearch || '').toLowerCase();
+    return this.gardesOptions.filter((g) => g.toLowerCase().includes(q));
+  }
+
+  get filteredPersonnels() {
+    const q = (this.personnelSearch || '').toLowerCase();
+    return this.personnelsOptions.filter((p) => p.toLowerCase().includes(q));
+  }
 
   handleNew() {
     this.planningForm = {
-      id: '',
-      dateDebut: '',
-      dateFin: '',
+      description: '',
+      garde: '',
       personnel: '',
-      type: 'consultation',
     };
+    this.gardeSearch = '';
+    this.personnelSearch = '';
+    this.gardeDropdownOpen = false;
+    this.personnelDropdownOpen = false;
     this.showCreateModal = true;
   }
 
@@ -51,7 +73,12 @@ export class Planning {
 
   handleEdit(item: any) {
     this.currentItem = item;
-    this.planningForm = { ...item };
+    const { description, garde, personnel } = item;
+    this.planningForm = { description, garde, personnel };
+    this.gardeSearch = '';
+    this.personnelSearch = '';
+    this.gardeDropdownOpen = false;
+    this.personnelDropdownOpen = false;
     this.showEditModal = true;
   }
 
@@ -65,8 +92,7 @@ export class Planning {
   }
 
   createPlanningItem() {
-    const newItem = { ...this.planningForm };
-    if (!newItem.id) newItem.id = `PLN${Math.floor(Math.random() * 1000)}`;
+    const newItem = { id: `PLN${Math.floor(Math.random() * 1000)}`, ...this.planningForm };
     this.planning = [newItem, ...this.planning];
     this.showCreateModal = false;
   }
@@ -79,6 +105,27 @@ export class Planning {
     this.showEditModal = false;
   }
 
+  // Dropdown helpers
+  toggleGardeDropdown() {
+    this.gardeDropdownOpen = !this.gardeDropdownOpen;
+    this.gardeActiveIndex = -1;
+  }
+
+  togglePersonnelDropdown() {
+    this.personnelDropdownOpen = !this.personnelDropdownOpen;
+    this.personnelActiveIndex = -1;
+  }
+
+  selectGarde(g: string) {
+    this.planningForm.garde = g;
+    this.gardeDropdownOpen = false;
+  }
+
+  selectPersonnel(p: string) {
+    this.planningForm.personnel = p;
+    this.personnelDropdownOpen = false;
+  }
+
   deletePlanningItem() {
     if (this.currentItem) {
       this.planning = this.planning.filter((t) => t.id !== this.currentItem.id);
@@ -89,24 +136,21 @@ export class Planning {
   planning = [
     {
       id: 'PLN001',
-      dateDebut: '2025-10-07 08:00',
-      dateFin: '2025-10-07 12:00',
+      description: 'Consultation générale du matin',
+      garde: 'Garde matin',
       personnel: 'Dr. Ndiaye',
-      type: 'consultation',
     },
     {
       id: 'PLN002',
-      dateDebut: '2025-10-07 16:00',
-      dateFin: '2025-10-07 20:00',
+      description: 'Garde du soir aux urgences',
+      garde: 'Garde soir',
       personnel: 'Infirmier Diop',
-      type: 'garde',
     },
     {
       id: 'PLN003',
-      dateDebut: '2025-10-08 08:00',
-      dateFin: '2025-10-08 10:00',
+      description: 'Consultation cardiologie',
+      garde: 'Garde matin',
       personnel: 'Dr. Ba',
-      type: 'consultation',
     },
   ];
 }

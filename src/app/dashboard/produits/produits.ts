@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DataTableComponent } from '../../shared/data-table-component/data-table-component';
 import { Column } from '../../core/interfaces/column';
@@ -12,13 +12,12 @@ import { Produit } from '../../core/interfaces/admin';
   templateUrl: './produits.html',
   styleUrl: './produits.css'
 })
-export class Produits {
+export class Produits implements OnInit {
   columns: Column[] = [
     { key: 'id', label: 'ID', sortable: true },
-    { key: 'libelle', label: 'Libellé produit', sortable: true },
+    { key: 'nom', label: 'Nom du produit', sortable: true },
     { key: 'description', label: 'Description', sortable: false },
-    { key: 'prix', label: 'Prix', sortable: true },
-    { key: 'quantite', label: 'Quantité en stock', sortable: true },
+    { key: 'cout', label: 'Coût', sortable: true },
     { key: 'actions', label: 'Actions', sortable: false },
   ];
 
@@ -30,10 +29,9 @@ export class Produits {
 
   productForm = {
     id: '',
-    libelle: '',
+    nom: '',
     description: '',
-    prix: 0,
-    quantite: 0,
+    cout: 0,
   };
 
   produits: Produit[] = [];
@@ -44,8 +42,12 @@ export class Produits {
     this.service.getAll().subscribe((data) => (this.produits = data));
   }
 
+  ngOnInit(): void {
+    this.refresh();
+  }
+
   handleNew() {
-    this.productForm = { id: '', libelle: '', description: '', prix: 0, quantite: 0 };
+    this.productForm = { id: '', nom: '', description: '', cout: 0 };
     this.showCreateModal = true;
   }
 
@@ -67,9 +69,9 @@ export class Produits {
   }
 
   createProduct() {
-    const { id, libelle, description, prix, quantite } = this.productForm;
+    const { nom, description, cout } = this.productForm;
     this.service
-      .create({ id: id || undefined, libelle: libelle!, description: description!, prix: prix!, quantite: quantite! })
+      .create({ nom: nom!, description: description!, cout: cout! })
       .subscribe(() => {
         toast.success('Produit créé avec succès');
         this.showCreateModal = false;
@@ -79,9 +81,9 @@ export class Produits {
 
   updateProduct() {
     if (this.currentProduct) {
-      const { libelle, description, prix, quantite } = this.productForm;
+      const { nom, description, cout } = this.productForm;
       this.service
-        .update(this.currentProduct.id, { libelle, description, prix, quantite })
+        .update(this.currentProduct.id, { nom, description, cout })
         .subscribe(() => {
           toast.success('Produit mis à jour avec succès');
           this.showEditModal = false;

@@ -1,32 +1,192 @@
-<h2 class="text-xl font-semibold mb-4">Nouvelle hospitalisation</h2>
+<form [formGroup]="form" (ngSubmit)="submit()" class="space-y-6">
+  <!-- En-tête harmonisé -->
+  <div class="bg-white border border-neutral-300 rounded p-6">
+    <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+      <div>
+        <h2 class="text-xl font-bold text-gray-800">Nouvelle hospitalisation</h2>
+        <div class="mt-3 text-sm text-gray-700 space-y-1">
+          <div><span class="font-semibold">Patient :</span> {{ form.value.patient }}</div>
+          <div><span class="font-semibold">Médecin traitant :</span> {{ doctorName }}</div>
+        </div>
+      </div>
+      <div class="text-sm text-gray-600 text-left md:text-right">
+        <div>
+          <span class="font-semibold">Date d’admission :</span>
+          {{ form.value.admissionDate | date : 'dd-MM-yyyy' }}
+        </div>
+      </div>
+    </div>
 
-<form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
-  <div>
-    <label class="block text-sm font-medium">Patient</label>
-    <input type="text" class="mt-1 w-full border rounded px-3 py-2" formControlName="patient" placeholder="Nom du patient" />
+    <hr class="my-4 border-neutral-200" />
+
+    <!-- Sélecteur patient + médecin + date -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+      <!-- Patient dropdown -->
+      <div class="relative">
+        <label class="block text-xs font-medium text-gray-500 mb-1">Patient</label>
+        <button
+          type="button"
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 text-left text-sm flex items-center justify-between hover:bg-neutral-50"
+          (click)="togglePatientDropdown()"
+          [attr.aria-expanded]="patientDropdownOpen"
+        >
+          <span>{{ form.value.patient || 'Sélectionner un patient' }}</span>
+          <svg
+            class="size-4 text-neutral-500"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+
+        <div
+          *ngIf="patientDropdownOpen"
+          class="absolute left-0 top-full mt-2 w-full bg-white border border-neutral-300 rounded shadow-sm p-2 z-50"
+          (click)="$event.stopPropagation()"
+          (mousedown)="$event.stopPropagation()"
+        >
+          <input
+            type="text"
+            [(ngModel)]="patientSearch"
+            [ngModelOptions]="{ standalone: true }"
+            placeholder="Rechercher un patient..."
+            class="w-full border border-neutral-300 rounded px-3 py-2 text-sm mb-2 focus:outline-none"
+            (click)="$event.stopPropagation()"
+            (mousedown)="$event.stopPropagation()"
+            (keydown.enter)="$event.preventDefault()"
+          />
+
+          <div class="max-h-44 overflow-y-auto">
+            <button
+              type="button"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
+              *ngFor="let p of filteredPatients; let i = index"
+              (mouseenter)="activeIndex = i"
+              [class.bg-blue-50]="activeIndex === i || form.get('patient')?.value === p"
+              (click)="selectPatientName(p)"
+            >
+              {{ p }}
+            </button>
+          </div>
+
+          <div class="flex justify-end gap-2 mt-2">
+            <button
+              type="button"
+              class="px-3 py-1 text-sm border border-neutral-300 rounded hover:bg-neutral-50"
+              (click)="patientDropdownOpen = false"
+            >Fermer</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Médecin traitant -->
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Médecin traitant</label>
+        <div class="w-full border border-neutral-300 rounded px-3 py-2 text-sm text-gray-800 bg-neutral-50">
+          {{ doctorName }}
+        </div>
+      </div>
+
+      <!-- Date d’admission -->
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Date d’admission</label>
+        <input
+          type="date"
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-sm text-gray-800"
+          formControlName="admissionDate"
+        />
+      </div>
+    </div>
   </div>
 
-  <div>
-    <label class="block text-sm font-medium">Date d’admission</label>
-    <input type="text" class="mt-1 w-full border rounded px-3 py-2" formControlName="admissionDate" placeholder="YYYY-MM-DD" />
+  <!-- Dossier patient -->
+  <div class="bg-white border border-neutral-300 rounded">
+    <div class="flex justify-between items-center p-6">
+      <div class="text-sm text-gray-700">Dossier du patient</div>
+      <button
+        type="button"
+        class="px-3 py-1 text-sm border border-neutral-300 rounded hover:bg-neutral-50"
+        (click)="toggleDossier()"
+      >{{ showPatientDossier ? 'Masquer' : 'Voir' }}</button>
+    </div>
+    <div *ngIf="showPatientDossier" class="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <div class="font-semibold text-sm text-gray-700 mb-2">Antécédents</div>
+        <ul class="list-disc ml-5 text-sm text-gray-800">
+          <li *ngFor="let a of patientDossier.antecedents">{{ a }}</li>
+          <li *ngIf="!patientDossier.antecedents.length" class="text-gray-500">Aucun</li>
+        </ul>
+      </div>
+      <div>
+        <div class="font-semibold text-sm text-gray-700 mb-2">Analyses</div>
+        <ul class="list-disc ml-5 text-sm text-gray-800">
+          <li *ngFor="let an of patientDossier.analyses">{{ an.name }} — {{ an.date }}</li>
+          <li *ngIf="!patientDossier.analyses.length" class="text-gray-500">Aucune</li>
+        </ul>
+      </div>
+      <div>
+        <div class="font-semibold text-sm text-gray-700 mb-2">Hospitalisations</div>
+        <ul class="list-disc ml-5 text-sm text-gray-800">
+          <li *ngFor="let h of patientDossier.hospitalisations">
+            {{ h.motif }} ({{ h.debut }} → {{ h.fin || 'en cours' }})
+          </li>
+          <li *ngIf="!patientDossier.hospitalisations.length" class="text-gray-500">Aucune</li>
+        </ul>
+      </div>
+      <div>
+        <div class="font-semibold text-sm text-gray-700 mb-2">Prescriptions</div>
+        <ul class="list-disc ml-5 text-sm text-gray-800">
+          <li *ngFor="let p of patientDossier.prescriptions">{{ p.id }} — {{ p.date }} — {{ p.description }}</li>
+          <li *ngIf="!patientDossier.prescriptions.length" class="text-gray-500">Aucune</li>
+        </ul>
+      </div>
+      <div>
+        <div class="font-semibold text-sm text-gray-700 mb-2">Documents</div>
+        <ul class="list-disc ml-5 text-sm text-gray-800">
+          <li *ngFor="let d of patientDossier.documents">{{ d.name }}</li>
+          <li *ngIf="!patientDossier.documents.length" class="text-gray-500">Aucun</li>
+        </ul>
+      </div>
+    </div>
   </div>
 
-  <div>
-    <label class="block text-sm font-medium">Service</label>
-    <input type="text" class="mt-1 w-full border rounded px-3 py-2" formControlName="service" placeholder="Service / Département" />
+  <!-- Informations d’hospitalisation -->
+  <div class="bg-white border border-neutral-300 rounded p-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Service</label>
+        <input type="text" class="w-full border border-neutral-300 rounded px-3 py-2 text-sm" formControlName="service" placeholder="Service / Département" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Statut</label>
+        <select class="w-full border border-neutral-300 rounded px-3 py-2 text-sm" formControlName="statut">
+          <option value="en cours">En cours</option>
+          <option value="sorti">Sorti</option>
+          <option value="annulé">Annulé</option>
+        </select>
+      </div>
+    </div>
   </div>
 
-  <div>
-    <label class="block text-sm font-medium">Statut</label>
-    <select class="mt-1 w-full border rounded px-3 py-2" formControlName="statut">
-      <option value="en cours">En cours</option>
-      <option value="sorti">Sorti</option>
-      <option value="annulé">Annulé</option>
-    </select>
-  </div>
-
+  <!-- Actions -->
   <div class="flex gap-2">
-    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50" [disabled]="form.invalid">Enregistrer</button>
-    <a class="px-4 py-2 border rounded" [routerLink]="['/dashboard/doctor/hospitalisations/list']">Annuler</a>
+    <button
+      type="submit"
+      class="px-5 py-2.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition hover:cursor-pointer text-sm"
+      [disabled]="form.invalid || !form.value.patient"
+    >
+      Enregistrer
+    </button>
+    <a
+      class="px-5 py-2.5 border border-gray-600 text-gray-600 rounded hover:bg-gray-600 hover:text-white transition hover:cursor-pointer text-sm"
+      [routerLink]="['/dashboard/doctor/hospitalisations/list']"
+    >
+      Annuler
+    </a>
   </div>
 </form>

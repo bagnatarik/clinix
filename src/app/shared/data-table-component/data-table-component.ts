@@ -20,6 +20,7 @@ export class DataTableComponent {
   @Input() tableName: string = 'Data table';
   @Input() showNewButton: boolean = true;
   @Input() manageUserAccount: boolean = false;
+  @Input() showEditButton: boolean = true;
 
   @Output() onNew = new EventEmitter<void>();
   @Output() onRefresh = new EventEmitter<void>();
@@ -28,6 +29,7 @@ export class DataTableComponent {
   @Output() onRowClick = new EventEmitter<any>();
   @Output() onViewProfile = new EventEmitter<any>();
   @Output() onResetPassword = new EventEmitter<any>();
+  @Output() onFirstAppointmentAction = new EventEmitter<any>();
 
   search: string = '';
   sortKey: string = '';

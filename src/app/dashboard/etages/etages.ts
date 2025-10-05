@@ -8,13 +8,12 @@ import { toast } from 'ngx-sonner';
   selector: 'app-etages',
   imports: [DataTableComponent, FormsModule],
   templateUrl: './etages.html',
-  styleUrl: './etages.css'
+  styleUrl: './etages.css',
 })
 export class Etages {
   columns: Column[] = [
     { key: 'id', label: 'ID', sortable: true },
     { key: 'libelle', label: 'Libellé étage', sortable: true },
-    { key: 'nbChambres', label: 'Nombre de chambres associées', sortable: true },
     { key: 'actions', label: 'Actions', sortable: false },
   ];
 
@@ -27,11 +26,10 @@ export class Etages {
   etageForm = {
     id: '',
     libelle: '',
-    nbChambres: 0,
   };
 
   handleNew() {
-    this.etageForm = { id: '', libelle: '', nbChambres: 0 };
+    this.etageForm = { id: '', libelle: '' };
     this.showCreateModal = true;
   }
 
@@ -81,8 +79,8 @@ export class Etages {
   }
 
   etages = [
-    { id: 'ETG1', libelle: 'Rez-de-chaussée', nbChambres: 12 },
-    { id: 'ETG2', libelle: 'Premier étage', nbChambres: 20 },
-    { id: 'ETG3', libelle: 'Deuxième étage', nbChambres: 18 },
+    { id: 'ETG1', libelle: 'Rez-de-chaussée' },
+    { id: 'ETG2', libelle: 'Premier étage' },
+    { id: 'ETG3', libelle: 'Deuxième étage' },
   ];
 }

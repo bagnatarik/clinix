@@ -2,7 +2,7 @@
   <div class="bg-white border border-neutral-300 rounded p-6">
     <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
       <div>
-        <h2 class="text-xl font-bold text-gray-800">Détails de la Consultation</h2>
+        <h2 class="text-xl font-bold text-gray-800">Nouvelle consultation</h2>
         <div class="mt-3 text-sm text-gray-700 space-y-1">
           <div><span class="font-semibold">Patient :</span> {{ form.value.patient }}</div>
           <div><span class="font-semibold">Médecin traitant :</span> {{ doctorName }}</div>
@@ -11,18 +11,74 @@
       <div class="text-sm text-gray-600 text-left md:text-right">
         <div>
           <span class="font-semibold">Date & Heure :</span>
-          {{ form.value.date | date : 'dd-MM-yyyy' }} à 10:30
+          {{ form.value.date | date : 'dd-MM-yyyy HH:mm' }}
         </div>
       </div>
     </div>
 
+    <hr class="my-4 border-neutral-200" />
+
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-      <div>
+      <div class="relative">
         <label class="block text-xs font-medium text-gray-500 mb-1">Patient</label>
-        <input
-          class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm disabled:bg-gray-100"
-          formControlName="patient"
-        />
+        <button
+          #patientTrigger
+          type="button"
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 text-left text-sm flex items-center justify-between hover:bg-neutral-50"
+          (click)="togglePatientDropdown()"
+          [attr.aria-expanded]="patientDropdownOpen"
+        >
+          <span>{{ form.value.patient || 'Sélectionner un patient' }}</span>
+          <svg
+            class="size-4 text-neutral-500"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+
+        @if (patientDropdownOpen) {
+        <div
+          #patientMenu
+          class="absolute left-0 top-full mt-2 w-full bg-white border border-neutral-300 rounded shadow-sm p-2 z-50"
+          (click)="$event.stopPropagation()"
+          (mousedown)="$event.stopPropagation()"
+        >
+          <input
+            type="text"
+            #patientSearchInput
+            [(ngModel)]="patientSearch"
+            [ngModelOptions]="{ standalone: true }"
+            placeholder="Rechercher un patient..."
+            class="w-full border border-neutral-300 rounded px-3 py-2 text-sm mb-2 focus:outline-none"
+            (click)="$event.stopPropagation()"
+            (mousedown)="$event.stopPropagation()"
+            (keydown.enter)="$event.preventDefault()"
+          />
+
+          <div class="max-h-44 overflow-y-auto">
+            <button
+              type="button"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
+              *ngFor="let p of filteredPatients; let i = index"
+              (mouseenter)="activeIndex = i"
+              [class.bg-blue-50]="activeIndex === i || form.get('patient')?.value === p"
+              (click)="selectPatient(p)"
+            >
+              {{ p }}
+            </button>
+
+            <div *ngIf="filteredPatients.length === 0" class="px-3 py-2 text-xs text-neutral-500">
+              Aucun patient trouvé
+            </div>
+          </div>
+        </div>
+        }
       </div>
       <div>
         <label class="block text-xs font-medium text-gray-500 mb-1">Médecin</label>
@@ -35,8 +91,149 @@
       <div>
         <label class="block text-xs font-medium text-gray-500 mb-1">Date & Heure</label>
         <input
+          type="datetime-local"
           class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm"
           formControlName="date"
+        />
+      </div>
+    </div>
+
+    <!-- Bouton dossier patient -->
+    <div class="mt-6">
+      <button
+        type="button"
+        class="w-full px-5 py-2.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition hover:cursor-pointer text-sm"
+        (click)="toggleDossier()"
+        [attr.aria-expanded]="showPatientDossier"
+      >
+        Voir le dossier du patient
+      </button>
+    </div>
+
+    <!-- Panneau dossier patient -->
+    @if (showPatientDossier) {
+    <div class="mt-4 bg-white border border-neutral-300 rounded">
+      <div class="px-5 py-4 border-b border-neutral-300 flex items-center justify-between">
+        <h3 class="font-semibold text-gray-800">Dossier Patient</h3>
+        <span class="text-xs text-gray-500">Code: {{ patientDossier.code }}</span>
+      </div>
+      <div class="p-5 text-sm text-gray-700 space-y-6">
+        <!-- Infos dossier -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <span class="text-gray-500">Ouvert le :</span>
+            {{ patientDossier.createdAt | date : 'dd/MM/yyyy' }}
+          </div>
+          <div><span class="text-gray-500">Patient :</span> {{ form.value.patient }}</div>
+          <div><span class="text-gray-500">Médecin traitant :</span> {{ doctorName }}</div>
+        </div>
+
+        <!-- Antécédents -->
+        <div>
+          <div class="font-medium text-gray-800 mb-2">Antécédents</div>
+          <div class="space-y-1" *ngIf="patientDossier.antecedents.length; else noAntecedents">
+            <div
+              *ngFor="let a of patientDossier.antecedents"
+              class="flex justify-between items-center"
+            >
+              <span>{{ a.type }} - {{ a.libelle }}</span>
+              <span class="text-gray-500">{{ a.description }}</span>
+            </div>
+          </div>
+          <ng-template #noAntecedents>
+            <div class="text-xs text-gray-500">Aucun antécédent enregistré</div>
+          </ng-template>
+        </div>
+
+        <!-- Analyses médicales -->
+        <div>
+          <div class="font-medium text-gray-800 mb-2">Analyses médicales</div>
+          <div class="space-y-1" *ngIf="patientDossier.analyses.length; else noAnalyses">
+            <div
+              *ngFor="let an of patientDossier.analyses"
+              class="flex justify-between items-center"
+            >
+              <span>{{ an.name }} - {{ an.date | date : 'dd/MM/yyyy' }}</span>
+              <span class="text-gray-500">{{ an.result }}</span>
+            </div>
+          </div>
+          <ng-template #noAnalyses>
+            <div class="text-xs text-gray-500">Aucune analyse enregistrée</div>
+          </ng-template>
+        </div>
+
+        <!-- Hospitalisations -->
+        <div>
+          <div class="font-medium text-gray-800 mb-2">Hospitalisations</div>
+          <div class="space-y-1" *ngIf="patientDossier.hospitalisations.length; else noHosp">
+            <div
+              *ngFor="let h of patientDossier.hospitalisations"
+              class="flex justify-between items-center"
+            >
+              <span>{{ h.motif }}</span>
+              <span class="text-gray-500"
+                >{{ h.debut | date : 'dd/MM/yyyy' }} → {{ h.fin | date : 'dd/MM/yyyy' }}</span
+              >
+            </div>
+          </div>
+          <ng-template #noHosp>
+            <div class="text-xs text-gray-500">Aucune hospitalisation enregistrée</div>
+          </ng-template>
+        </div>
+
+        <!-- Prescriptions -->
+        <div>
+          <div class="font-medium text-gray-800 mb-2">Prescriptions</div>
+          <div class="space-y-1" *ngIf="patientDossier.prescriptions.length; else noPresc">
+            <div
+              *ngFor="let pr of patientDossier.prescriptions"
+              class="flex justify-between items-center"
+            >
+              <span>{{ pr.id }} - {{ pr.date | date : 'dd/MM/yyyy' }}</span>
+              <span class="text-gray-500">{{ pr.description }}</span>
+            </div>
+          </div>
+          <ng-template #noPresc>
+            <div class="text-xs text-gray-500">Aucune prescription enregistrée</div>
+          </ng-template>
+        </div>
+
+        <!-- Documents -->
+        <div>
+          <div class="font-medium text-gray-800 mb-2">Documents</div>
+          <div class="space-y-1" *ngIf="patientDossier.documents.length; else noDocs">
+            <div *ngFor="let d of patientDossier.documents" class="flex items-center gap-2">
+              <span class="inline-block w-2.5 h-2.5 bg-blue-500 rounded-full"></span>
+              <span>{{ d.name }}</span>
+            </div>
+          </div>
+          <ng-template #noDocs>
+            <div class="text-xs text-gray-500">Aucun document</div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- Vital signs -->
+    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Poids (kg)</label>
+        <input
+          type="number"
+          step="0.1"
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 placeholder:text-gray-600 focus:outline-none text-sm"
+          placeholder="72.5"
+        />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Température (°C)</label>
+        <input
+          type="number"
+          step="0.1"
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm placeholder:text-gray-600"
+          formControlName="temperature"
+          placeholder="37.2"
         />
       </div>
     </div>
@@ -44,8 +241,18 @@
     <div class="mt-6">
       <label class="block text-xs font-medium text-gray-500 mb-1">Motif de Consultation</label>
       <textarea
-        class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm"
+        class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm placeholder:text-gray-600 resize-y"
         rows="4"
+        placeholder="Motif de la consultation du patient"
+        formControlName="motif"
+      ></textarea>
+    </div>
+    <div class="mt-6">
+      <label class="block text-xs font-medium text-gray-500 mb-1">Motif de Consultation</label>
+      <textarea
+        class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm placeholder:text-gray-600 resize-y"
+        rows="4"
+        placeholder="Motif de la consultation du patient"
         formControlName="motif"
       ></textarea>
     </div>
@@ -55,7 +262,7 @@
         >Notes Cliniques (Format SOAP)</label
       >
       <textarea
-        class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm"
+        class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm placeholder:text-gray-600 resize-y"
         rows="6"
         placeholder="Sujetif, Objectif, Analyse, Plan"
         formControlName="notesSoap"
@@ -109,13 +316,13 @@
       </div>
       <div class="p-5 space-y-3 text-sm text-gray-700">
         <div class="flex justify-between items-center">
-          <span>NFS, CRP</span><span class="text-gray-400">—</span>
+          <span>NFS, CRP</span><span class="text-gray-400">-</span>
         </div>
         <div class="flex justify-between items-center">
-          <span>Échographie abdominale</span><span class="text-gray-400">—</span>
+          <span>Échographie abdominale</span><span class="text-gray-400">-</span>
         </div>
         <div class="flex justify-between items-center">
-          <span>Scanner abdominal</span><span class="text-gray-400">—</span>
+          <span>Scanner abdominal</span><span class="text-gray-400">-</span>
         </div>
       </div>
     </div>

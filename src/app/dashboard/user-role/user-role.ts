@@ -14,14 +14,11 @@ export class UserRole {
   columns: Column[] = [
     { key: 'id', label: 'Identifiant', sortable: true },
     { key: 'libelle', label: 'Libellé', sortable: true },
-    { key: 'permissions', label: 'Permissions', sortable: false },
-    { key: 'nbUsers', label: "Nombre d'utilisateurs affectés", sortable: true },
     { key: 'actions', label: 'Actions', sortable: false },
   ];
 
   // Modals visibility
   showCreateModal = false;
-  showEditModal = false;
   showDeleteModal = false;
 
   // Current role being edited or deleted
@@ -29,13 +26,13 @@ export class UserRole {
 
   // Form model for create/edit
   roleForm = {
+    id: '',
     libelle: '',
-    permissions: [] as string[],
   };
 
   // Event handlers
   handleNew() {
-    this.roleForm = { libelle: '', permissions: [] };
+    this.roleForm = { id: '', libelle: '' };
     this.showCreateModal = true;
   }
 
@@ -43,11 +40,7 @@ export class UserRole {
     toast.info('this one will call api /roles to refetch the list in table');
   }
 
-  handleEdit(role: any) {
-    this.currentRole = role;
-    this.roleForm = { libelle: role.libelle, permissions: [...role.permissions] };
-    this.showEditModal = true;
-  }
+  // L’édition des rôles est désactivée pour sensibilité
 
   handleDelete(role: any) {
     this.currentRole = role;
@@ -61,22 +54,22 @@ export class UserRole {
 
   // CRUD operations
   createRole() {
+    const { id, libelle } = this.roleForm;
+    if (!id || !libelle) {
+      toast.error('Identifiant et libellé sont requis');
+      return;
+    }
+    const exists = this.roles.some((r) => r.id === id);
+    if (exists) {
+      toast.error("Un rôle avec cet identifiant existe déjà");
+      return;
+    }
+    this.roles.push({ id, libelle });
+    toast.success('Rôle créé');
     this.showCreateModal = false;
   }
 
-  updateRole() {
-    if (this.currentRole) {
-      const index = this.roles.findIndex((r) => r.id === this.currentRole.id);
-      if (index !== -1) {
-        this.roles[index] = {
-          ...this.currentRole,
-          libelle: this.roleForm.libelle,
-          permissions: this.roleForm.permissions,
-        };
-      }
-    }
-    this.showEditModal = false;
-  }
+  // Pas d’update: l’édition est interdite
 
   deleteRole() {
     if (this.currentRole) {
@@ -86,48 +79,10 @@ export class UserRole {
   }
 
   roles = [
-    {
-      id: 'admin',
-      libelle: 'Administrateur',
-      permissions: [
-        'Créer utilisateur',
-        'Modifier utilisateur',
-        'Supprimer utilisateur',
-        'Gérer rôles',
-      ],
-      nbUsers: 3,
-    },
-    {
-      id: 'doctor',
-      libelle: 'Docteur',
-      permissions: ['Consulter dossier patient', 'Éditer rapport médical', 'Prescrire traitement'],
-      nbUsers: 5,
-    },
-    {
-      id: 'nurse',
-      libelle: 'Infirmière',
-      permissions: [
-        'Consulter dossier patient',
-        'Administrer traitement',
-        'Mettre à jour observations',
-      ],
-      nbUsers: 4,
-    },
-    {
-      id: 'patient',
-      libelle: 'Patient',
-      permissions: ['Consulter mon dossier', 'Prendre rendez-vous', 'Contacter le médecin'],
-      nbUsers: 15,
-    },
-    {
-      id: 'laborant',
-      libelle: 'Laborantin',
-      permissions: [
-        'Saisir résultats analyses',
-        'Éditer rapport laboratoire',
-        'Consulter dossier patient',
-      ],
-      nbUsers: 2,
-    },
+    { id: 'admin', libelle: 'Administrateur' },
+    { id: 'doctor', libelle: 'Docteur' },
+    { id: 'nurse', libelle: 'Infirmière' },
+    { id: 'patient', libelle: 'Patient' },
+    { id: 'laborant', libelle: 'Laborantin' },
   ];
 }

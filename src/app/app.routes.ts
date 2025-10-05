@@ -12,6 +12,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'patient',
+    canLoad: [canLoadGuard],
+    canActivate: [authenticationGuard],
+    loadChildren: () =>
+      import('./patient/patient-routing-module').then((m) => m.PatientRoutingModule),
+  },
+  {
     path: 'dashboard',
     canLoad: [canLoadGuard],
     canActivate: [authenticationGuard],

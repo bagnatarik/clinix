@@ -8,8 +8,10 @@ import { AuthenticationService } from '../../authentication/services/authenticat
 export class DepartementsService {
   constructor(private db: InMemoryDatabaseService, private auth: AuthenticationService) {}
 
-  getAll(): Observable<Departement[]> { return this.db.getDepartements(); }
-  create(item: Omit<Departement, 'id' | 'updatedBy'> & { id?: string }): Observable<Departement> {
+  getAll(): Observable<Departement[]> {
+    return this.db.getDepartements();
+  }
+  create(item: Departement): Observable<Departement> {
     const user = this.auth.getCurrentUser();
     return this.db.createDepartement({ ...item, updatedBy: user?.name });
   }
@@ -17,5 +19,7 @@ export class DepartementsService {
     const user = this.auth.getCurrentUser();
     return this.db.updateDepartement(id, { ...changes, updatedBy: user?.name });
   }
-  delete(id: string): Observable<boolean> { return this.db.deleteDepartement(id); }
+  delete(id: string): Observable<boolean> {
+    return this.db.deleteDepartement(id);
+  }
 }
