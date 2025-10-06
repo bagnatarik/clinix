@@ -1,21 +1,25 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Specialite } from '../../core/interfaces/admin';
-import { InMemoryDatabaseService } from '../../core/services/in-memory-database.service';
 import { AuthenticationService } from '../../authentication/services/authentication-service';
+import { HttpClient } from '@angular/common/http';
+import { API_BASE_URL } from '../../core/services/api';
 
 @Injectable({ providedIn: 'root' })
 export class SpecialitesService {
-  constructor(private db: InMemoryDatabaseService, private auth: AuthenticationService) {}
+  private readonly baseUrl = `${API_BASE_URL}/specialite`;
+  constructor(private http: HttpClient) {}
 
-  getAll(): Observable<Specialite[]> { return this.db.getSpecialites(); }
-  create(item: Omit<Specialite, 'id' | 'updatedBy'> & { id?: string }): Observable<Specialite> {
-    const user = this.auth.getCurrentUser();
-    return this.db.createSpecialite({ ...item, updatedBy: user?.name });
+  getAll(): Observable<Specialite[]> {
+    return this.http.get<Specialite[]>(this.baseUrl + '/all');
+  }
+  create(libelle: string): Observable<Specialite> {
+    return this.http.post<Specialite>(this.baseUrl + '/save', { libelle });
   }
   update(id: string, changes: Partial<Specialite>): Observable<Specialite | null> {
-    const user = this.auth.getCurrentUser();
-    return this.db.updateSpecialite(id, { ...changes, updatedBy: user?.name });
+    return this.http.put<Specialite | null>(`${this.baseUrl}/update/${id}`, { ...changes });
   }
-  delete(id: string): Observable<boolean> { return this.db.deleteSpecialite(id); }
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/delete/${id}`);
+  }
 }

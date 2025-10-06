@@ -14,7 +14,7 @@ import { Specialite } from '../../core/interfaces/admin';
 })
 export class Specialites implements OnInit {
   columns: Column[] = [
-    { key: 'id', label: 'ID', sortable: true },
+    // { key: 'publicId', label: 'ID', sortable: true },
     { key: 'libelle', label: 'Libellé', sortable: true },
     { key: 'actions', label: 'Actions', sortable: false },
   ];
@@ -41,7 +41,10 @@ export class Specialites implements OnInit {
   specialites: Specialite[] = [];
 
   private refresh() {
-    this.service.getAll().subscribe((data) => (this.specialites = data));
+    this.service.getAll().subscribe({
+      next: (data) => (this.specialites = data),
+      error: () => toast.error('Erreur lors du chargement des spécialités'),
+    });
   }
 
   // Event handlers
@@ -50,7 +53,9 @@ export class Specialites implements OnInit {
     this.showCreateModal = true;
   }
 
-  handleRefresh() { this.refresh(); }
+  handleRefresh() {
+    this.refresh();
+  }
 
   handleEdit(specialite: any) {
     this.currentSpecialite = specialite;
@@ -72,8 +77,7 @@ export class Specialites implements OnInit {
   createSpecialite() {
     const { libelle } = this.specialiteForm;
     // L'id est généré côté backend; on n'envoie que le libellé
-    // Description par défaut vide pour compatibilité avec le service
-    this.service.create({ libelle: libelle!, description: '', nbPersonnel: 0 }).subscribe(() => {
+    this.service.create(libelle!).subscribe(() => {
       toast.success('Spécialité créée avec succès');
       this.showCreateModal = false;
       this.refresh();
@@ -82,14 +86,14 @@ export class Specialites implements OnInit {
 
   updateSpecialite() {
     if (this.currentSpecialite) {
+      console.log(this.currentSpecialite);
+
       const { libelle } = this.specialiteForm;
-      this.service
-        .update(this.currentSpecialite.id, { libelle })
-        .subscribe(() => {
-          toast.success('Spécialité mise à jour avec succès');
-          this.showEditModal = false;
-          this.refresh();
-        });
+      this.service.update(this.currentSpecialite.publicId, { libelle }).subscribe(() => {
+        toast.success('Spécialité mise à jour avec succès');
+        this.showEditModal = false;
+        this.refresh();
+      });
     } else {
       this.showEditModal = false;
     }
@@ -97,7 +101,7 @@ export class Specialites implements OnInit {
 
   deleteSpecialite() {
     if (this.currentSpecialite) {
-      this.service.delete(this.currentSpecialite.id).subscribe(() => {
+      this.service.delete(this.currentSpecialite.publicId).subscribe(() => {
         toast.success('Spécialité supprimée avec succès');
         this.showDeleteModal = false;
         this.refresh();

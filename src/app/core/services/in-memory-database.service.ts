@@ -365,34 +365,24 @@ export class InMemoryDatabaseService {
   // Admin: Spécialités
   private specialites: Specialite[] = [
     {
-      id: 'cardio',
+      publicId: 'cardio',
       libelle: 'Cardiologie',
-      description: 'Spécialité médicale qui traite des affections du cœur et des vaisseaux',
-      nbPersonnel: 5,
     },
     {
-      id: 'derma',
+      publicId: 'derma',
       libelle: 'Dermatologie',
-      description: "Spécialité médicale qui s'occupe de la peau, des muqueuses et des phanères",
-      nbPersonnel: 3,
     },
     {
-      id: 'neuro',
+      publicId: 'neuro',
       libelle: 'Neurologie',
-      description: 'Spécialité médicale qui étudie et traite les maladies du système nerveux',
-      nbPersonnel: 4,
     },
     {
-      id: 'ophtalmo',
+      publicId: 'ophtalmo',
       libelle: 'Ophtalmologie',
-      description: 'Spécialité médicale qui traite des maladies des yeux et de la vision',
-      nbPersonnel: 2,
     },
     {
-      id: 'pediatrie',
+      publicId: 'pediatrie',
       libelle: 'Pédiatrie',
-      description: 'Spécialité médicale qui étudie le développement et soigne les enfants',
-      nbPersonnel: 6,
     },
   ];
 
@@ -640,14 +630,14 @@ export class InMemoryDatabaseService {
     return of(newItem);
   }
   updateSpecialite(id: string, changes: Partial<Specialite>): Observable<Specialite | null> {
-    const idx = this.specialites.findIndex((s) => s.id === id);
+    const idx = this.specialites.findIndex((s) => s.publicId === id);
     if (idx === -1) return of(null);
     this.specialites[idx] = { ...this.specialites[idx], ...changes };
     return of(this.specialites[idx]);
   }
   deleteSpecialite(id: string): Observable<boolean> {
     const initial = this.specialites.length;
-    this.specialites = this.specialites.filter((s) => s.id !== id);
+    this.specialites = this.specialites.filter((s) => s.publicId !== id);
     return of(this.specialites.length < initial);
   }
 

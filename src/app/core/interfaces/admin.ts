@@ -12,11 +12,8 @@ export interface Profession {
 }
 
 export interface Specialite {
-  id: string;
+  publicId: string;
   libelle: string;
-  description: string;
-  nbPersonnel: number;
-  updatedBy?: string;
 }
 
 export interface Personnel {
