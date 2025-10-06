@@ -268,6 +268,10 @@ export const MENUS_BY_ROLE: MenusByRole = {
       slug: 'personnels',
       route: '/dashboard/personnels',
       children: [
+        {
+          label: 'Départements',
+          route: '/dashboard/departements',
+        },
         { label: 'Spécialités', route: '/dashboard/specialites' },
         { label: 'Professions', route: '/dashboard/professions' },
         { label: 'Personnels', route: '/dashboard/personnels' },
@@ -283,11 +287,7 @@ export const MENUS_BY_ROLE: MenusByRole = {
         { label: 'Chambres', route: '/dashboard/hospitalisation/chambres' },
       ],
     },
-    {
-      label: 'Départements',
-      slug: 'departements',
-      route: '/dashboard/departements',
-    },
+
     {
       label: 'Produits',
       slug: 'produits',

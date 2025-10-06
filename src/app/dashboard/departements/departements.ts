@@ -14,7 +14,7 @@ import { Departement } from '../../core/interfaces/admin';
 })
 export class Departements implements OnInit {
   columns: Column[] = [
-    { key: 'publicId', label: 'ID', sortable: true },
+    // { key: 'publicId', label: 'ID', sortable: true },
     { key: 'libelle', label: 'Libellé département', sortable: true },
     { key: 'actions', label: 'Actions', sortable: false },
   ];
@@ -67,7 +67,7 @@ export class Departements implements OnInit {
 
   createDept() {
     const { libelle } = this.deptForm;
-    this.service.create({ publicId: 'UNID', libelle: libelle! }).subscribe(() => {
+    this.service.create(libelle!).subscribe(() => {
       this.showCreateModal = false;
       this.refresh();
     });
