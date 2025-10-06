@@ -22,6 +22,8 @@ export class DataTableComponent {
   @Input() manageUserAccount: boolean = false;
   @Input() showEditButton: boolean = true;
   @Input() showViewButton: boolean = false;
+  @Input() showDeleteButton: boolean = true;
+  @Input() canViewRow: (row: any) => boolean = () => true;
 
   @Output() onNew = new EventEmitter<void>();
   @Output() onRefresh = new EventEmitter<void>();

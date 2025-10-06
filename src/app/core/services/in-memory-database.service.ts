@@ -6,6 +6,7 @@ import {
   Prescription,
   Hospitalisation,
   Ordonnance,
+  Rendezvous,
 } from '../interfaces/medical';
 import { Departement, Profession, Specialite, Personnel, Produit } from '../interfaces/admin';
 
@@ -38,6 +39,183 @@ export class InMemoryDatabaseService {
       poids: 80.0,
       temperature: 38.5,
       tension: '13/9',
+    },
+    {
+      id: 'CONS-003',
+      patient: 'Patient User',
+      date: '2025-10-05',
+      motif: 'Suivi post-traitement',
+      statut: 'planifiée',
+      typeConsultation: 'Général',
+      description: 'Contrôle des paramètres vitaux et évolution',
+      cout: 200,
+      poids: 70.2,
+      temperature: 36.9,
+      tension: '12/7',
+      diagnostics: [
+        {
+          maladie: 'Hypertension légère',
+          details: 'TA légèrement élevée, céphalées occasionnelles',
+          gravite: 'modéré',
+        },
+        { maladie: 'Fatigue', details: 'Liée au traitement précédent', gravite: 'faible' },
+      ],
+      analyses: [
+        {
+          nomAnalyse: 'NFS',
+          dateAnalyse: '2025-10-05',
+          description: 'Bilan sanguin complet',
+          typeAnalyse: 'Hématologie',
+          diagnosticRef: 'Hypertension légère',
+        },
+        {
+          nomAnalyse: 'CRP',
+          dateAnalyse: '2025-10-05',
+          description: 'Protéine C-réactive',
+          typeAnalyse: 'Biochimie',
+          diagnosticRef: 'Fatigue',
+        },
+      ],
+      prescriptions: [
+        {
+          date: '2025-10-05',
+          description: 'Paracétamol 500mg si douleur',
+          motif: 'Analgésie',
+          diagnosticRef: 'Hypertension légère',
+        },
+      ],
+      hospitalisations: [
+        {
+          dateAdmission: '2025-10-06',
+          dateSortie: '2025-10-07',
+          motif: 'Surveillance tensionnelle courte',
+          diagnosticRef: 'Hypertension légère',
+        },
+      ],
+    },
+    {
+      id: 'CONS-004',
+      patient: 'Patient User',
+      date: '2025-10-10',
+      motif: 'Résultats d’analyses',
+      statut: 'terminée',
+      typeConsultation: 'Interprétation analyses',
+      description: 'Revue et explication des résultats de laboratoire',
+      cout: 250,
+      poids: 69.8,
+      temperature: 37.0,
+      tension: '11/7',
+      diagnostics: [
+        { maladie: 'Anémie ferriprive', details: 'Ferritine basse, pâleur', gravite: 'modéré' },
+      ],
+      analyses: [
+        {
+          nomAnalyse: 'Ferritine',
+          dateAnalyse: '2025-10-09',
+          description: 'Dosage ferritine',
+          typeAnalyse: 'Biochimie',
+          diagnosticRef: 'Anémie ferriprive',
+        },
+        {
+          nomAnalyse: 'Hémoglobine',
+          dateAnalyse: '2025-10-09',
+          description: 'Hb basse',
+          typeAnalyse: 'Hématologie',
+          diagnosticRef: 'Anémie ferriprive',
+        },
+      ],
+      prescriptions: [
+        {
+          date: '2025-10-10',
+          description: 'Fer oral 160mg/j pendant 3 mois',
+          motif: 'Correction anémie',
+          diagnosticRef: 'Anémie ferriprive',
+        },
+      ],
+      hospitalisations: [],
+    },
+    {
+      id: 'CONS-005',
+      patient: 'Youssef El Amrani',
+      date: '2025-10-08',
+      motif: 'Douleurs dorsales',
+      statut: 'planifiée',
+      typeConsultation: 'Général',
+      description: 'Évaluation de douleurs lombaires chroniques',
+      cout: 180,
+      poids: 77.4,
+      temperature: 36.8,
+      tension: '12/8',
+    },
+    {
+      id: 'CONS-006',
+      patient: 'Alice Dubois',
+      date: '2025-10-11',
+      motif: 'Dermatologie - suivi',
+      statut: 'terminée',
+      typeConsultation: 'Dermatologie',
+      description: 'Suivi traitement dermatologique',
+      cout: 320,
+      poids: 72.0,
+      temperature: 37.1,
+      tension: '12/8',
+    },
+    {
+      id: 'CONS-007',
+      patient: 'Jean Dupont',
+      date: '2025-10-12',
+      motif: 'Cardiologie - contrôle',
+      statut: 'planifiée',
+      typeConsultation: 'Cardiologie',
+      description: 'Contrôle tension et ECG de routine',
+      cout: 400,
+      poids: 79.5,
+      temperature: 36.7,
+      tension: '13/8',
+    },
+  ];
+
+  private rendezvous: Rendezvous[] = [
+    {
+      id: 'RDV-100',
+      date: '2025-10-09',
+      heure: '14:00',
+      patient: 'Patient User',
+      personnel: 'Dr. Anne Mercier',
+      statut: 'planifié',
+      motif: 'Contrôle de routine',
+    },
+    {
+      id: 'RDV-101',
+      date: '2025-10-11',
+      heure: '09:30',
+      patient: 'Youssef El Amrani',
+      personnel: 'Doctor User',
+      statut: 'honoré',
+    },
+    {
+      id: 'RDV-102',
+      date: '2025-10-12',
+      heure: '16:00',
+      patient: 'Patient User',
+      personnel: 'Karim',
+      statut: 'annulé',
+    },
+    {
+      id: 'RDV-010',
+      date: '2025-10-07',
+      heure: '10:00',
+      patient: 'Karim Benali',
+      personnel: 'Doctor User',
+      statut: 'planifié',
+    },
+    {
+      id: 'RDV-012',
+      date: '2025-10-08',
+      heure: '09:00',
+      patient: 'Youssef El Amrani',
+      personnel: 'Doctor User',
+      statut: 'honoré',
     },
   ];
 
@@ -137,6 +315,35 @@ export class InMemoryDatabaseService {
         { nom: 'Calcium', description: '500 mg', prixProduit: 6.0 },
       ],
     },
+    {
+      id: 'ORD-003',
+      patient: 'Patient User',
+      date: '2025-10-05',
+      statut: 'brouillon',
+      libelle: 'Antalgique',
+      coutTotal: 5.0,
+      produits: [{ nom: 'Paracétamol', description: '500 mg si douleur', prixProduit: 5.0 }],
+    },
+    {
+      id: 'ORD-004',
+      patient: 'Patient User',
+      date: '2025-10-10',
+      statut: 'signée',
+      libelle: 'Fer oral 3 mois',
+      coutTotal: 45.0,
+      produits: [{ nom: 'Fer oral', description: '160 mg/j pendant 3 mois', prixProduit: 45.0 }],
+    },
+    {
+      id: 'ORD-005',
+      patient: 'Patient User',
+      date: '2025-10-12',
+      statut: 'brouillon',
+      libelle: 'Suppléments vitamine',
+      produits: [
+        { nom: 'Vitamine D3', description: '1000 UI/j', prixProduit: 9.0 },
+        { nom: 'Calcium', description: '500 mg/j', prixProduit: 6.0 },
+      ],
+    },
   ];
 
   // Admin: Départements
@@ -157,11 +364,36 @@ export class InMemoryDatabaseService {
 
   // Admin: Spécialités
   private specialites: Specialite[] = [
-    { id: 'cardio', libelle: 'Cardiologie', description: 'Spécialité médicale qui traite des affections du cœur et des vaisseaux', nbPersonnel: 5 },
-    { id: 'derma', libelle: 'Dermatologie', description: "Spécialité médicale qui s'occupe de la peau, des muqueuses et des phanères", nbPersonnel: 3 },
-    { id: 'neuro', libelle: 'Neurologie', description: 'Spécialité médicale qui étudie et traite les maladies du système nerveux', nbPersonnel: 4 },
-    { id: 'ophtalmo', libelle: 'Ophtalmologie', description: 'Spécialité médicale qui traite des maladies des yeux et de la vision', nbPersonnel: 2 },
-    { id: 'pediatrie', libelle: 'Pédiatrie', description: 'Spécialité médicale qui étudie le développement et soigne les enfants', nbPersonnel: 6 },
+    {
+      id: 'cardio',
+      libelle: 'Cardiologie',
+      description: 'Spécialité médicale qui traite des affections du cœur et des vaisseaux',
+      nbPersonnel: 5,
+    },
+    {
+      id: 'derma',
+      libelle: 'Dermatologie',
+      description: "Spécialité médicale qui s'occupe de la peau, des muqueuses et des phanères",
+      nbPersonnel: 3,
+    },
+    {
+      id: 'neuro',
+      libelle: 'Neurologie',
+      description: 'Spécialité médicale qui étudie et traite les maladies du système nerveux',
+      nbPersonnel: 4,
+    },
+    {
+      id: 'ophtalmo',
+      libelle: 'Ophtalmologie',
+      description: 'Spécialité médicale qui traite des maladies des yeux et de la vision',
+      nbPersonnel: 2,
+    },
+    {
+      id: 'pediatrie',
+      libelle: 'Pédiatrie',
+      description: 'Spécialité médicale qui étudie le développement et soigne les enfants',
+      nbPersonnel: 6,
+    },
   ];
 
   // Admin: Personnels
@@ -345,8 +577,13 @@ export class InMemoryDatabaseService {
   getDepartements(): Observable<Departement[]> {
     return of([...this.departements]);
   }
-  createDepartement(item: Omit<Departement, 'id'> & { id?: string; updatedBy?: string }): Observable<Departement> {
-    const newItem: Departement = { id: item.id ?? `DEP${Math.floor(Math.random() * 1000)}`, ...item } as Departement;
+  createDepartement(
+    item: Omit<Departement, 'id'> & { id?: string; updatedBy?: string }
+  ): Observable<Departement> {
+    const newItem: Departement = {
+      id: item.id ?? `DEP${Math.floor(Math.random() * 1000)}`,
+      ...item,
+    } as Departement;
     this.departements = [newItem, ...this.departements];
     return of(newItem);
   }
@@ -366,8 +603,13 @@ export class InMemoryDatabaseService {
   getProfessions(): Observable<Profession[]> {
     return of([...this.professions]);
   }
-  createProfession(item: Omit<Profession, 'id'> & { id?: string; updatedBy?: string }): Observable<Profession> {
-    const newItem: Profession = { id: item.id ?? `prof_${Math.floor(Math.random() * 1000)}`, ...item } as Profession;
+  createProfession(
+    item: Omit<Profession, 'id'> & { id?: string; updatedBy?: string }
+  ): Observable<Profession> {
+    const newItem: Profession = {
+      id: item.id ?? `prof_${Math.floor(Math.random() * 1000)}`,
+      ...item,
+    } as Profession;
     this.professions.push(newItem);
     return of(newItem);
   }
@@ -387,8 +629,13 @@ export class InMemoryDatabaseService {
   getSpecialites(): Observable<Specialite[]> {
     return of([...this.specialites]);
   }
-  createSpecialite(item: Omit<Specialite, 'id'> & { id?: string; updatedBy?: string }): Observable<Specialite> {
-    const newItem: Specialite = { id: item.id ?? `spec_${Math.floor(Math.random() * 1000)}`, ...item } as Specialite;
+  createSpecialite(
+    item: Omit<Specialite, 'id'> & { id?: string; updatedBy?: string }
+  ): Observable<Specialite> {
+    const newItem: Specialite = {
+      id: item.id ?? `spec_${Math.floor(Math.random() * 1000)}`,
+      ...item,
+    } as Specialite;
     this.specialites.push(newItem);
     return of(newItem);
   }
@@ -408,9 +655,14 @@ export class InMemoryDatabaseService {
   getPersonnels(): Observable<Personnel[]> {
     return of([...this.personnels]);
   }
-  createPersonnel(item: Omit<Personnel, 'id'> & { id?: string; updatedBy?: string }): Observable<Personnel> {
+  createPersonnel(
+    item: Omit<Personnel, 'id'> & { id?: string; updatedBy?: string }
+  ): Observable<Personnel> {
     const base = (item.nom ?? 'NEW').substring(0, 3).toUpperCase();
-    const newItem: Personnel = { id: item.id ?? `${base}${Math.floor(Math.random() * 1000)}`, ...item } as Personnel;
+    const newItem: Personnel = {
+      id: item.id ?? `${base}${Math.floor(Math.random() * 1000)}`,
+      ...item,
+    } as Personnel;
     this.personnels = [newItem, ...this.personnels];
     return of(newItem);
   }
@@ -430,8 +682,13 @@ export class InMemoryDatabaseService {
   getProduits(): Observable<Produit[]> {
     return of([...this.produits]);
   }
-  createProduit(item: Omit<Produit, 'id'> & { id?: string; updatedBy?: string }): Observable<Produit> {
-    const newItem: Produit = { id: item.id ?? `PRD${Math.floor(Math.random() * 1000)}`, ...item } as Produit;
+  createProduit(
+    item: Omit<Produit, 'id'> & { id?: string; updatedBy?: string }
+  ): Observable<Produit> {
+    const newItem: Produit = {
+      id: item.id ?? `PRD${Math.floor(Math.random() * 1000)}`,
+      ...item,
+    } as Produit;
     this.produits = [newItem, ...this.produits];
     return of(newItem);
   }
@@ -445,5 +702,30 @@ export class InMemoryDatabaseService {
     const initial = this.produits.length;
     this.produits = this.produits.filter((p) => p.id !== id);
     return of(this.produits.length < initial);
+  }
+
+  // Rendez-vous
+  getRendezvous(): Observable<Rendezvous[]> {
+    return of([...this.rendezvous]);
+  }
+  getRendezvousById(id: string): Observable<Rendezvous | null> {
+    return of(this.rendezvous.find((x) => x.id === id) || null);
+  }
+  createRendezvous(item: Omit<Rendezvous, 'id'>): Observable<Rendezvous> {
+    const id = `RDV-${String(this.rendezvous.length + 1).padStart(3, '0')}`;
+    const created = { id, ...item } as Rendezvous;
+    this.rendezvous.push(created);
+    return of(created);
+  }
+  updateRendezvous(id: string, changes: Partial<Rendezvous>): Observable<Rendezvous | null> {
+    const idx = this.rendezvous.findIndex((x) => x.id === id);
+    if (idx === -1) return of(null);
+    this.rendezvous[idx] = { ...this.rendezvous[idx], ...changes } as Rendezvous;
+    return of(this.rendezvous[idx]);
+  }
+  deleteRendezvous(id: string): Observable<boolean> {
+    const initial = this.rendezvous.length;
+    this.rendezvous = this.rendezvous.filter((x) => x.id !== id);
+    return of(this.rendezvous.length < initial);
   }
 }

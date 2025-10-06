@@ -199,7 +199,12 @@ export const MENUS_BY_ROLE: MenusByRole = {
     {
       label: 'Dashboard',
       slug: 'dashboard',
-      route: '/patient/dashboard',
+      route: '/dashboard',
+    },
+    {
+      label: 'Mon dossier',
+      slug: 'patient-dossier',
+      route: '/patient/dossier',
     },
     {
       label: 'Mes RDV',
@@ -210,33 +215,38 @@ export const MENUS_BY_ROLE: MenusByRole = {
         { label: 'Mes RDV', route: '/patient/rdv/list' },
       ],
     },
-    {
-      label: 'Mes consultations',
-      slug: 'patient-consult',
-      route: '/patient/consultations',
-      children: [
-        { label: 'Historique', route: '/patient/consultations/list' },
-        { label: 'Télécharger compte-rendu', route: '/patient/consultations/:id/download' },
-      ],
-    },
+    // {
+    //   label: 'Mes consultations',
+    //   slug: 'patient-consult',
+    //   route: '/patient/consultations',
+    //   children: [
+    //     { label: 'Historique', route: '/patient/consultations/list' },
+    //     { label: 'Télécharger compte-rendu', route: '/patient/consultations/:id/download' },
+    //   ],
+    // },
     {
       label: 'Mes analyses',
       slug: 'patient-analyses',
-      route: '/patient/analyses',
-      children: [
-        { label: 'Résultats', route: '/patient/analyses/list' },
-        { label: 'Télécharger PDF', route: '/patient/analyses/:id/download' },
-      ],
+      route: 'patient/analyses/list',
+      // children: [
+      //   { label: 'Résultats', route: '/patient/analyses/list' },
+      //   { label: 'Télécharger PDF', route: '/patient/analyses/:id/download' },
+      // ],
     },
     {
-      label: 'Profil',
-      slug: 'patient-profile',
-      route: '/patient/profile',
-      children: [
-        { label: 'Mes infos', route: '/patient/profile/info' },
-        { label: 'Assurance', route: '/patient/profile/insurance' },
-      ],
+      label: 'Mes ordonnances',
+      slug: 'patient-ordonnances',
+      route: '/patient/ordonnances/list',
     },
+    // {
+    //   label: 'Profil',
+    //   slug: 'patient-profile',
+    //   route: '/patient/profile',
+    //   children: [
+    //     { label: 'Mes infos', route: '/patient/profile/info' },
+    //     { label: 'Assurance', route: '/patient/profile/insurance' },
+    //   ],
+    // },
   ],
   admin: [
     {

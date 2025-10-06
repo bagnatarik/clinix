@@ -8,13 +8,13 @@ export const routes: Routes = [
     path: '',
     component: DashboardLayout,
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      {
-        path: 'dashboard',
-        canActivate: [roleGuard],
-        data: { roles: ['patient'] },
-        loadComponent: () => import('./home/home').then((m) => m.PatientHome),
-      },
+      // { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      // {
+      //   path: 'dashboard',
+      //   canActivate: [roleGuard],
+      //   data: { roles: ['patient'] },
+      //   loadComponent: () => import('./home/home').then((m) => m.PatientHome),
+      // },
 
       // RDV
       {
@@ -56,7 +56,9 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['patient'] },
         loadComponent: () =>
-          import('./consultations/consultations-download').then((m) => m.PatientConsultationsDownload),
+          import('./consultations/consultations-download').then(
+            (m) => m.PatientConsultationsDownload
+          ),
       },
 
       // Analyses
@@ -80,6 +82,29 @@ export const routes: Routes = [
           import('./analyses/analyses-download').then((m) => m.PatientAnalysesDownload),
       },
 
+      // Ordonnances
+      // {
+      //   path: 'ordonnances',
+      //   canActivate: [roleGuard],
+      //   data: { roles: ['patient'] },
+      //   loadComponent: () =>
+      //     import('./ordonnances/ordonnances-list').then((m) => m.PatientOrdonnancesList),
+      // },
+      {
+        path: 'ordonnances/list',
+        canActivate: [roleGuard],
+        data: { roles: ['patient'] },
+        loadComponent: () =>
+          import('./ordonnances/ordonnances-list').then((m) => m.PatientOrdonnancesList),
+      },
+      {
+        path: 'ordonnances/:id',
+        canActivate: [roleGuard],
+        data: { roles: ['patient'] },
+        loadComponent: () =>
+          import('../dashboard/doctor/ordonnances/ordonnances-view/ordonnances-view.component').then((m) => m.OrdonnancesViewComponent),
+      },
+
       // Profil
       {
         path: 'profile',
@@ -97,7 +122,15 @@ export const routes: Routes = [
         path: 'profile/insurance',
         canActivate: [roleGuard],
         data: { roles: ['patient'] },
-        loadComponent: () => import('./profile/profile-insurance').then((m) => m.PatientProfileInsurance),
+        loadComponent: () =>
+          import('./profile/profile-insurance').then((m) => m.PatientProfileInsurance),
+      },
+      // Dossier
+      {
+        path: 'dossier',
+        canActivate: [roleGuard],
+        data: { roles: ['patient'] },
+        loadComponent: () => import('./dossier/dossier').then((m) => m.PatientDossier),
       },
     ],
   },

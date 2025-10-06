@@ -4,15 +4,9 @@ import { RouterModule } from '@angular/router';
 import { DataTableComponent } from '../../../../shared/data-table-component/data-table-component';
 import { Column } from '../../../../core/interfaces/column';
 import { AuthenticationService } from '../../../../authentication/services/authentication-service';
+import { Rendezvous } from '../../../../core/interfaces/medical';
+import { RendezvousService } from '../../../../core/services/rendezvous.service';
 
-type Rendezvous = {
-  id: string;
-  date: string;
-  statut: 'planifié' | 'honoré' | 'annulé';
-  heure: string;
-  patient: string;
-  personnel: string; // médecin responsable
-};
 
 @Component({
   selector: 'app-doctor-rendezvous-list',
@@ -48,7 +42,7 @@ export class DoctorRendezvousListComponent implements OnInit {
   dataSource: Rendezvous[] = [];
   private doctorName = '';
 
-  constructor(private auth: AuthenticationService) {}
+  constructor(private auth: AuthenticationService, private rdvService: RendezvousService) {}
 
   ngOnInit(): void {
     this.doctorName = this.auth.getCurrentUser()?.name ?? 'Doctor User';
@@ -56,36 +50,10 @@ export class DoctorRendezvousListComponent implements OnInit {
   }
 
   refresh() {
-    // Données d’exemple – devront être remplacées par un service réel
-    this.allData = [
-      {
-        id: 'RDV-010',
-        date: '2025-10-07',
-        statut: 'planifié',
-        heure: '10:00',
-        patient: 'Karim Benali',
-        personnel: 'Doctor User',
-      },
-      {
-        id: 'RDV-011',
-        date: '2025-10-07',
-        statut: 'annulé',
-        heure: '11:30',
-        patient: 'Nadia Lamrani',
-        personnel: 'Dr. Anne Mercier',
-      },
-      {
-        id: 'RDV-012',
-        date: '2025-10-08',
-        statut: 'honoré',
-        heure: '09:00',
-        patient: 'Youssef El Amrani',
-        personnel: 'Doctor User',
-      },
-    ];
-
-    // Filtrer pour n’afficher que les rendez-vous du docteur connecté
-    this.dataSource = this.allData.filter((rdv) => rdv.personnel === this.doctorName);
+    this.rdvService.getAll().subscribe((rows) => {
+      this.allData = rows || [];
+      this.dataSource = this.allData.filter((rdv) => rdv.personnel === this.doctorName);
+    });
   }
 
   view(row: Rendezvous) {

@@ -5,16 +5,10 @@ import { ReactiveFormsModule, FormBuilder, Validators, FormGroup, FormArray } fr
 import { FormsModule } from '@angular/forms';
 import { DataTableComponent } from '../../../../shared/data-table-component/data-table-component';
 import { Column } from '../../../../core/interfaces/column';
+import { Rendezvous } from '../../../../core/interfaces/medical';
+import { RendezvousService } from '../../../../core/services/rendezvous.service';
 
-type Rendezvous = {
-  id: string;
-  date: string;
-  statut: 'planifié' | 'honoré' | 'annulé';
-  heure: string;
-  patient: string;
-  personnel: string;
-  isFirstForPatient?: boolean;
-};
+type ListRendezvous = Rendezvous & { isFirstForPatient?: boolean };
 
 @Component({
   selector: 'app-rendezvous-list',
@@ -223,9 +217,9 @@ export class RendezvousListComponent implements OnInit {
     { key: 'actions', label: 'Actions', sortable: false },
   ];
 
-  dataSource: Rendezvous[] = [];
+  dataSource: ListRendezvous[] = [];
 
-  constructor(private router: Router, private fb: FormBuilder) {
+  constructor(private router: Router, private fb: FormBuilder, private rdvService: RendezvousService) {
     // Initialisation sûre du formulaire pour éviter "Property 'fb' is used before its initialization"
     this.antecedentsForm = this.fb.group({ antecedents: this.fb.array([]) });
   }
@@ -235,44 +229,28 @@ export class RendezvousListComponent implements OnInit {
   }
 
   refresh() {
-    // Données d’exemple pour démarrer
-    this.dataSource = [
-      {
-        id: 'RDV-001',
-        date: '2025-10-05',
-        statut: 'planifié',
-        heure: '09:30',
-        patient: 'Alice Dubois',
-        personnel: 'Tarik',
-        isFirstForPatient: true,
-      },
-      {
-        id: 'RDV-002',
-        date: '2025-10-06',
-        statut: 'honoré',
-        heure: '11:00',
-        patient: 'Jean Dupont',
-        personnel: 'Sarah',
-        isFirstForPatient: true,
-      },
-    ];
+    this.rdvService.getAll().subscribe((rows) => {
+      const list = (rows || []).map((r) => ({ ...r } as ListRendezvous));
+      this.dataSource = list;
+    });
   }
 
   addNew() {
     this.router.navigate(['/dashboard/infirmier/rendezvous/new']);
   }
 
-  edit(row: Rendezvous) {
+  edit(row: ListRendezvous) {
     // Placeholder: pas d’écran d’édition dédié pour le moment
     this.router.navigate(['/dashboard/infirmier/rendezvous/new']);
   }
 
-  delete(row: Rendezvous) {
-    // Suppression locale (à remplacer par service ensuite)
-    this.dataSource = this.dataSource.filter((x) => x.id !== row.id);
+  delete(row: ListRendezvous) {
+    this.rdvService.delete(row.id).subscribe(() => {
+      this.refresh();
+    });
   }
 
-  view(row: Rendezvous) {
+  view(row: ListRendezvous) {
     // À implémenter si une page détail existe
   }
 
@@ -280,7 +258,7 @@ export class RendezvousListComponent implements OnInit {
   firstAppointmentModalOpen = false;
   selectedPatientName = '';
 
-  openFirstAppointmentModal(row: Rendezvous) {
+  openFirstAppointmentModal(row: ListRendezvous) {
     this.selectedPatientName = row.patient;
     this.firstAppointmentModalOpen = true;
     while (this.antecedents.length) this.antecedents.removeAt(0);

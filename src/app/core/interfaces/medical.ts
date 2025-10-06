@@ -91,3 +91,13 @@ export interface Ordonnance {
     prixProduit?: number;
   }[];
 }
+
+export interface Rendezvous {
+  id: string;
+  date: string; // ISO date string
+  heure: string; // HH:mm
+  patient: string;
+  personnel: string; // assigné côté infirmier/doctor
+  statut: 'planifié' | 'honoré' | 'annulé';
+  motif?: string;
+}

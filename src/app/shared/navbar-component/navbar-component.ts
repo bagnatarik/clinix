@@ -61,7 +61,7 @@ export class NavbarComponent {
       case 'doctor':
         return 'Médecin';
       case 'nurse':
-        return 'Infirmier';
+        return 'Infirmier/Infirmière';
       case 'patient':
         return 'Patient';
       case 'laborant':
