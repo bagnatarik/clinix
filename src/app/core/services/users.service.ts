@@ -96,7 +96,7 @@ export class UsersService {
     });
   }
 
-  getRoles(): Observable<string[]> {
-    return this.http.get<string[]>(`${API_BASE_URL}/role`);
+  getRoles(): Observable<{ id: number; name: string }[]> {
+    return this.http.get<{ id: number; name: string }[]>(`${API_BASE_URL}/role`);
   }
 }

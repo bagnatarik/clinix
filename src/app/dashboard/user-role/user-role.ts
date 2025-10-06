@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { toast } from 'ngx-sonner';
 import { Column } from '../../core/interfaces/column';
 import { DataTableComponent } from '../../shared/data-table-component/data-table-component';
 import { FormsModule } from '@angular/forms';
+import { UsersService } from '../../core/services/users.service';
 
 @Component({
   selector: 'app-user-role',
@@ -10,10 +11,10 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './user-role.html',
   styleUrl: './user-role.css',
 })
-export class UserRole {
+export class UserRole implements OnInit {
   columns: Column[] = [
     { key: 'id', label: 'Identifiant', sortable: true },
-    { key: 'libelle', label: 'Libellé', sortable: true },
+    { key: 'name', label: 'Libellé', sortable: true },
     // { key: 'actions', label: 'Actions', sortable: false },
   ];
 
@@ -27,17 +28,23 @@ export class UserRole {
   // Form model for create/edit
   roleForm = {
     id: '',
-    libelle: '',
+    nom: '',
   };
+
+  constructor(private usersService: UsersService) {}
+
+  ngOnInit(): void {
+    this.loadRoles();
+  }
 
   // Event handlers
   handleNew() {
-    this.roleForm = { id: '', libelle: '' };
+    this.roleForm = { id: '', nom: '' };
     this.showCreateModal = true;
   }
 
   handleRefresh() {
-    toast.info('this one will call api /roles to refetch the list in table');
+    this.loadRoles();
   }
 
   // L’édition des rôles est désactivée pour sensibilité
@@ -54,8 +61,8 @@ export class UserRole {
 
   // CRUD operations
   createRole() {
-    const { id, libelle } = this.roleForm;
-    if (!id || !libelle) {
+    const { id, nom } = this.roleForm;
+    if (!id || !nom) {
       toast.error('Identifiant et libellé sont requis');
       return;
     }
@@ -64,7 +71,7 @@ export class UserRole {
       toast.error('Un rôle avec cet identifiant existe déjà');
       return;
     }
-    this.roles.push({ id, libelle });
+    this.roles.push({ id, name: nom });
     toast.success('Rôle créé');
     this.showCreateModal = false;
   }
@@ -78,11 +85,48 @@ export class UserRole {
     this.showDeleteModal = false;
   }
 
-  roles = [
-    { id: 'admin', libelle: 'Administrateur' },
-    { id: 'doctor', libelle: 'Docteur' },
-    { id: 'nurse', libelle: 'Infirmière' },
-    { id: 'patient', libelle: 'Patient' },
-    { id: 'laborant', libelle: 'Laborantin' },
-  ];
+  roles: Array<{ id: string; name: string }> = [];
+
+  private tonom(name: string): string {
+    const id = (name || '').toLowerCase();
+    console.log(id);
+
+    switch (id) {
+      case 'admin':
+        return 'Administrateur';
+      case 'doctor':
+        return 'Docteur';
+      case 'nurse':
+        return 'Infirmière';
+      case 'patient':
+        return 'Patient';
+      case 'laborant':
+        return 'Laborantin';
+      default:
+        return name;
+    }
+  }
+
+  private normalizeId(role: string): string {
+    // Convert backend role formats like 'ROLE_ADMIN' or 'ADMIN' to lowercase id
+    const cleaned = (role || '').replace(/^ROLE_/i, '').toLowerCase();
+    return cleaned;
+  }
+
+  private loadRoles(): void {
+    this.usersService.getRoles().subscribe({
+      next: (list) => {
+        this.roles = (list || [])
+          .filter((r) => r.name.toLowerCase() !== 'user')
+          .map((raw) => {
+            const id = this.normalizeId(raw.name);
+            return { id, name: this.tonom(id) };
+          });
+        toast.success('Rôles mis à jour');
+      },
+      error: () => {
+        toast.error('Erreur lors du chargement des rôles');
+      },
+    });
+  }
 }
