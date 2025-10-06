@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
+// import { v4 as uuidv4 } from 'uuid';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from './api';
 
@@ -39,6 +40,7 @@ export interface UpdateUserPayload {
   telephone: string;
   adresse: string;
   role: string;
+  enable?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -52,20 +54,49 @@ export class UsersService {
   }
 
   create(payload: CreateUserPayload): Observable<UserAccountItem> {
-    return this.http.post<UserAccountItem>(this.baseUrl, payload);
+    return this.http.post<UserAccountItem>(this.baseUrl, {
+      username: payload.email,
+      fullName: 'User',
+      password: payload.password,
+      roles: payload.role,
+      enable: true,
+      // publicId: uuidv4(),
+      createdAt: new Date(),
+    });
   }
 
   update(id: string, changes: UpdateUserPayload): Observable<UserAccountItem> {
-    return this.http.put<UserAccountItem>(`${this.baseUrl}/${id}`, changes);
+    return this.http.put<UserAccountItem>(`${this.baseUrl}/${id}`, {
+      fullName: 'User',
+      username: changes.email,
+      roles: changes.role,
+      password: '',
+      enable: changes.enable ?? false,
+      // publicId: uuidv4(),
+      createdAt: new Date(),
+    });
   }
 
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 
-  resetPassword(id: string, newPassword: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.baseUrl}/${id}/reset-password`, {
-      password: newPassword,
+  resetPassword(
+    id: number,
+    publicId: string,
+    currentPassword: string,
+    newPassword: string
+  ): Observable<{ message: string }> {
+    console.log(currentPassword, newPassword);
+
+    return this.http.put<{ message: string }>(`${this.baseUrl}/change_password/${publicId}`, {
+      currentPassword,
+      newPassword,
+      userId: id,
     });
+  }
+
+  getRoles(): Observable<string[]> {
+    return this.http.get<string[]>(`${API_BASE_URL}/role`);
   }
 }

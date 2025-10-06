@@ -34,6 +34,7 @@ export class DataTableComponent {
   @Output() onResetPassword = new EventEmitter<any>();
   @Output() onFirstAppointmentAction = new EventEmitter<any>();
   @Output() onView = new EventEmitter<any>();
+  @Output() onActivateUser = new EventEmitter<any>();
 
   search: string = '';
   sortKey: string = '';

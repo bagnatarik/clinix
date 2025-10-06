@@ -10,6 +10,7 @@ import {
   UpdateUserPayload,
   UserAccountItem,
 } from '../../core/services/users.service';
+import { AuthenticationService } from '../../authentication/services/authentication-service';
 
 @Component({
   selector: 'app-user-account',
@@ -18,7 +19,7 @@ import {
   styleUrl: './user-account.css',
 })
 export class UserAccount implements OnInit {
-  constructor(private usersService: UsersService) {}
+  constructor(private usersService: UsersService, private auth: AuthenticationService) {}
 
   users: UserAccountItem[] = [];
   columns: Column[] = [
@@ -32,9 +33,12 @@ export class UserAccount implements OnInit {
     { key: 'dateCreation', label: 'Date de création', sortable: true },
     { key: 'actions', label: 'Actions', sortable: true },
   ];
+  userEmail: string | null = null;
 
   ngOnInit(): void {
-    this.handleRefresh();
+    const user = this.auth.getCurrentUser();
+    this.userEmail = user?.email ?? null;
+    this.handleRefresh(true);
   }
 
   // Table des rôles (id, libellé)
@@ -70,6 +74,7 @@ export class UserAccount implements OnInit {
 
   // Formulaire pour changement de mot de passe
   passwordForm = {
+    currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   };
@@ -88,17 +93,23 @@ export class UserAccount implements OnInit {
     };
     this.showCreateModal = true;
   }
-  handleRefresh() {
+  handleRefresh(firstTime: boolean = false) {
     this.usersService.getAll().subscribe((list) => {
       this.users =
-        list.map((user) => ({
-          ...user,
-          email: user.username || '',
-          role: this.roleLabel(user.roles.toLowerCase() || 'User'),
-          statut: user.enable ? 'Actif' : 'Inactif',
-          dateCreation: user.createdAt ? new Date(user.createdAt).toLocaleDateString('fr-FR') : '',
-        })) || [];
-      toast.success('Liste des utilisateurs mise à jour');
+        list
+          .filter((user) => user.username !== this.userEmail)
+          .map((user) => ({
+            ...user,
+            email: user.username || '',
+            role: this.roleLabel(user.roles.toLowerCase() || 'User'),
+            statut: user.enable ? 'Actif' : 'Inactif',
+            dateCreation: user.createdAt
+              ? new Date(user.createdAt).toLocaleDateString('fr-FR')
+              : '',
+          })) || [];
+      if (!firstTime) {
+        toast.success('Liste des utilisateurs mise à jour');
+      }
     });
   }
 
@@ -124,7 +135,7 @@ export class UserAccount implements OnInit {
 
   handleResetPassword(user: any) {
     this.currentUser = user;
-    this.passwordForm = { newPassword: '', confirmPassword: '' };
+    this.passwordForm = { currentPassword: '', newPassword: '', confirmPassword: '' };
     this.showResetPasswordModal = true;
   }
 
@@ -150,10 +161,12 @@ export class UserAccount implements OnInit {
       adresse: this.userForm.adresse,
       role: this.roleLabel(this.userForm.role),
     };
-    this.usersService.create(payload).subscribe((created) => {
-      this.users = [created, ...this.users];
+    console.log(payload.password);
+
+    this.usersService.create(payload).subscribe((_created) => {
       toast.success('Utilisateur créé');
       this.showCreateModal = false;
+      this.handleRefresh();
     });
   }
 
@@ -166,13 +179,10 @@ export class UserAccount implements OnInit {
         prenom: this.userForm.prenom,
         telephone: this.userForm.telephone,
         adresse: this.userForm.adresse,
-        role: this.roleLabel(this.userForm.role),
+        role: this.userForm.role.toUpperCase(),
       };
-      this.usersService.update(this.currentUser.id, changes).subscribe((updated) => {
-        const index = this.users.findIndex((u) => u.id === this.currentUser.id);
-        if (index !== -1) {
-          this.users[index] = { ...this.users[index], ...updated };
-        }
+      this.usersService.update(this.currentUser.publicId, changes).subscribe((_updated) => {
+        this.handleRefresh();
         this.showEditModal = false;
         toast.success('Utilisateur mis à jour');
       });
@@ -183,8 +193,8 @@ export class UserAccount implements OnInit {
 
   deleteUser() {
     if (this.currentUser) {
-      this.usersService.delete(this.currentUser.id).subscribe(() => {
-        this.users = this.users.filter((u) => u.id !== this.currentUser.id);
+      this.usersService.delete(this.currentUser.publicId).subscribe(() => {
+        this.handleRefresh();
         toast.success('Utilisateur supprimé');
         this.showDeleteModal = false;
       });
@@ -193,12 +203,46 @@ export class UserAccount implements OnInit {
     }
   }
 
+  activateUser(user?: any) {
+    const target = user;
+    if (!target) {
+      toast.error('Aucun utilisateur sélectionné');
+      return;
+    }
+
+    const changes: UpdateUserPayload = {
+      email: user.email,
+      role: user.roles.toUpperCase(),
+      sexe: this.userForm.sexe,
+      nom: this.userForm.nom,
+      prenom: this.userForm.prenom,
+      telephone: this.userForm.telephone,
+      adresse: this.userForm.adresse,
+      enable: true,
+    };
+
+    this.usersService.update(target.publicId, changes).subscribe({
+      next: () => {
+        toast.success(`Compte activé pour ${target.email}`);
+        this.handleRefresh();
+        if (this.showViewModal) this.showViewModal = false;
+      },
+      error: () => {
+        toast.error("Erreur lors de l'activation du compte");
+      },
+    });
+  }
+
   closeView() {
     this.showViewModal = false;
   }
 
   resetPassword() {
-    const { newPassword, confirmPassword } = this.passwordForm;
+    const { currentPassword, newPassword, confirmPassword } = this.passwordForm;
+    if (!currentPassword) {
+      toast.error('Veuillez saisir le mot de passe actuel');
+      return;
+    }
     if (!newPassword || newPassword.length < 8) {
       toast.error('Le mot de passe doit comporter au moins 8 caractères');
       return;
@@ -211,15 +255,17 @@ export class UserAccount implements OnInit {
       toast.error('Aucun utilisateur sélectionné');
       return;
     }
-    this.usersService.resetPassword(this.currentUser.id, newPassword).subscribe({
-      next: () => {
-        toast.success(`Mot de passe mis à jour pour l’utilisateur ${this.currentUser.id}`);
-        this.showResetPasswordModal = false;
-      },
-      error: () => {
-        toast.error('Erreur lors de la mise à jour du mot de passe');
-      },
-    });
+    this.usersService
+      .resetPassword(this.currentUser.id, this.currentUser.publicId, currentPassword, newPassword)
+      .subscribe({
+        next: () => {
+          toast.success(`Mot de passe mis à jour pour l'utilisateur ${this.currentUser.email}`);
+          this.showResetPasswordModal = false;
+        },
+        error: () => {
+          toast.error('Erreur lors de la mise à jour du mot de passe');
+        },
+      });
   }
 
   generatePassword(): string {

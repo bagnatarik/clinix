@@ -14,7 +14,7 @@ export class UserRole {
   columns: Column[] = [
     { key: 'id', label: 'Identifiant', sortable: true },
     { key: 'libelle', label: 'Libellé', sortable: true },
-    { key: 'actions', label: 'Actions', sortable: false },
+    // { key: 'actions', label: 'Actions', sortable: false },
   ];
 
   // Modals visibility
@@ -61,7 +61,7 @@ export class UserRole {
     }
     const exists = this.roles.some((r) => r.id === id);
     if (exists) {
-      toast.error("Un rôle avec cet identifiant existe déjà");
+      toast.error('Un rôle avec cet identifiant existe déjà');
       return;
     }
     this.roles.push({ id, libelle });
