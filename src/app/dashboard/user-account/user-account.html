@@ -123,10 +123,10 @@
           >
             <option value="" disabled>Choisir un rôle...</option>
             @for (r of roles; track r.id) {
-              <option [value]="r.id">{{ r.libelle }}</option>
+            <option [value]="r.id">{{ r.libelle }}</option>
             }
           </select>
-          </div>
+        </div>
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">Mot de passe (généré)</label>
           <div class="flex gap-2">
@@ -137,7 +137,7 @@
               class="flex-1 px-3 py-1.5 border border-gray-200 rounded focus:border-blue-500 focus:outline-none text-sm bg-neutral-50"
             />
             <button
-              (click)="userForm.password = generatePassword()"
+              (click)="userForm.password = regeneratePassword()"
               class="px-3 py-1.5 text-xs font-medium text-white bg-blue-500 rounded hover:bg-blue-600"
               type="button"
             >
@@ -206,7 +206,9 @@
         />
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Confirmer le mot de passe</label>
+        <label class="block text-xs font-medium text-gray-600 mb-1"
+          >Confirmer le mot de passe</label
+        >
         <input
           type="password"
           [(ngModel)]="passwordForm.confirmPassword"
@@ -218,10 +220,10 @@
       <div class="space-y-1 text-xs">
         <p class="text-gray-500">Minimum 8 caractères, mélangez lettres, chiffres et symboles.</p>
         @if (passwordForm.newPassword && passwordForm.newPassword.length < 8) {
-          <p class="text-red-600">Le mot de passe doit comporter au moins 8 caractères.</p>
-        }
-        @if (passwordForm.confirmPassword && passwordForm.newPassword !== passwordForm.confirmPassword) {
-          <p class="text-red-600">Les mots de passe ne correspondent pas.</p>
+        <p class="text-red-600">Le mot de passe doit comporter au moins 8 caractères.</p>
+        } @if (passwordForm.confirmPassword && passwordForm.newPassword !==
+        passwordForm.confirmPassword) {
+        <p class="text-red-600">Les mots de passe ne correspondent pas.</p>
         }
       </div>
     </div>
@@ -235,18 +237,28 @@
       </button>
       <button
         (click)="resetPassword()"
-        [disabled]="!passwordForm.newPassword || passwordForm.newPassword.length < 8 || passwordForm.newPassword !== passwordForm.confirmPassword"
+        [disabled]="
+          !passwordForm.newPassword ||
+          passwordForm.newPassword.length < 8 ||
+          passwordForm.newPassword !== passwordForm.confirmPassword
+        "
         class="px-3 py-1.5 text-xs font-medium text-white rounded hover:bg-blue-600"
         [ngClass]="{
-          'bg-blue-500': passwordForm.newPassword && passwordForm.newPassword.length >= 8 && passwordForm.newPassword === passwordForm.confirmPassword,
-          'bg-blue-300 cursor-not-allowed': !passwordForm.newPassword || passwordForm.newPassword.length < 8 || passwordForm.newPassword !== passwordForm.confirmPassword
+          'bg-blue-500':
+            passwordForm.newPassword &&
+            passwordForm.newPassword.length >= 8 &&
+            passwordForm.newPassword === passwordForm.confirmPassword,
+          'bg-blue-300 cursor-not-allowed':
+            !passwordForm.newPassword ||
+            passwordForm.newPassword.length < 8 ||
+            passwordForm.newPassword !== passwordForm.confirmPassword
         }"
       >
         Valider
       </button>
     </div>
   </div>
-  </div>
+</div>
 }
 
 <!-- Modal de visualisation du profil utilisateur -->
@@ -286,15 +298,21 @@
         <p class="text-xs font-semibold text-neutral-700">Identité</p>
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">Nom</label>
-          <div class="px-3 py-1.5 border border-gray-200 rounded text-sm bg-neutral-50">{{ currentUser?.nom || '-' }}</div>
+          <div class="px-3 py-1.5 border border-gray-200 rounded text-sm bg-neutral-50">
+            {{ currentUser?.nom || '-' }}
+          </div>
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">Prénom</label>
-          <div class="px-3 py-1.5 border border-gray-200 rounded text-sm bg-neutral-50">{{ currentUser?.prenom || '-' }}</div>
+          <div class="px-3 py-1.5 border border-gray-200 rounded text-sm bg-neutral-50">
+            {{ currentUser?.prenom || '-' }}
+          </div>
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">Sexe</label>
-          <div class="px-3 py-1.5 border border-gray-200 rounded text-sm bg-neutral-50">{{ currentUser?.sexe || '-' }}</div>
+          <div class="px-3 py-1.5 border border-gray-200 rounded text-sm bg-neutral-50">
+            {{ currentUser?.sexe || '-' }}
+          </div>
         </div>
       </div>
 
@@ -305,15 +323,21 @@
         <p class="text-xs font-semibold text-neutral-700">Coordonnées</p>
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">Email</label>
-          <div class="px-3 py-1.5 border border-gray-200 rounded text-sm bg-neutral-50">{{ currentUser?.email || '-' }}</div>
+          <div class="px-3 py-1.5 border border-gray-200 rounded text-sm bg-neutral-50">
+            {{ currentUser?.email || '-' }}
+          </div>
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">Téléphone</label>
-          <div class="px-3 py-1.5 border border-gray-200 rounded text-sm bg-neutral-50">{{ currentUser?.telephone || '-' }}</div>
+          <div class="px-3 py-1.5 border border-gray-200 rounded text-sm bg-neutral-50">
+            {{ currentUser?.telephone || '-' }}
+          </div>
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">Adresse</label>
-          <div class="px-3 py-1.5 border border-gray-200 rounded text-sm bg-neutral-50">{{ currentUser?.adresse || '-' }}</div>
+          <div class="px-3 py-1.5 border border-gray-200 rounded text-sm bg-neutral-50">
+            {{ currentUser?.adresse || '-' }}
+          </div>
         </div>
       </div>
 
@@ -324,19 +348,27 @@
         <p class="text-xs font-semibold text-neutral-700">Compte</p>
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">ID</label>
-          <div class="px-3 py-1.5 border border-gray-200 rounded text-sm bg-neutral-50">{{ currentUser?.id || '-' }}</div>
+          <div class="px-3 py-1.5 border border-gray-200 rounded text-sm bg-neutral-50">
+            {{ currentUser?.id || '-' }}
+          </div>
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">Rôle</label>
-          <div class="px-3 py-1.5 border border-gray-200 rounded text-sm bg-neutral-50">{{ currentUser?.role || '-' }}</div>
+          <div class="px-3 py-1.5 border border-gray-200 rounded text-sm bg-neutral-50">
+            {{ currentUser?.role || '-' }}
+          </div>
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">Statut</label>
-          <div class="px-3 py-1.5 border border-gray-200 rounded text-sm bg-neutral-50">{{ currentUser?.statut || '-' }}</div>
+          <div class="px-3 py-1.5 border border-gray-200 rounded text-sm bg-neutral-50">
+            {{ currentUser?.statut || '-' }}
+          </div>
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">Date de création</label>
-          <div class="px-3 py-1.5 border border-gray-200 rounded text-sm bg-neutral-50">{{ currentUser?.dateCreation || '-' }}</div>
+          <div class="px-3 py-1.5 border border-gray-200 rounded text-sm bg-neutral-50">
+            {{ currentUser?.dateCreation || '-' }}
+          </div>
         </div>
       </div>
     </div>
@@ -458,7 +490,7 @@
           >
             <option value="" disabled>Choisir un rôle...</option>
             @for (r of roles; track r.id) {
-              <option [value]="r.id">{{ r.libelle }}</option>
+            <option [value]="r.id">{{ r.libelle }}</option>
             }
           </select>
         </div>
