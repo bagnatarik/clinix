@@ -90,7 +90,14 @@ export class UserAccount implements OnInit {
   }
   handleRefresh() {
     this.usersService.getAll().subscribe((list) => {
-      this.users = list || [];
+      this.users =
+        list.map((user) => ({
+          ...user,
+          email: user.username || '',
+          role: this.roleLabel(user.roles.toLowerCase() || 'User'),
+          statut: user.enable ? 'Actif' : 'Inactif',
+          dateCreation: user.createdAt ? new Date(user.createdAt).toLocaleDateString('fr-FR') : '',
+        })) || [];
       toast.success('Liste des utilisateurs mise à jour');
     });
   }

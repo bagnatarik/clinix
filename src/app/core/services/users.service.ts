@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from './api';
 
@@ -8,10 +8,14 @@ export interface UserAccountItem {
   nom: string;
   prenom: string;
   email: string;
+  username: string;
   telephone: string;
-  role: string;
   statut: string;
+  enable: boolean;
+  role: string;
+  roles: string;
   dateCreation: string;
+  createdAt: Date;
   sexe: string;
   adresse: string;
 }

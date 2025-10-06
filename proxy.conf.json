@@ -1,0 +1,7 @@
+{
+  "/api": {
+    "target": "https://multibranched-uncomportable-ingrid.ngrok-free.dev",
+    "secure": false,
+    "changeOrigin": true
+  }
+}
