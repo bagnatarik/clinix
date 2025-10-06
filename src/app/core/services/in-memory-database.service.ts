@@ -348,18 +348,18 @@ export class InMemoryDatabaseService {
 
   // Admin: Départements
   private departements: Departement[] = [
-    { id: 'CARD', libelle: 'Cardiologie' },
-    { id: 'ONC', libelle: 'Oncologie' },
-    { id: 'PED', libelle: 'Pédiatrie' },
+    { publicId: 'CARD', libelle: 'Cardiologie' },
+    { publicId: 'ONC', libelle: 'Oncologie' },
+    { publicId: 'PED', libelle: 'Pédiatrie' },
   ];
 
   // Admin: Professions
   private professions: Profession[] = [
-    { id: 'med', libelle: 'Médecin', nbPersonnels: 12 },
-    { id: 'inf', libelle: 'Infirmier/Infirmière', nbPersonnels: 25 },
-    { id: 'kine', libelle: 'Kinésithérapeute', nbPersonnels: 8 },
-    { id: 'sec', libelle: 'Secrétaire médical(e)', nbPersonnels: 6 },
-    { id: 'tech', libelle: 'Technicien de laboratoire', nbPersonnels: 4 },
+    { publicId: 'med', libelle: 'Médecin' },
+    { publicId: 'inf', libelle: 'Infirmier/Infirmière' },
+    { publicId: 'kine', libelle: 'Kinésithérapeute' },
+    { publicId: 'sec', libelle: 'Secrétaire médical(e)' },
+    { publicId: 'tech', libelle: 'Technicien de laboratoire' },
   ];
 
   // Admin: Spécialités
@@ -568,24 +568,24 @@ export class InMemoryDatabaseService {
     return of([...this.departements]);
   }
   createDepartement(
-    item: Omit<Departement, 'id'> & { id?: string; updatedBy?: string }
+    item: Omit<Departement, 'publicId'> & { publicId?: string }
   ): Observable<Departement> {
     const newItem: Departement = {
-      id: item.id ?? `DEP${Math.floor(Math.random() * 1000)}`,
+      publicId: item.publicId ?? `DEP${Math.floor(Math.random() * 1000)}`,
       ...item,
     } as Departement;
     this.departements = [newItem, ...this.departements];
     return of(newItem);
   }
   updateDepartement(id: string, changes: Partial<Departement>): Observable<Departement | null> {
-    const idx = this.departements.findIndex((d) => d.id === id);
+    const idx = this.departements.findIndex((d) => d.publicId === id);
     if (idx === -1) return of(null);
     this.departements[idx] = { ...this.departements[idx], ...changes };
     return of(this.departements[idx]);
   }
   deleteDepartement(id: string): Observable<boolean> {
     const initial = this.departements.length;
-    this.departements = this.departements.filter((d) => d.id !== id);
+    this.departements = this.departements.filter((d) => d.publicId !== id);
     return of(this.departements.length < initial);
   }
 
@@ -594,24 +594,24 @@ export class InMemoryDatabaseService {
     return of([...this.professions]);
   }
   createProfession(
-    item: Omit<Profession, 'id'> & { id?: string; updatedBy?: string }
+    item: Omit<Profession, 'publicId'> & { publicId?: string }
   ): Observable<Profession> {
     const newItem: Profession = {
-      id: item.id ?? `prof_${Math.floor(Math.random() * 1000)}`,
+      publicId: item.publicId ?? `prof_${Math.floor(Math.random() * 1000)}`,
       ...item,
     } as Profession;
     this.professions.push(newItem);
     return of(newItem);
   }
   updateProfession(id: string, changes: Partial<Profession>): Observable<Profession | null> {
-    const idx = this.professions.findIndex((p) => p.id === id);
+    const idx = this.professions.findIndex((p) => p.publicId === id);
     if (idx === -1) return of(null);
     this.professions[idx] = { ...this.professions[idx], ...changes };
     return of(this.professions[idx]);
   }
   deleteProfession(id: string): Observable<boolean> {
     const initial = this.professions.length;
-    this.professions = this.professions.filter((p) => p.id !== id);
+    this.professions = this.professions.filter((p) => p.publicId !== id);
     return of(this.professions.length < initial);
   }
 

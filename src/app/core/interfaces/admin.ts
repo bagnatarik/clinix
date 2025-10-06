@@ -1,14 +1,11 @@
 export interface Departement {
-  id: string;
+  publicId: string;
   libelle: string;
-  updatedBy?: string;
 }
 
 export interface Profession {
-  id: string;
+  publicId: string;
   libelle: string;
-  nbPersonnels: number;
-  updatedBy?: string;
 }
 
 export interface Specialite {

@@ -1,21 +1,24 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Profession } from '../../core/interfaces/admin';
-import { InMemoryDatabaseService } from '../../core/services/in-memory-database.service';
-import { AuthenticationService } from '../../authentication/services/authentication-service';
+import { HttpClient } from '@angular/common/http';
+import { API_BASE_URL } from '../../core/services/api';
 
 @Injectable({ providedIn: 'root' })
 export class ProfessionsService {
-  constructor(private db: InMemoryDatabaseService, private auth: AuthenticationService) {}
+  private readonly baseUrl = `${API_BASE_URL}/profession`;
+  constructor(private http: HttpClient) {}
 
-  getAll(): Observable<Profession[]> { return this.db.getProfessions(); }
-  create(item: Omit<Profession, 'id' | 'updatedBy'> & { id?: string }): Observable<Profession> {
-    const user = this.auth.getCurrentUser();
-    return this.db.createProfession({ ...item, updatedBy: user?.name });
+  getAll(): Observable<Profession[]> {
+    return this.http.get<Profession[]>(this.baseUrl + '/all');
+  }
+  create(libelle: string): Observable<Profession> {
+    return this.http.post<Profession>(this.baseUrl + '/save', { libelle });
   }
   update(id: string, changes: Partial<Profession>): Observable<Profession | null> {
-    const user = this.auth.getCurrentUser();
-    return this.db.updateProfession(id, { ...changes, updatedBy: user?.name });
+    return this.http.put<Profession | null>(`${this.baseUrl}/update/${id}`, { ...changes });
   }
-  delete(id: string): Observable<boolean> { return this.db.deleteProfession(id); }
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/delete/${id}`);
+  }
 }

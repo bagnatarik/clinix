@@ -14,7 +14,7 @@ import { Departement } from '../../core/interfaces/admin';
 })
 export class Departements implements OnInit {
   columns: Column[] = [
-    { key: 'id', label: 'ID', sortable: true },
+    { key: 'publicId', label: 'ID', sortable: true },
     { key: 'libelle', label: 'Libellé département', sortable: true },
     { key: 'actions', label: 'Actions', sortable: false },
   ];
@@ -26,12 +26,12 @@ export class Departements implements OnInit {
   currentDept: any = null;
 
   deptForm = {
-    id: '',
+    publicId: '',
     libelle: '',
   };
 
   handleNew() {
-    this.deptForm = { id: '', libelle: '' };
+    this.deptForm = { publicId: '', libelle: '' };
     this.showCreateModal = true;
   }
 
@@ -52,7 +52,7 @@ export class Departements implements OnInit {
 
   handleEdit(dept: any) {
     this.currentDept = dept;
-    this.deptForm = { id: dept.id ?? '', libelle: dept.libelle ?? '' };
+    this.deptForm = { publicId: dept.publicId ?? '', libelle: dept.libelle ?? '' };
     this.showEditModal = true;
   }
 
@@ -67,7 +67,7 @@ export class Departements implements OnInit {
 
   createDept() {
     const { libelle } = this.deptForm;
-    this.service.create({ id: 'UNID', libelle: libelle! }).subscribe(() => {
+    this.service.create({ publicId: 'UNID', libelle: libelle! }).subscribe(() => {
       this.showCreateModal = false;
       this.refresh();
     });
@@ -76,7 +76,7 @@ export class Departements implements OnInit {
   updateDept() {
     if (this.currentDept) {
       const { libelle } = this.deptForm;
-      this.service.update(this.currentDept.id, { libelle }).subscribe(() => {
+      this.service.update(this.currentDept.publicId, { libelle }).subscribe(() => {
         this.showEditModal = false;
         this.refresh();
       });
@@ -87,7 +87,7 @@ export class Departements implements OnInit {
 
   deleteDept() {
     if (this.currentDept) {
-      this.service.delete(this.currentDept.id).subscribe(() => {
+      this.service.delete(this.currentDept.publicId).subscribe(() => {
         this.showDeleteModal = false;
         this.refresh();
       });

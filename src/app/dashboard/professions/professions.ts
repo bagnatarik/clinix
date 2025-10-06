@@ -10,11 +10,11 @@ import { Profession } from '../../core/interfaces/admin';
   selector: 'app-professions',
   imports: [DataTableComponent, FormsModule],
   templateUrl: './professions.html',
-  styleUrl: './professions.css'
+  styleUrl: './professions.css',
 })
 export class Professions implements OnInit {
   columns: Column[] = [
-    { key: 'id', label: 'ID', sortable: true },
+    // { key: 'id', label: 'ID', sortable: true },
     { key: 'libelle', label: 'Libellé profession', sortable: true },
     { key: 'actions', label: 'Actions', sortable: false },
   ];
@@ -50,12 +50,14 @@ export class Professions implements OnInit {
     this.showCreateModal = true;
   }
 
-  handleRefresh() { this.refresh(); }
+  handleRefresh() {
+    this.refresh();
+  }
 
   handleEdit(profession: any) {
     this.currentProfession = profession;
-    this.professionForm = { 
-      libelle: profession.libelle
+    this.professionForm = {
+      libelle: profession.libelle,
     };
     this.showEditModal = true;
   }
@@ -73,7 +75,7 @@ export class Professions implements OnInit {
   // CRUD operations
   createProfession() {
     const { libelle } = this.professionForm;
-    this.service.create({ libelle: libelle!, nbPersonnels: 0 }).subscribe(() => {
+    this.service.create(libelle!).subscribe(() => {
       toast.success('Profession créée avec succès');
       this.showCreateModal = false;
       this.refresh();
@@ -83,7 +85,7 @@ export class Professions implements OnInit {
   updateProfession() {
     if (this.currentProfession) {
       const { libelle } = this.professionForm;
-      this.service.update(this.currentProfession.id, { libelle }).subscribe(() => {
+      this.service.update(this.currentProfession.publicId, { libelle }).subscribe(() => {
         toast.success('Profession mise à jour avec succès');
         this.showEditModal = false;
         this.refresh();
@@ -95,7 +97,7 @@ export class Professions implements OnInit {
 
   deleteProfession() {
     if (this.currentProfession) {
-      this.service.delete(this.currentProfession.id).subscribe(() => {
+      this.service.delete(this.currentProfession.publicId).subscribe(() => {
         toast.success('Profession supprimée avec succès');
         this.showDeleteModal = false;
         this.refresh();
