@@ -34,10 +34,8 @@ export class LoginProfesionnal {
     const { email, password } = this.formGroup.value;
 
     (await this.service.login(email, password)).subscribe({
-      next: (response) => {
+      next: () => {
         toast.success('Connexion réussie');
-        // Store token and role in local storage or session storage
-        localStorage.setItem('token', response.token);
 
         // Reset form after successful login
         this.formGroup.reset();

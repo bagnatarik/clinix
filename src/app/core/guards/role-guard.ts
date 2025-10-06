@@ -23,7 +23,7 @@ export const roleGuard: CanActivateFn = (route, state) => {
   const userRole = service.getUserRole();
 
   // Allow access if the user has one of the required roles
-  if (userRole && exceptedRoles.includes(userRole)) {
+  if (userRole && exceptedRoles.some((role) => userRole.includes(role))) {
     return true;
   }
 

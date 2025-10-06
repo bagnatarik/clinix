@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { API_BASE_URL } from '../../../core/services/api';
 
 export type Patient = {
   id: string;
@@ -17,56 +19,31 @@ export type Patient = {
 
 @Injectable({ providedIn: 'root' })
 export class PatientsService {
-  private patients: Patient[] = [
-    {
-      id: 'PAT-001',
-      nom: 'Dubois',
-      prenom: 'Alice',
-      sexe: 'F',
-      email: 'alice@example.com',
-      telephone: '0600000001',
-      adresse: '12 rue des Fleurs, Paris',
-      dateNaissance: '1992-03-15',
-      statut: 'actif',
-    },
-    {
-      id: 'PAT-002',
-      nom: 'Dupont',
-      prenom: 'Jean',
-      sexe: 'H',
-      email: 'jean@example.com',
-      telephone: '0600000002',
-      adresse: '5 avenue Victor Hugo, Lyon',
-      dateNaissance: '1986-07-02',
-      statut: 'actif',
-    },
-  ];
+  private baseUrl = `${API_BASE_URL}/patients`;
+  constructor(private http: HttpClient) {}
 
   getAll(): Observable<Patient[]> {
-    return of([...this.patients]);
+    return this.http.get<Patient[]>(this.baseUrl);
   }
 
   getById(id: string): Observable<Patient | null> {
-    return of(this.patients.find((p) => p.id === id) || null);
+    return this.http.get<Patient | null>(`${this.baseUrl}/${id}`);
   }
 
   create(item: Omit<Patient, 'id'> & { id?: string }): Observable<Patient> {
-    const id = item.id ?? `PAT-${String(this.patients.length + 1).padStart(3, '0')}`;
-    const created: Patient = { ...item, id } as Patient;
-    this.patients.push(created);
-    return of(created);
+    return this.http.post<Patient>(this.baseUrl, item);
   }
 
   update(id: string, changes: Partial<Patient>): Observable<Patient | null> {
-    const idx = this.patients.findIndex((p) => p.id === id);
-    if (idx === -1) return of(null);
-    this.patients[idx] = { ...this.patients[idx], ...changes };
-    return of(this.patients[idx]);
+    return this.http.put<Patient | null>(`${this.baseUrl}/${id}`, changes);
   }
 
   delete(id: string): Observable<boolean> {
-    const initial = this.patients.length;
-    this.patients = this.patients.filter((p) => p.id !== id);
-    return of(this.patients.length < initial);
+    try {
+      this.http.delete<void>(`${this.baseUrl}/${id}`).subscribe();
+      return new Observable((observer) => observer.next(true));
+    } catch {
+      return new Observable((observer) => observer.next(false));
+    }
   }
 }

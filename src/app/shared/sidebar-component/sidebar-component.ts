@@ -25,8 +25,8 @@ export class SidebarComponent implements OnInit {
       this.menuService.setRoles(this.roles);
     }
 
-    const role = this.authentService.getUserRole();
-    this.menuService.setRoles([role]);
+    const roles = this.authentService.getUserRole();
+    this.menuService.setRoles(roles);
 
     this.menu = this.menuService.getMenu();
 

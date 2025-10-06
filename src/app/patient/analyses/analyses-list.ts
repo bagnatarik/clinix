@@ -91,7 +91,7 @@ import { Consultation } from '../../core/interfaces/medical';
 })
 export class PatientAnalysesList implements OnInit {
   columns: Column[] = [
-    { key: 'id', label: 'ID', sortable: false },
+    // { key: 'id', label: 'ID', sortable: false },
     { key: 'nomAnalyse', label: 'Analyse', sortable: true },
     { key: 'typeAnalyse', label: 'Type', sortable: true },
     { key: 'dateAnalyse', label: 'Date', sortable: true },

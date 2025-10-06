@@ -1,15 +1,17 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Ordonnance } from '../../../core/interfaces/medical';
-import { InMemoryDatabaseService } from '../../../core/services/in-memory-database.service';
+import { HttpClient } from '@angular/common/http';
+import { API_BASE_URL } from '../../../core/services/api';
 
 @Injectable({ providedIn: 'root' })
 export class OrdonnancesService {
-  constructor(private db: InMemoryDatabaseService) {}
+  private readonly baseUrl = `${API_BASE_URL}/ordonnances`;
+  constructor(private http: HttpClient) {}
 
-  getAll(): Observable<Ordonnance[]> { return this.db.getOrdonnances(); }
-  getById(id: string): Observable<Ordonnance | null> { return this.db.getOrdonnanceById(id); }
-  create(item: Omit<Ordonnance, 'id'>): Observable<Ordonnance> { return this.db.createOrdonnance(item); }
-  update(id: string, changes: Partial<Ordonnance>): Observable<Ordonnance | null> { return this.db.updateOrdonnance(id, changes); }
-  delete(id: string): Observable<boolean> { return this.db.deleteOrdonnance(id); }
+  getAll(): Observable<Ordonnance[]> { return this.http.get<Ordonnance[]>(this.baseUrl); }
+  getById(id: string): Observable<Ordonnance | null> { return this.http.get<Ordonnance | null>(`${this.baseUrl}/${id}`); }
+  create(item: Omit<Ordonnance, 'id'>): Observable<Ordonnance> { return this.http.post<Ordonnance>(this.baseUrl, item); }
+  update(id: string, changes: Partial<Ordonnance>): Observable<Ordonnance | null> { return this.http.put<Ordonnance | null>(`${this.baseUrl}/${id}`, changes); }
+  delete(id: string): Observable<void> { return this.http.delete<void>(`${this.baseUrl}/${id}`); }
 }

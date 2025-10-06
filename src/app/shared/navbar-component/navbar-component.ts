@@ -2,6 +2,7 @@ import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { AuthenticationService } from '../../authentication/services/authentication-service';
 import { CommonModule } from '@angular/common';
+import { Role } from '../../core/interfaces/role-type';
 
 @Component({
   selector: 'app-navbar-component',
@@ -12,7 +13,7 @@ import { CommonModule } from '@angular/common';
 export class NavbarComponent {
   userName: string | null = null;
   userEmail: string | null = null;
-  userRole: string | null = null;
+  userRole: Role | null = null;
   dropdownOpen = false;
 
   @ViewChild('profileMenu') profileMenuRef?: ElementRef<HTMLDivElement>;
@@ -29,7 +30,7 @@ export class NavbarComponent {
     const user = this.auth.getCurrentUser();
     this.userName = user?.name ?? null;
     this.userEmail = user?.email ?? null;
-    this.userRole = user?.role ?? null;
+    this.userRole = user?.roles[0] ?? null;
   }
 
   toggleDropdown() {
@@ -53,9 +54,9 @@ export class NavbarComponent {
     }
   }
 
-  getRoleFrench(role: string | null): string {
+  getRoleFrench(role: Role | null): string {
     if (!role) return '';
-    switch (role.toLowerCase()) {
+    switch (role) {
       case 'admin':
         return 'Admin';
       case 'doctor':
@@ -67,7 +68,7 @@ export class NavbarComponent {
       case 'laborant':
         return 'Laborantin';
       default:
-        return role.charAt(0).toUpperCase() + role.slice(1);
+        return role;
     }
   }
 }

@@ -35,7 +35,7 @@ import { RendezvousService } from '../../core/services/rendezvous.service';
 })
 export class RdvList implements OnInit {
   columns: Column[] = [
-    { key: 'id', label: 'ID', sortable: true },
+    // { key: 'id', label: 'ID', sortable: true },
     { key: 'date', label: 'Date', sortable: true },
     { key: 'heure', label: 'Heure', sortable: true },
     { key: 'personnel', label: 'Personnel', sortable: true },

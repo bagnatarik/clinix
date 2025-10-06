@@ -1,29 +1,36 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { InMemoryDatabaseService } from './in-memory-database.service';
 import { Rendezvous } from '../interfaces/medical';
+import { API_BASE_URL } from './api';
 
 @Injectable({ providedIn: 'root' })
 export class RendezvousService {
-  constructor(private db: InMemoryDatabaseService) {}
+  private baseUrl = `${API_BASE_URL}/rendezvous`;
+  constructor(private http: HttpClient) {}
 
   getAll(): Observable<Rendezvous[]> {
-    return this.db.getRendezvous();
+    return this.http.get<Rendezvous[]>(this.baseUrl);
   }
 
   getById(id: string): Observable<Rendezvous | null> {
-    return this.db.getRendezvousById(id);
+    return this.http.get<Rendezvous | null>(`${this.baseUrl}/${id}`);
   }
 
   create(item: Omit<Rendezvous, 'id'>): Observable<Rendezvous> {
-    return this.db.createRendezvous(item);
+    return this.http.post<Rendezvous>(this.baseUrl, item);
   }
 
   update(id: string, changes: Partial<Rendezvous>): Observable<Rendezvous | null> {
-    return this.db.updateRendezvous(id, changes);
+    return this.http.put<Rendezvous | null>(`${this.baseUrl}/${id}`, changes);
   }
 
   delete(id: string): Observable<boolean> {
-    return this.db.deleteRendezvous(id);
+    try {
+      this.http.delete<void>(`${this.baseUrl}/${id}`).subscribe();
+      return new Observable((observer) => observer.next(true));
+    } catch {
+      return new Observable((observer) => observer.next(false));
+    }
   }
 }

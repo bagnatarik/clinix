@@ -1,96 +1,56 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { Role } from '../../core/interfaces/role-type';
+import { API_BASE_URL } from '../../core/services/api';
 
 interface UserInfo {
   id: string;
   email: string;
   name: string;
-  role: Role;
+  roles: Role[];
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthenticationService {
-  // Utilisateurs fictifs pour simuler différents rôles
-  private mockUsers = [
-    {
-      id: '1',
-      email: 'admin@clinix.com',
-      password: 'admin123',
-      name: 'Admin User',
-      role: 'admin' as Role,
-    },
-    {
-      id: '2',
-      email: 'doctor@clinix.com',
-      password: 'doctor123',
-      name: 'Doctor User',
-      role: 'doctor' as Role,
-    },
-    {
-      id: '3',
-      email: 'patient@clinix.com',
-      password: 'patient123',
-      name: 'Patient User',
-      role: 'patient' as Role,
-    },
-    {
-      id: '5',
-      email: 'nurse@clinix.com',
-      password: 'nurse123',
-      name: 'Nurse User',
-      role: 'nurse' as Role,
-    },
-    {
-      id: '6',
-      email: 'laborant@clinix.com',
-      password: 'laborant123',
-      name: 'Laborant User',
-      role: 'laborant' as Role,
-    },
-    {
-      id: '4',
-      email: 'tarikbagnapro@gmail.com',
-      password: 'azertyuiop',
-      name: 'Tarik Bagna',
-      role: 'admin' as Role,
-    },
-  ];
+  private readonly baseUrl = `${API_BASE_URL}`;
+
+  constructor(private http: HttpClient) {}
 
   async login(
     email: string,
     password: string
-  ): Promise<Observable<{ token: string; user: UserInfo }>> {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const user = this.mockUsers.find((u) => u.email === email && u.password === password);
-
-    if (user) {
-      // Stocker les informations utilisateur dans localStorage
-      const userInfo: UserInfo = {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: (user.role as string).toLowerCase() as Role,
-      };
-
-      localStorage.setItem('token', 'jwt_token_' + user.id);
-      localStorage.setItem('user_info', JSON.stringify(userInfo));
-
-      return of({ token: 'jwt_token_' + user.id, user: userInfo });
-    }
-
-    return new Observable((observer) => observer.error('Invalid credentials'));
+  ): Promise<Observable<{ accessToken: string; id: string; username: string; roles: string[] }>> {
+    const obs = this.http
+      .post<{ accessToken: string; id: string; username: string; roles: string[] }>(
+        `${this.baseUrl}/login`,
+        { username: email, password }
+      )
+      .pipe(
+        tap((response) => {
+          localStorage.setItem('token', response.accessToken);
+          localStorage.setItem(
+            'user_info',
+            JSON.stringify({
+              id: response.id,
+              email: response.username,
+              roles: response.roles
+                .map((role) => role.replace('ROLE_', ''))
+                .map((role) => role.toLowerCase() as Role),
+            })
+          );
+        })
+      );
+    return Promise.resolve(obs);
   }
 
   async forgotPassword(email: string): Promise<Observable<{ message: string }>> {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    if (this.mockUsers.some((u) => u.email === email)) {
-      return of({ message: 'Password reset email sent to ' + email });
-    }
-    return new Observable((observer) => observer.error('Email not found'));
+    return Promise.resolve(
+      this.http.post<{ message: string }>(`${this.baseUrl}/forgot-password`, { email })
+    );
   }
 
   async resetPassword(
@@ -98,11 +58,13 @@ export class AuthenticationService {
     password: string,
     otp: string
   ): Promise<Observable<{ message: string }>> {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    if (this.mockUsers.some((u) => u.email === email) && otp === '123456') {
-      return of({ message: 'Password reset successfully' });
-    }
-    return new Observable((observer) => observer.error('Invalid OTP'));
+    return Promise.resolve(
+      this.http.post<{ message: string }>(`${this.baseUrl}/reset-password`, {
+        email,
+        password,
+        otp,
+      })
+    );
   }
 
   logout(): void {
@@ -115,13 +77,13 @@ export class AuthenticationService {
     return token !== null;
   }
 
-  getUserRole(): Role {
+  getUserRole(): Role[] {
     const userInfo = localStorage.getItem('user_info');
     if (userInfo) {
       const user = JSON.parse(userInfo) as UserInfo;
-      return (user.role as string).toLowerCase() as Role;
+      return user.roles;
     }
-    return 'doctor' as Role;
+    return ['doctor'] as Role[];
   }
 
   getCurrentUser(): UserInfo | null {
@@ -134,13 +96,8 @@ export class AuthenticationService {
 
   // Expose all users (sans mot de passe) pour alimenter des sélecteurs
   getAllUsers(): Observable<Array<{ id: string; email: string; name: string; role: Role }>> {
-    return of(
-      this.mockUsers.map((u) => ({
-        id: u.id,
-        email: u.email,
-        name: u.name,
-        role: (u.role as string).toLowerCase() as Role,
-      }))
+    return this.http.get<Array<{ id: string; email: string; name: string; role: Role }>>(
+      `${this.baseUrl}/users`
     );
   }
 }
