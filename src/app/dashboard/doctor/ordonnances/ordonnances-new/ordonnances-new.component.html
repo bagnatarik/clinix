@@ -120,6 +120,30 @@
       </div>
     </div>
 
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Statut</label>
+        <select
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm"
+          formControlName="statut"
+        >
+          <option value="brouillon">Brouillon</option>
+          <option value="signée">Signée</option>
+          <option value="annulée">Annulée</option>
+        </select>
+      </div>
+      <div class="flex items-center gap-2 mt-6 md:mt-0">
+        <input
+          id="signerMaintenant"
+          type="checkbox"
+          class="size-4"
+          [checked]="signerMaintenant"
+          (change)="toggleSignature($event.target.checked)"
+        />
+        <label for="signerMaintenant" class="text-sm text-gray-700">Signer l’ordonnance maintenant</label>
+      </div>
+    </div>
+
     <div class="mt-6">
       <button
         type="button"

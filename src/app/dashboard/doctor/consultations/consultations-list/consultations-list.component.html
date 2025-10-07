@@ -9,3 +9,16 @@
   (onDelete)="delete($event)"
   (onRefresh)="refresh()"
 ></app-data-table-component>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal-backdrop" *ngIf="confirmDeleteOpen"></div>
+<div class="modal" *ngIf="confirmDeleteOpen" role="dialog" aria-modal="true">
+  <div class="modal-content">
+    <h3>Confirmer la suppression</h3>
+    <p>Voulez-vous vraiment supprimer cette consultation ? Cette action est irréversible.</p>
+    <div class="modal-actions">
+      <button class="btn btn-danger" (click)="confirmDelete()">Supprimer</button>
+      <button class="btn btn-secondary" (click)="cancelDelete()">Annuler</button>
+    </div>
+  </div>
+  </div>

@@ -25,7 +25,7 @@ export class InMemoryDatabaseService {
       cout: 300,
       poids: 72.5,
       temperature: 37.2,
-      tension: '12/8',
+      tension: 1.28,
     },
     {
       id: 'CONS-002',
@@ -38,7 +38,7 @@ export class InMemoryDatabaseService {
       cout: 450,
       poids: 80.0,
       temperature: 38.5,
-      tension: '13/9',
+      tension: 1.39,
     },
     {
       id: 'CONS-003',
@@ -51,7 +51,7 @@ export class InMemoryDatabaseService {
       cout: 200,
       poids: 70.2,
       temperature: 36.9,
-      tension: '12/7',
+      tension: 1.27,
       diagnostics: [
         {
           maladie: 'Hypertension légère',
@@ -104,7 +104,7 @@ export class InMemoryDatabaseService {
       cout: 250,
       poids: 69.8,
       temperature: 37.0,
-      tension: '11/7',
+      tension: 1.17,
       diagnostics: [
         { maladie: 'Anémie ferriprive', details: 'Ferritine basse, pâleur', gravite: 'modéré' },
       ],
@@ -145,7 +145,7 @@ export class InMemoryDatabaseService {
       cout: 180,
       poids: 77.4,
       temperature: 36.8,
-      tension: '12/8',
+      tension: 1.8,
     },
     {
       id: 'CONS-006',
@@ -158,7 +158,7 @@ export class InMemoryDatabaseService {
       cout: 320,
       poids: 72.0,
       temperature: 37.1,
-      tension: '12/8',
+      tension: 1.28,
     },
     {
       id: 'CONS-007',
@@ -171,7 +171,7 @@ export class InMemoryDatabaseService {
       cout: 400,
       poids: 79.5,
       temperature: 36.7,
-      tension: '13/8',
+      tension: 1.38,
     },
   ];
 

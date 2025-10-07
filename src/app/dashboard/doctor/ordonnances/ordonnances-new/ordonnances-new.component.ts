@@ -6,6 +6,8 @@ import { OrdonnancesService } from '../ordonnances.service';
 import { AuthenticationService } from '../../../../authentication/services/authentication-service';
 import { ProduitsService } from '../../../produits/produits.service';
 import { Produit } from '../../../../core/interfaces/admin';
+import { PatientsService } from '../../../nurse/patients/patients.service';
+import { catchError, of } from 'rxjs';
 
 @Component({
   selector: 'app-ordonnances-new',
@@ -22,7 +24,7 @@ export class OrdonnancesNewComponent implements OnInit {
   form!: FormGroup;
   doctorName: string = 'Médecin';
   // Dropdown patient façon Consultations
-  patients: string[] = ['Alice Dubois', 'Jean Dupont'];
+  patients: string[] = [];
   patientSearch: string = '';
   patientDropdownOpen = false;
   activeIndex: number = -1;
@@ -40,6 +42,7 @@ export class OrdonnancesNewComponent implements OnInit {
     private router: Router,
     private auth: AuthenticationService,
     private produitsService: ProduitsService,
+    private patientsService: PatientsService,
   ) {
     this.form = this.fb.group({
       patient: ['', Validators.required],
@@ -76,6 +79,21 @@ export class OrdonnancesNewComponent implements OnInit {
   };
 
   ngOnInit(): void {
+    // Charger les patients depuis l’API et fallback statique en cas d’erreur
+    this.patientsService
+      .getAll()
+      .pipe(
+        catchError(() => {
+          return of([
+            { prenom: 'Alice', nom: 'Dubois' },
+            { prenom: 'Jean', nom: 'Dupont' },
+          ]);
+        })
+      )
+      .subscribe((list: any[]) => {
+        this.patients = (list || []).map((p) => `${p.prenom} ${p.nom}`.trim());
+      });
+
     this.form.get('patient')?.valueChanges.subscribe((value) => {
       this.updatePatientDossier((value as string) || '');
       if (!value) {
@@ -121,6 +139,21 @@ export class OrdonnancesNewComponent implements OnInit {
     this.form.get('patient')?.setValue(name, { emitEvent: true });
     this.patientDropdownOpen = false;
     this.updatePatientDossier(name);
+  }
+
+  // Gestion signature/statut
+  signerMaintenant = false;
+  toggleSignature(checked: boolean) {
+    this.signerMaintenant = checked;
+    if (checked) {
+      this.form.get('statut')?.setValue('signée');
+    } else {
+      // Ne pas écraser si utilisateur a choisi un autre statut que brouillon
+      const current = (this.form.get('statut')?.value as string) || 'brouillon';
+      if (current === 'signée') {
+        this.form.get('statut')?.setValue('brouillon');
+      }
+    }
   }
 
   private updatePatientDossier(patientName: string): void {

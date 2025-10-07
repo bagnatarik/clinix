@@ -37,7 +37,7 @@ import { toast } from 'ngx-sonner';
 })
 export class PatientsListNurseComponent implements OnInit {
   columns: Column[] = [
-    { key: 'id', label: 'ID', sortable: true },
+    // { key: 'id', label: 'ID', sortable: true },
     { key: 'nom', label: 'Nom', sortable: true },
     { key: 'prenom', label: 'Prénom', sortable: true },
     { key: 'sexe', label: 'Sexe', sortable: true },
@@ -62,11 +62,11 @@ export class PatientsListNurseComponent implements OnInit {
   }
 
   edit(row: Patient) {
-    this.router.navigate([`/dashboard/infirmier/patients/${row.id}/edit`]);
+    this.router.navigate([`/dashboard/infirmier/patients/${row.publicId}/edit`]);
   }
 
   remove(row: Patient) {
-    this.service.delete(row.id).subscribe((ok) => {
+    this.service.delete(row.publicId).subscribe((ok) => {
       if (ok) {
         toast.success('Patient supprimé');
         this.refresh();

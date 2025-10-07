@@ -57,6 +57,11 @@ export class UsersService {
     return this.http.get<UserAccountItem[]>(this.baseUrl);
   }
 
+  // Récupérer un utilisateur par son identifiant public
+  getByPublicId(publicId: string): Observable<UserAccountItem | null> {
+    return this.http.get<UserAccountItem | null>(`${this.baseUrl}/get-one/${publicId}`);
+  }
+
   create(payload: CreateUserPayload): Observable<UserAccountItem> {
     return this.http.post<UserAccountItem>(this.baseUrl, {
       username: payload.email,

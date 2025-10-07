@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { ConsultationsService } from '../consultations.service';
-import { Consultation } from '../../../../core/interfaces/medical';
+import { Consultation, ConsultationResponse } from '../../../../core/interfaces/medical';
 import { AuthenticationService } from '../../../../authentication/services/authentication-service';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
@@ -54,49 +54,97 @@ export class ConsultationsViewComponent {
     private auth: AuthenticationService,
     private fb: FormBuilder
   ) {
-    this.doctorName = this.auth.getCurrentUser()?.name ?? 'Doctor User';
-    const id = this.route.snapshot.paramMap.get('id');
-    this.consultation$ = id ? this.service.getById(id) : of(null);
+    this.doctorName = `Dr. ${this.auth.getCurrentUser()?.fullName || 'Anne Mercier'}`;
 
     // Init formulaires
     this.form = this.fb.group({
       patient: [{ value: '', disabled: true }],
       date: [''],
       motif: [''],
-      statut: ['planifiée'],
+      statut: ['brouillon'],
       typeConsultation: [''],
       description: [''],
       cout: [null],
       poids: [null],
       temperature: [null],
-      tension: [''],
+      tension: [null],
       diagnostics: this.fb.array([]),
       analyses: this.fb.array([]),
       prescriptions: this.fb.array([]),
       hospitalisations: this.fb.array([]),
     });
-    this.diagnosticForm = this.fb.group({ maladie: ['', Validators.required], details: ['', Validators.required], gravite: ['', Validators.required] });
-    this.analysisForm = this.fb.group({ nomAnalyse: ['', Validators.required], typeAnalyse: ['', Validators.required], dateAnalyse: ['', Validators.required], description: ['', Validators.required], diagnosticRef: ['', Validators.required] });
-    this.prescriptionForm = this.fb.group({ date: ['', Validators.required], description: ['', Validators.required], motif: ['', Validators.required], diagnosticRef: ['', Validators.required] });
-    this.hospitalisationForm = this.fb.group({ dateAdmission: ['', Validators.required], dateSortie: [''], motif: ['', Validators.required], diagnosticRef: ['', Validators.required] });
+    this.diagnosticForm = this.fb.group({
+      maladie: ['', Validators.required],
+      details: ['', Validators.required],
+      gravite: ['', Validators.required],
+    });
+    this.analysisForm = this.fb.group({
+      nomAnalyse: ['', Validators.required],
+      typeAnalyse: ['', Validators.required],
+      dateAnalyse: ['', Validators.required],
+      description: ['', Validators.required],
+      diagnosticRef: ['', Validators.required],
+    });
+    this.prescriptionForm = this.fb.group({
+      date: ['', Validators.required],
+      description: ['', Validators.required],
+      motif: ['', Validators.required],
+      diagnosticRef: ['', Validators.required],
+    });
+    this.hospitalisationForm = this.fb.group({
+      dateAdmission: ['', Validators.required],
+      dateSortie: [''],
+      motif: ['', Validators.required],
+      diagnosticRef: ['', Validators.required],
+    });
 
-    if (id) {
+    // Charger la consultation selon l'identifiant de route (id ou publicId)
+    this.route.paramMap.subscribe((pm) => {
+      const id = pm.get('id');
+      if (!id) {
+        this.consultation$ = of(null);
+        return;
+      }
       this.service.getById(id).subscribe((c) => {
         if (c) {
+          this.consultation$ = of(c);
           this.populateFromConsultation(c);
           this.ensureSeedForCONS001();
+        } else {
+          // Fallback V2: récupération via publicId et mapping vers Consultation
+          this.service.getByPublicId(id).subscribe((resp) => {
+            if (resp) {
+              const mapped = this.mapResponseToConsultation(resp);
+              this.consultation$ = of(mapped);
+              this.populateFromConsultation(mapped);
+            } else {
+              this.consultation$ = of(null);
+            }
+          });
         }
       });
-    }
+    });
   }
 
   // Helpers
-  get diagnostics(): FormArray { return this.form.get('diagnostics') as FormArray; }
-  get analyses(): FormArray { return this.form.get('analyses') as FormArray; }
-  get prescriptions(): FormArray { return this.form.get('prescriptions') as FormArray; }
-  get hospitalisations(): FormArray { return this.form.get('hospitalisations') as FormArray; }
-  get hasDiagnostics(): boolean { return this.diagnostics.length > 0; }
-  get diagnosticsLabels(): string[] { return this.diagnostics.controls.map((ctrl) => (ctrl as FormGroup).get('maladie')?.value || ''); }
+  get diagnostics(): FormArray {
+    return this.form.get('diagnostics') as FormArray;
+  }
+  get analyses(): FormArray {
+    return this.form.get('analyses') as FormArray;
+  }
+  get prescriptions(): FormArray {
+    return this.form.get('prescriptions') as FormArray;
+  }
+  get hospitalisations(): FormArray {
+    return this.form.get('hospitalisations') as FormArray;
+  }
+  get hasDiagnostics(): boolean {
+    return this.diagnostics.length > 0;
+  }
+  get diagnosticsLabels(): string[] {
+    return this.diagnostics.controls.map((ctrl) => (ctrl as FormGroup).get('maladie')?.value || '');
+  }
 
   populateFromConsultation(c: Consultation) {
     this.form.patchValue({
@@ -112,13 +160,95 @@ export class ConsultationsViewComponent {
       tension: c.tension ?? '',
     });
     this.diagnostics.clear();
-    (c.diagnostics || []).forEach((d) => this.diagnostics.push(this.fb.group({ maladie: [d.maladie], details: [d.details], gravite: [d.gravite] })));
+    (c.diagnostics || []).forEach((d) =>
+      this.diagnostics.push(
+        this.fb.group({ maladie: [d.maladie], details: [d.details], gravite: [d.gravite] })
+      )
+    );
     this.analyses.clear();
-    (c.analyses || []).forEach((a) => this.analyses.push(this.fb.group({ nomAnalyse: [a.nomAnalyse], typeAnalyse: [a.typeAnalyse], dateAnalyse: [a.dateAnalyse], description: [a.description], diagnosticRef: [a.diagnosticRef] })));
+    (c.analyses || []).forEach((a) =>
+      this.analyses.push(
+        this.fb.group({
+          nomAnalyse: [a.nomAnalyse],
+          typeAnalyse: [a.typeAnalyse],
+          dateAnalyse: [a.dateAnalyse],
+          description: [a.description],
+          diagnosticRef: [a.diagnosticRef],
+        })
+      )
+    );
     this.prescriptions.clear();
-    (c.prescriptions || []).forEach((p) => this.prescriptions.push(this.fb.group({ date: [p.date], description: [p.description], motif: [p.motif], diagnosticRef: [p.diagnosticRef] })));
+    (c.prescriptions || []).forEach((p) =>
+      this.prescriptions.push(
+        this.fb.group({
+          date: [p.date],
+          description: [p.description],
+          motif: [p.motif],
+          diagnosticRef: [p.diagnosticRef],
+        })
+      )
+    );
     this.hospitalisations.clear();
-    (c.hospitalisations || []).forEach((h) => this.hospitalisations.push(this.fb.group({ dateAdmission: [h.dateAdmission], dateSortie: [h.dateSortie], motif: [h.motif], diagnosticRef: [h.diagnosticRef] })));
+    (c.hospitalisations || []).forEach((h) =>
+      this.hospitalisations.push(
+        this.fb.group({
+          dateAdmission: [h.dateAdmission],
+          dateSortie: [h.dateSortie],
+          motif: [h.motif],
+          diagnosticRef: [h.diagnosticRef],
+        })
+      )
+    );
+  }
+
+  private mapResponseToConsultation(resp: ConsultationResponse): Consultation {
+    return {
+      id: resp.publicId,
+      patient: resp.codeDossierPatient, // Code dossier en attendant le nom du patient
+      date: resp.consultationDate,
+      motif: '',
+      statut: (resp.consultationStatus as Consultation['statut']) || 'planifiée',
+      typeConsultation: resp.consultationType,
+      description: resp.consultationDescription,
+      cout: resp.coutConsultation,
+      poids: resp.poids,
+      temperature: resp.temperature,
+      tension: resp.tension,
+      diagnostics: [],
+      analyses: [],
+      prescriptions: [],
+      hospitalisations: [],
+    };
+  }
+
+  signer() {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (!id) return;
+    const raw = this.form.getRawValue();
+    // Forcer le statut à "signée" avant mise à jour
+    const payload: Partial<Consultation> = {
+      patient: raw.patient,
+      date: raw.date,
+      motif: raw.motif,
+      statut: 'signée',
+      typeConsultation: raw.typeConsultation,
+      description: raw.description,
+      cout: raw.cout,
+      poids: raw.poids,
+      temperature: raw.temperature,
+      tension: raw.tension,
+      diagnostics: (this.form.get('diagnostics') as FormArray).value,
+      analyses: (this.form.get('analyses') as FormArray).value,
+      prescriptions: (this.form.get('prescriptions') as FormArray).value,
+      hospitalisations: (this.form.get('hospitalisations') as FormArray).value,
+    };
+    this.service.update(id, payload).subscribe((updated) => {
+      if (updated) {
+        // Répercuter localement le statut signé
+        this.form.get('statut')?.setValue('signée');
+        this.consultation$ = of(updated);
+      }
+    });
   }
 
   updateConsultation() {
@@ -129,26 +259,28 @@ export class ConsultationsViewComponent {
     const analyses = (this.form.get('analyses') as FormArray).value;
     const prescriptions = (this.form.get('prescriptions') as FormArray).value;
     const hospitalisations = (this.form.get('hospitalisations') as FormArray).value;
-    this.service.update(id, {
-      patient: raw.patient,
-      date: raw.date,
-      motif: raw.motif,
-      statut: raw.statut,
-      typeConsultation: raw.typeConsultation,
-      description: raw.description,
-      cout: raw.cout,
-      poids: raw.poids,
-      temperature: raw.temperature,
-      tension: raw.tension,
-      diagnostics,
-      analyses,
-      prescriptions,
-      hospitalisations,
-    }).subscribe((updated) => {
-      if (updated) {
-        this.consultation$ = of(updated);
-      }
-    });
+    this.service
+      .update(id, {
+        patient: raw.patient,
+        date: raw.date,
+        motif: raw.motif,
+        statut: raw.statut,
+        typeConsultation: raw.typeConsultation,
+        description: raw.description,
+        cout: raw.cout,
+        poids: raw.poids,
+        temperature: raw.temperature,
+        tension: raw.tension,
+        diagnostics,
+        analyses,
+        prescriptions,
+        hospitalisations,
+      })
+      .subscribe((updated) => {
+        if (updated) {
+          this.consultation$ = of(updated);
+        }
+      });
   }
 
   // Diagnostic
@@ -167,15 +299,28 @@ export class ConsultationsViewComponent {
     }
     this.diagnosticModalOpen = true;
   }
-  closeDiagnosticModal() { this.diagnosticModalOpen = false; this.diagnosticEditIndex = null; }
+  closeDiagnosticModal() {
+    this.diagnosticModalOpen = false;
+    this.diagnosticEditIndex = null;
+  }
   saveDiagnosticFromModal() {
     if (this.diagnosticForm.invalid) return;
-    const { maladie, details, gravite } = this.diagnosticForm.value as { maladie: string; details?: string; gravite?: string };
+    const { maladie, details, gravite } = this.diagnosticForm.value as {
+      maladie: string;
+      details?: string;
+      gravite?: string;
+    };
     if (this.diagnosticEditIndex !== null) {
       const grp = this.diagnostics.at(this.diagnosticEditIndex) as FormGroup;
       grp.patchValue({ maladie, details: details || '', gravite: gravite || '' });
     } else {
-      this.diagnostics.push(this.fb.group({ maladie: [maladie, Validators.required], details: [details || ''], gravite: [gravite || ''] }));
+      this.diagnostics.push(
+        this.fb.group({
+          maladie: [maladie, Validators.required],
+          details: [details || ''],
+          gravite: [gravite || ''],
+        })
+      );
     }
     this.closeDiagnosticModal();
   }
@@ -220,30 +365,49 @@ export class ConsultationsViewComponent {
       });
       this.analysisEditIndex = index;
     } else {
-      this.analysisForm.reset({ nomAnalyse: '', typeAnalyse: '', dateAnalyse: '', description: '', diagnosticRef: '' });
+      this.analysisForm.reset({
+        nomAnalyse: '',
+        typeAnalyse: '',
+        dateAnalyse: '',
+        description: '',
+        diagnosticRef: '',
+      });
       this.analysisEditIndex = null;
     }
     this.analysisModalOpen = true;
   }
-  closeAnalysisModal() { this.analysisModalOpen = false; this.analysisEditIndex = null; }
+  closeAnalysisModal() {
+    this.analysisModalOpen = false;
+    this.analysisEditIndex = null;
+  }
   saveAnalysisFromModal() {
     if (this.analysisForm.invalid) return;
-    const val = this.analysisForm.value as { nomAnalyse: string; typeAnalyse?: string; dateAnalyse: string; description?: string; diagnosticRef?: string };
+    const val = this.analysisForm.value as {
+      nomAnalyse: string;
+      typeAnalyse?: string;
+      dateAnalyse: string;
+      description?: string;
+      diagnosticRef?: string;
+    };
     if (this.analysisEditIndex !== null) {
       const grp = this.analyses.at(this.analysisEditIndex) as FormGroup;
       grp.patchValue({ ...val });
     } else {
-      this.analyses.push(this.fb.group({
-        nomAnalyse: [val.nomAnalyse, Validators.required],
-        typeAnalyse: [val.typeAnalyse || ''],
-        dateAnalyse: [val.dateAnalyse, Validators.required],
-        description: [val.description || ''],
-        diagnosticRef: [val.diagnosticRef || ''],
-      }));
+      this.analyses.push(
+        this.fb.group({
+          nomAnalyse: [val.nomAnalyse, Validators.required],
+          typeAnalyse: [val.typeAnalyse || ''],
+          dateAnalyse: [val.dateAnalyse, Validators.required],
+          description: [val.description || ''],
+          diagnosticRef: [val.diagnosticRef || ''],
+        })
+      );
     }
     this.closeAnalysisModal();
   }
-  removeAnalysis(index: number) { this.analyses.removeAt(index); }
+  removeAnalysis(index: number) {
+    this.analyses.removeAt(index);
+  }
 
   // Prescription
   openPrescriptionModal(index?: number) {
@@ -263,24 +427,36 @@ export class ConsultationsViewComponent {
     }
     this.prescriptionModalOpen = true;
   }
-  closePrescriptionModal() { this.prescriptionModalOpen = false; this.prescriptionEditIndex = null; }
+  closePrescriptionModal() {
+    this.prescriptionModalOpen = false;
+    this.prescriptionEditIndex = null;
+  }
   savePrescriptionFromModal() {
     if (this.prescriptionForm.invalid) return;
-    const val = this.prescriptionForm.value as { date: string; description?: string; motif?: string; diagnosticRef?: string };
+    const val = this.prescriptionForm.value as {
+      date: string;
+      description?: string;
+      motif?: string;
+      diagnosticRef?: string;
+    };
     if (this.prescriptionEditIndex !== null) {
       const grp = this.prescriptions.at(this.prescriptionEditIndex) as FormGroup;
       grp.patchValue({ ...val });
     } else {
-      this.prescriptions.push(this.fb.group({
-        date: [val.date, Validators.required],
-        description: [val.description || ''],
-        motif: [val.motif || ''],
-        diagnosticRef: [val.diagnosticRef || ''],
-      }));
+      this.prescriptions.push(
+        this.fb.group({
+          date: [val.date, Validators.required],
+          description: [val.description || ''],
+          motif: [val.motif || ''],
+          diagnosticRef: [val.diagnosticRef || ''],
+        })
+      );
     }
     this.closePrescriptionModal();
   }
-  removePrescription(index: number) { this.prescriptions.removeAt(index); }
+  removePrescription(index: number) {
+    this.prescriptions.removeAt(index);
+  }
 
   // Hospitalisation
   openHospitalisationModal(index?: number) {
@@ -295,29 +471,46 @@ export class ConsultationsViewComponent {
       });
       this.hospitalisationEditIndex = index;
     } else {
-      this.hospitalisationForm.reset({ dateAdmission: '', dateSortie: '', motif: '', diagnosticRef: '' });
+      this.hospitalisationForm.reset({
+        dateAdmission: '',
+        dateSortie: '',
+        motif: '',
+        diagnosticRef: '',
+      });
       this.hospitalisationEditIndex = null;
     }
     this.hospitalisationModalOpen = true;
   }
-  closeHospitalisationModal() { this.hospitalisationModalOpen = false; this.hospitalisationEditIndex = null; }
+  closeHospitalisationModal() {
+    this.hospitalisationModalOpen = false;
+    this.hospitalisationEditIndex = null;
+  }
   saveHospitalisationFromModal() {
     if (this.hospitalisationForm.invalid) return;
-    const val = this.hospitalisationForm.value as { dateAdmission: string; dateSortie?: string; motif?: string; diagnosticRef?: string };
+    const val = this.hospitalisationForm.value as {
+      dateAdmission: string;
+      dateSortie?: string;
+      motif?: string;
+      diagnosticRef?: string;
+    };
     if (this.hospitalisationEditIndex !== null) {
       const grp = this.hospitalisations.at(this.hospitalisationEditIndex) as FormGroup;
       grp.patchValue({ ...val });
     } else {
-      this.hospitalisations.push(this.fb.group({
-        dateAdmission: [val.dateAdmission, Validators.required],
-        dateSortie: [val.dateSortie || ''],
-        motif: [val.motif || ''],
-        diagnosticRef: [val.diagnosticRef || ''],
-      }));
+      this.hospitalisations.push(
+        this.fb.group({
+          dateAdmission: [val.dateAdmission, Validators.required],
+          dateSortie: [val.dateSortie || ''],
+          motif: [val.motif || ''],
+          diagnosticRef: [val.diagnosticRef || ''],
+        })
+      );
     }
     this.closeHospitalisationModal();
   }
-  removeHospitalisation(index: number) { this.hospitalisations.removeAt(index); }
+  removeHospitalisation(index: number) {
+    this.hospitalisations.removeAt(index);
+  }
 
   // --- Helpers style "consultations-new" ---
   capitalizeMaladie() {
@@ -398,7 +591,8 @@ export class ConsultationsViewComponent {
     return list.filter((d) => d.toLowerCase().includes(q));
   }
   toggleHospitalisationDiagnosticSelectDropdown() {
-    this.hospitalisationDiagnosticSelectDropdownOpen = !this.hospitalisationDiagnosticSelectDropdownOpen;
+    this.hospitalisationDiagnosticSelectDropdownOpen =
+      !this.hospitalisationDiagnosticSelectDropdownOpen;
     if (this.hospitalisationDiagnosticSelectDropdownOpen) {
       const list = this.filteredDiagnosticsOptionsHospitalisation;
       const current = (this.hospitalisationForm.get('diagnosticRef')?.value as string) || '';
@@ -424,33 +618,41 @@ export class ConsultationsViewComponent {
     if (!hasAny) {
       // Diagnostic de base
       const maladie = 'Hypertension';
-      this.diagnostics.push(this.fb.group({
-        maladie: [maladie, Validators.required],
-        details: ['TA élevée, céphalées'],
-        gravite: ['modéré'],
-      }));
+      this.diagnostics.push(
+        this.fb.group({
+          maladie: [maladie, Validators.required],
+          details: ['TA élevée, céphalées'],
+          gravite: ['modéré'],
+        })
+      );
       // Analyse liée
-      this.analyses.push(this.fb.group({
-        nomAnalyse: ['NFS', Validators.required],
-        typeAnalyse: ['Sanguin'],
-        dateAnalyse: [today, Validators.required],
-        description: ['Hémogramme complet'],
-        diagnosticRef: [maladie],
-      }));
+      this.analyses.push(
+        this.fb.group({
+          nomAnalyse: ['NFS', Validators.required],
+          typeAnalyse: ['Sanguin'],
+          dateAnalyse: [today, Validators.required],
+          description: ['Hémogramme complet'],
+          diagnosticRef: [maladie],
+        })
+      );
       // Prescription liée
-      this.prescriptions.push(this.fb.group({
-        date: [today, Validators.required],
-        description: ['Amlodipine 5mg/j'],
-        motif: ['Traitement initial'],
-        diagnosticRef: [maladie],
-      }));
+      this.prescriptions.push(
+        this.fb.group({
+          date: [today, Validators.required],
+          description: ['Amlodipine 5mg/j'],
+          motif: ['Traitement initial'],
+          diagnosticRef: [maladie],
+        })
+      );
       // Hospitalisation liée
-      this.hospitalisations.push(this.fb.group({
-        dateAdmission: [today, Validators.required],
-        dateSortie: [''],
-        motif: ['Surveillance tensionnelle 24h'],
-        diagnosticRef: [maladie],
-      }));
+      this.hospitalisations.push(
+        this.fb.group({
+          dateAdmission: [today, Validators.required],
+          dateSortie: [''],
+          motif: ['Surveillance tensionnelle 24h'],
+          diagnosticRef: [maladie],
+        })
+      );
       // Persistance immédiate
       this.updateConsultation();
     }

@@ -4,7 +4,8 @@ import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../../../core/services/api';
 
 export type Patient = {
-  id: string;
+  publicId: string;
+  id?: string;
   nom: string;
   prenom: string;
   sexe: 'H' | 'F';
@@ -14,33 +15,35 @@ export type Patient = {
   motDePasse?: string;
   antecedents?: { type: string; description: string }[];
   dateNaissance?: string;
+  numeroDossier?: string;
+  dossierPublicId?: string;
   statut: 'actif' | 'inactif';
 };
 
 @Injectable({ providedIn: 'root' })
 export class PatientsService {
-  private baseUrl = `${API_BASE_URL}/patients`;
+  private baseUrl = `${API_BASE_URL}/patient`;
   constructor(private http: HttpClient) {}
 
   getAll(): Observable<Patient[]> {
-    return this.http.get<Patient[]>(this.baseUrl);
+    return this.http.get<Patient[]>(`${this.baseUrl}/all`);
   }
 
-  getById(id: string): Observable<Patient | null> {
-    return this.http.get<Patient | null>(`${this.baseUrl}/${id}`);
+  getById(publicId: string): Observable<Patient | null> {
+    return this.http.get<Patient | null>(`${this.baseUrl}/get-one/${publicId}`);
   }
 
-  create(item: Omit<Patient, 'id'> & { id?: string }): Observable<Patient> {
-    return this.http.post<Patient>(this.baseUrl, item);
+  create(item: Omit<Patient, 'publicId'> & { publicId?: string }): Observable<Patient> {
+    return this.http.post<Patient>(`${this.baseUrl}/save`, item);
   }
 
-  update(id: string, changes: Partial<Patient>): Observable<Patient | null> {
-    return this.http.put<Patient | null>(`${this.baseUrl}/${id}`, changes);
+  update(publicId: string, changes: Partial<Patient>): Observable<Patient | null> {
+    return this.http.put<Patient | null>(`${this.baseUrl}/update/${publicId}`, changes);
   }
 
-  delete(id: string): Observable<boolean> {
+  delete(publicId: string): Observable<boolean> {
     try {
-      this.http.delete<void>(`${this.baseUrl}/${id}`).subscribe();
+      this.http.delete<void>(`${this.baseUrl}/delete/${publicId}`).subscribe();
       return new Observable((observer) => observer.next(true));
     } catch {
       return new Observable((observer) => observer.next(false));

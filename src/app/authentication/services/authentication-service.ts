@@ -9,6 +9,7 @@ export interface UserInfo {
   id: string;
   email: string;
   name: string;
+  fullName: string;
   roles: Role[];
 }
 
@@ -25,10 +26,13 @@ export class AuthenticationService {
     password: string
   ): Promise<Observable<{ accessToken: string; id: string; username: string; roles: string[] }>> {
     const obs = this.http
-      .post<{ accessToken: string; id: string; username: string; roles: string[] }>(
-        `${this.baseUrl}/login`,
-        { username: email, password }
-      )
+      .post<{
+        accessToken: string;
+        id: string;
+        username: string;
+        roles: string[];
+        fullName: string;
+      }>(`${this.baseUrl}/login`, { username: email, password })
       .pipe(
         tap((response) => {
           localStorage.setItem('token', response.accessToken);
@@ -37,6 +41,7 @@ export class AuthenticationService {
             JSON.stringify({
               id: response.id,
               email: response.username,
+              fullName: response.fullName,
               roles: response.roles
                 .map((role) => role.replace('ROLE_', ''))
                 .map((role) => role.toLowerCase() as Role),

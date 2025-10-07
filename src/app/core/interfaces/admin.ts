@@ -64,6 +64,7 @@ export interface Personnel {
   libelleProfession: string;
   libelleSpecialite: string;
   libelleDepartement: string;
+  idUser: string;
   // Optionnel: planning associé au personnel
   planning?: string;
   adresse: string;

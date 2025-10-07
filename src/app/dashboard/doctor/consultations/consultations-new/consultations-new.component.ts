@@ -1,11 +1,24 @@
-import { Component, HostListener, ElementRef, ViewChild } from '@angular/core';
+import { Component, HostListener, ElementRef, ViewChild, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { ConsultationsService } from '../consultations.service';
-import { Consultation } from '../../../../core/interfaces/medical';
+import { Consultation, PatientResponse } from '../../../../core/interfaces/medical';
+import { Analyse } from '../../../../core/interfaces/admin';
+import { AnalysesService } from '../../../admin/analyses/analyses.service';
+import { AnalysesMedicalesService } from '../../consultations/analyses-medicales.service';
+import { PrescriptionService } from '../../consultations/prescriptions.service';
+import { HospitalisationService } from '../hospitalisation.service';
+import { ChambresService } from '../../../chambres/chambres.service';
 import { AuthenticationService } from '../../../../authentication/services/authentication-service';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { PatientService } from '../patient.service';
+import { DossierPatientService } from '../dossier-patient.service';
+import { AntecedentsService } from '../antecedents.service';
+import { DiagnostiqueService } from '../diagnostique.service';
+import { UsersService } from '../../../../core/services/users.service';
+import { toast } from 'ngx-sonner';
+import { PersonnelsService } from '../../../personnels/personnels.service';
 
 @Component({
   selector: 'app-consultations-new',
@@ -14,14 +27,17 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } fr
   templateUrl: './consultations-new.component.html',
   styleUrl: './consultations-new.component.css',
 })
-export class ConsultationsNewComponent {
-  doctorName: string;
+export class ConsultationsNewComponent implements OnInit {
+  doctorName: string = '';
   form!: FormGroup;
-  patients: string[] = ['Alice Dubois', 'Jean Dupont'];
+  patientsNames: string[] = [];
+  private patientsMap = new Map<string, PatientResponse>();
   patientSearch: string = '';
   patientDropdownOpen = false;
   activeIndex: number = -1;
   showPatientDossier = false;
+  // Identifiant de consultation créé (si disponible)
+  currentConsultationId?: string;
   // Modal Diagnostics
   diagnosticModalOpen = false;
   diagnosticForm!: FormGroup;
@@ -30,7 +46,8 @@ export class ConsultationsNewComponent {
   // Analyses médicales
   analysisModalOpen = false;
   analysisForm!: FormGroup;
-  analysisOptions: string[] = ['NFS', 'CRP', 'Glycémie', 'Bilan hépatique', 'Ionogramme'];
+  analysisOptions: string[] = [];
+  analysisTypes: Analyse[] = [];
   // Dropdown états pour le modal Analyses
   analysisTypeDropdownOpen = false;
   analysisTypeSearch: string = '';
@@ -88,14 +105,24 @@ export class ConsultationsNewComponent {
     private fb: FormBuilder,
     private service: ConsultationsService,
     private auth: AuthenticationService,
-    private router: Router
+    private router: Router,
+    private patientsService: PatientService,
+    private dossierService: DossierPatientService,
+    private antecedentsService: AntecedentsService,
+    private analysesService: AnalysesService,
+    private analysesMedicalesService: AnalysesMedicalesService,
+    private prescriptionService: PrescriptionService,
+    private diagnostiqueService: DiagnostiqueService,
+    private usersService: UsersService,
+    private personnnelService: PersonnelsService,
+    private hospitalisationService: HospitalisationService,
+    private chambresService: ChambresService
   ) {
-    this.doctorName = this.auth.getCurrentUser()?.name ?? 'Dr. Anne Mercier';
     this.form = this.fb.group({
       patient: ['', Validators.required],
       date: [this.nowInputValue(), Validators.required],
       motif: ['', Validators.required],
-      statut: ['planifiée', Validators.required],
+      statut: ['signée', Validators.required],
       notesSoap: [''],
       typeConsultation: [''],
       description: [''],
@@ -141,14 +168,36 @@ export class ConsultationsNewComponent {
       diagnosticRef: [''],
     });
 
-    // Charger les patients depuis les consultations existantes pour obtenir une liste cohérente
-    this.service.getAll().subscribe((list) => {
-      const names = Array.from(new Set(list.map((c) => c.patient)));
-      if (names.length) {
-        this.patients = names;
-      }
+    // Charger la liste des patients via le service Patient pour le select
+    this.patientsService.getAll().subscribe((list) => {
+      const names = Array.from(new Set(list.map((p) => `${p.nom} ${p.prenom}`)));
+      this.patientsNames = names;
+      this.patientsMap.clear();
+      list.forEach((p) => this.patientsMap.set(`${p.nom} ${p.prenom}`, p));
+    });
+
+    // Récupérer l'identifiant du personnel connecté (publicId) pour les requêtes V2
+    const currentEmail = this.auth.getCurrentUser()?.email || '';
+    this.usersService.getAll().subscribe((users) => {
+      const me = users.find((u) => u.username === currentEmail);
+      this.currentPersonnelPublicId = me?.personnel?.publicId || null;
+    });
+
+    // Charger les types d'analyses depuis le service Admin
+    this.analysesService.getAll().subscribe((types) => {
+      this.analysisTypes = types || [];
+      this.analysisOptions = this.analysisTypes.map((t) => t.libelle);
     });
     this.updatePatientDossier();
+  }
+
+  // Identifiant du personnel connecté (UUID publicId)
+  private currentPersonnelPublicId: string | null = null;
+
+  ngOnInit() {
+    this.doctorName = `Dr. ${this.auth.getCurrentUser()?.fullName || 'Anne Mercier'}`;
+    // Met à jour automatiquement le dossier à la modification du patient
+    this.form.get('patient')?.valueChanges.subscribe(() => this.updatePatientDossier());
   }
 
   get diagnostics(): FormArray {
@@ -213,14 +262,83 @@ export class ConsultationsNewComponent {
       grp.get('maladie')?.setValue(maladie);
       grp.get('details')?.setValue(details || '');
       grp.get('gravite')?.setValue(gravite || '');
+      const publicId = (grp.get('diagnostiquePublicId')?.value as string) || '';
+      if (publicId) {
+        // Mettre à jour côté backend si un diagnostique existe déjà
+        const payload = {
+          maladie: maladie,
+          details: details || '',
+          niveauGravite: gravite || '',
+          idConsultation: this.currentConsultationId || '',
+        };
+        this.diagnostiqueService.update(publicId, payload).subscribe();
+      }
     } else {
-      this.diagnostics.push(
-        this.fb.group({
-          maladie: [maladie, Validators.required],
-          details: [details || ''],
-          gravite: [gravite || ''],
-        })
-      );
+      const grp = this.fb.group({
+        maladie: [maladie, Validators.required],
+        details: [details || ''],
+        gravite: [gravite || ''],
+        diagnostiquePublicId: [''],
+      });
+      this.diagnostics.push(grp);
+      // Persister le diagnostique immédiatement.
+      // Si la consultation n'existe pas encore, créer une consultation brouillon
+      // puis persister le diagnostique avec l'identifiant obtenu.
+      const ensureConsultationAndCreate = (consultId: string) => {
+        const payload = {
+          maladie: maladie,
+          details: details || '',
+          niveauGravite: gravite || '',
+          idConsultation: consultId,
+        };
+        this.diagnostiqueService.create(payload).subscribe((resp: any) => {
+          grp.get('diagnostiquePublicId')?.setValue(resp?.publicId || '');
+        });
+      };
+
+      if (this.currentConsultationId) {
+        ensureConsultationAndCreate(this.currentConsultationId);
+      } else {
+        const raw = this.form.getRawValue() as Consultation;
+        const selectedPatient = this.patientsMap.get(raw.patient || '');
+        const idDossierPatient = selectedPatient?.dossierPublicId || '';
+        const currentUserPublicId = this.auth.getCurrentUser()?.id || '';
+
+        if (!currentUserPublicId || !idDossierPatient) {
+          toast.error(
+            'Impossible de créer la consultation: utilisateur courant ou dossier patient manquant'
+          );
+          this.closeDiagnosticModal();
+          return;
+        }
+
+        this.personnnelService.getAll().subscribe((personnels) => {
+          const idPersonnel =
+            personnels?.find((u) => u.idUser === currentUserPublicId)?.publicId || '';
+
+          if (!idPersonnel) {
+            toast.error('Impossible de créer la consultation: aucun personnel associé au compte');
+            this.closeDiagnosticModal();
+            return;
+          }
+
+          const payload = {
+            consultationType: raw.typeConsultation || '',
+            consultationDescription: raw.description || '',
+            consultationStatus: raw.statut || 'planifiée',
+            coutConsultation: Number(raw.cout) || 0,
+            poids: Number(raw.poids) || 0,
+            temperature: Number(raw.temperature) || 0,
+            tension: Number(raw.tension) || 0,
+            idPersonnel,
+            idDossierPatient,
+          };
+          this.service.createV2(payload).subscribe((created) => {
+            this.currentConsultationId = created.publicId;
+            ensureConsultationAndCreate(created.publicId);
+          });
+        });
+      }
     }
     this.closeDiagnosticModal();
   }
@@ -228,6 +346,11 @@ export class ConsultationsNewComponent {
   removeDiagnostic(index: number) {
     if (!this.form.get('patient')?.value) return;
     if (index < 0 || index >= this.diagnostics.length) return;
+    const grp = this.diagnostics.at(index) as FormGroup;
+    const publicId = (grp.get('diagnostiquePublicId')?.value as string) || '';
+    if (publicId) {
+      this.diagnostiqueService.deleteByPublicId(publicId).subscribe();
+    }
     this.diagnostics.removeAt(index);
   }
 
@@ -252,7 +375,13 @@ export class ConsultationsNewComponent {
       });
       this.analysisEditIndex = index;
     } else {
-      this.analysisForm.reset({ nomAnalyse: '', dateAnalyse: '', description: '', typeAnalyse: '', diagnosticRef: '' });
+      this.analysisForm.reset({
+        nomAnalyse: '',
+        dateAnalyse: '',
+        description: '',
+        typeAnalyse: '',
+        diagnosticRef: '',
+      });
       this.analysisEditIndex = null;
     }
     this.analysisModalOpen = true;
@@ -265,7 +394,8 @@ export class ConsultationsNewComponent {
 
   saveAnalysisFromModal() {
     if (this.analysisForm.invalid) return;
-    const { nomAnalyse, dateAnalyse, description, typeAnalyse, diagnosticRef } = this.analysisForm.value as {
+    const { nomAnalyse, dateAnalyse, description, typeAnalyse, diagnosticRef } = this.analysisForm
+      .value as {
       nomAnalyse: string;
       dateAnalyse: string;
       description?: string;
@@ -289,6 +419,34 @@ export class ConsultationsNewComponent {
           diagnosticRef: [diagnosticRef || ''],
         })
       );
+      // Sauvegarde immédiate côté backend
+      const diagLabel = diagnosticRef || '';
+      const diagIdx = this.diagnostics.controls.findIndex(
+        (g) => (g.get('maladie')?.value as string) === diagLabel
+      );
+      const diagGrp = diagIdx >= 0 ? (this.diagnostics.at(diagIdx) as FormGroup) : null;
+      const diagnostiquePublicId = (diagGrp?.get('diagnostiquePublicId')?.value as string) || '';
+      if (!diagnostiquePublicId) {
+        toast.error('Aucun diagnostique sélectionné ou non persisté');
+      } else {
+        // Trouver l’ID de type d’analyse (idAnalyse) via le libellé sélectionné
+        const type = (typeAnalyse || '').trim();
+        const anaType = this.analysisTypes.find((t) => t.libelle === type);
+        const idAnalyse = (anaType as any)?.publicId || '';
+        if (!idAnalyse) {
+          toast.error("Type d'analyse introuvable");
+        } else {
+          this.analysesMedicalesService
+            .create({
+              nomAnalyseMedicale: nomAnalyse,
+              dateAnalyseMedicale: dateAnalyse,
+              description: description || '',
+              idAnalyse,
+              idDiagnostique: diagnostiquePublicId,
+            })
+            .subscribe();
+        }
+      }
     }
     this.closeAnalysisModal();
   }
@@ -329,7 +487,9 @@ export class ConsultationsNewComponent {
 
   // Dropdown helpers for Diagnostics selection
   get diagnosticsLabels(): string[] {
-    return this.diagnostics.controls.map((g) => (g.get('maladie')?.value as string) || '').filter(Boolean);
+    return this.diagnostics.controls
+      .map((g) => (g.get('maladie')?.value as string) || '')
+      .filter(Boolean);
   }
 
   get filteredDiagnosticsOptions(): string[] {
@@ -402,6 +562,25 @@ export class ConsultationsNewComponent {
           diagnosticRef: [diagnosticRef || ''],
         })
       );
+
+      // Sauvegarde immédiate côté backend (V2)
+      const diagLabel = diagnosticRef || '';
+      const diagIdx = this.diagnostics.controls.findIndex(
+        (g) => (g.get('maladie')?.value as string) === diagLabel
+      );
+      const diagGrp = diagIdx >= 0 ? (this.diagnostics.at(diagIdx) as FormGroup) : null;
+      const diagnostiquePublicId = (diagGrp?.get('diagnostiquePublicId')?.value as string) || '';
+      if (!diagnostiquePublicId) {
+        toast.error('Aucun diagnostique sélectionné ou non persisté');
+      } else {
+        this.prescriptionService
+          .create({
+            motif: motif || '',
+            description: description || '',
+            idDiagnostique: diagnostiquePublicId,
+          })
+          .subscribe();
+      }
     }
     this.closePrescriptionModal();
   }
@@ -454,7 +633,12 @@ export class ConsultationsNewComponent {
       });
       this.hospitalisationEditIndex = index;
     } else {
-      this.hospitalisationForm.reset({ dateAdmission: '', dateSortie: '', motif: '', diagnosticRef: '' });
+      this.hospitalisationForm.reset({
+        dateAdmission: '',
+        dateSortie: '',
+        motif: '',
+        diagnosticRef: '',
+      });
       this.hospitalisationEditIndex = null;
     }
     this.hospitalisationModalOpen = true;
@@ -488,6 +672,35 @@ export class ConsultationsNewComponent {
           diagnosticRef: [diagnosticRef || ''],
         })
       );
+      // Sauvegarde immédiate côté backend
+      const diagLabel = diagnosticRef || '';
+      const diagIdx = this.diagnostics.controls.findIndex(
+        (g) => (g.get('maladie')?.value as string) === diagLabel
+      );
+      const diagGrp = diagIdx >= 0 ? (this.diagnostics.at(diagIdx) as FormGroup) : null;
+      const diagnostiquePublicId = (diagGrp?.get('diagnostiquePublicId')?.value as string) || '';
+      if (!diagnostiquePublicId) {
+        toast.error('Aucun diagnostique sélectionné ou non persisté');
+      } else {
+        this.chambresService.getAll().subscribe({
+          next: (rooms) => {
+            const idChambre = (rooms && rooms[0]?.publicId) || '';
+            if (!idChambre) {
+              toast.error("Aucune chambre disponible pour l'hospitalisation");
+            } else {
+              this.hospitalisationService
+                .create({
+                  motif: motif || '',
+                  idDiagnostique: diagnostiquePublicId,
+                  idChambre,
+                  ...(dateSortie ? { dateSortie } : {}),
+                })
+                .subscribe();
+            }
+          },
+          error: () => toast.error('Erreur lors du chargement des chambres'),
+        });
+      }
     }
     this.closeHospitalisationModal();
   }
@@ -512,7 +725,8 @@ export class ConsultationsNewComponent {
   }
 
   toggleHospitalisationDiagnosticSelectDropdown() {
-    this.hospitalisationDiagnosticSelectDropdownOpen = !this.hospitalisationDiagnosticSelectDropdownOpen;
+    this.hospitalisationDiagnosticSelectDropdownOpen =
+      !this.hospitalisationDiagnosticSelectDropdownOpen;
     if (this.hospitalisationDiagnosticSelectDropdownOpen) {
       const list = this.filteredDiagnosticsOptionsHospitalisation;
       const current = (this.hospitalisationForm.get('diagnosticRef')?.value as string) || '';
@@ -527,7 +741,10 @@ export class ConsultationsNewComponent {
   }
 
   submit() {
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+      toast.error('Formulaire incomplet: veuillez remplir les champs requis');
+      return;
+    }
     const {
       patient,
       date,
@@ -540,37 +757,99 @@ export class ConsultationsNewComponent {
       temperature,
       tension,
     } = this.form.value as Consultation;
-    const diagnostics = (this.form.get('diagnostics') as FormArray).value;
+    const diagnosticsCount = (this.form.get('diagnostics') as FormArray).length;
     const analyses = (this.form.get('analyses') as FormArray).value;
     const prescriptions = (this.form.get('prescriptions') as FormArray).value;
     const hospitalisations = (this.form.get('hospitalisations') as FormArray).value;
-    this.service
-      .create({
-        patient,
-        date,
-        motif,
-        statut,
-        typeConsultation,
-        description,
-        cout,
-        poids,
-        temperature,
-        tension,
-        diagnostics,
-        analyses,
-        prescriptions,
-        hospitalisations,
-      })
-      .subscribe((created) =>
-        this.router.navigate(['/dashboard/doctor/consultations', created.id])
-      );
+    const selectedPatient = this.patientsMap.get(patient || '');
+    const idDossierPatient = selectedPatient?.dossierPublicId || '';
+    const currentUserPublicId = this.auth.getCurrentUser()?.id || '';
+    // Si aucun diagnostic, toujours créer une nouvelle consultation (pas d'update)
+    if (diagnosticsCount === 0) {
+      if (!currentUserPublicId || !idDossierPatient) {
+        toast.error('Veuillez sélectionner un patient et vérifier votre compte personnel');
+        return;
+      }
+      this.personnnelService.getAll().subscribe((personnels) => {
+        const idPersonnel =
+          personnels?.find((u) => u.idUser === currentUserPublicId)?.publicId || '';
+        if (!idPersonnel) {
+          toast.error('Impossible de créer la consultation: aucun personnel associé au compte');
+          return;
+        }
+        const payload = {
+          consultationType: typeConsultation || '',
+          consultationDescription: description || '',
+          consultationStatus: statut || 'planifiée',
+          coutConsultation: Number(cout) || 0,
+          poids: Number(poids) || 0,
+          temperature: Number(temperature) || 0,
+          tension: Number(tension) || 0,
+          idPersonnel,
+          idDossierPatient,
+        };
+        this.service.createV2(payload).subscribe((created) => {
+          this.currentConsultationId = created.publicId;
+          this.router.navigate(['/dashboard/doctor/consultations', created.publicId]);
+        });
+      });
+      return;
+    }
+
+    // S'il y a des diagnostics, mettre à jour si une consultation existe, sinon créer
+    const ensurePersonnelId = (cb: (idPersonnel: string) => void) => {
+      const cached = this.currentPersonnelPublicId || '';
+      if (cached) return cb(cached);
+      const userId = this.auth.getCurrentUser()?.id || '';
+      if (!userId) {
+        toast.error('Compte personnel introuvable');
+        return;
+      }
+      this.personnnelService.getAll().subscribe((personnels) => {
+        const resolved = personnels?.find((u) => u.idUser === userId)?.publicId || '';
+        if (!resolved) {
+          toast.error('Impossible de finaliser la consultation: aucun personnel associé au compte');
+          return;
+        }
+        this.currentPersonnelPublicId = resolved;
+        cb(resolved);
+      });
+    };
+
+    ensurePersonnelId((idPersonnel) => {
+      const payload = {
+        consultationType: typeConsultation || '',
+        consultationDescription: description || '',
+        consultationStatus: statut || 'planifiée',
+        coutConsultation: Number(cout) || 0,
+        poids: Number(poids) || 0,
+        temperature: Number(temperature) || 0,
+        tension: Number(tension) || 0,
+        idPersonnel,
+        idDossierPatient,
+      };
+      if (!idDossierPatient) {
+        toast.error('Veuillez sélectionner un patient et vérifier votre compte personnel');
+        return;
+      }
+      if (this.currentConsultationId) {
+        this.service.updateV2(this.currentConsultationId, payload).subscribe(() => {
+          this.router.navigate(['/dashboard/doctor/consultations', this.currentConsultationId!]);
+        });
+      } else {
+        this.service.createV2(payload).subscribe((created) => {
+          this.currentConsultationId = created.publicId;
+          this.router.navigate(['/dashboard/doctor/consultations', created.publicId]);
+        });
+      }
+    });
   }
 
   // Helpers
   get filteredPatients(): string[] {
     const q = this.patientSearch.trim().toLowerCase();
-    if (!q) return this.patients;
-    return this.patients.filter((p) => p.toLowerCase().includes(q));
+    if (!q) return this.patientsNames;
+    return this.patientsNames.filter((p) => p.toLowerCase().includes(q));
   }
 
   private nowInputValue(): string {
@@ -651,13 +930,9 @@ export class ConsultationsNewComponent {
 
   private updatePatientDossier() {
     const name: string = this.form.get('patient')?.value || '';
-    const codeBase = name ? name.toUpperCase().replace(/\s+/g, '-') : 'PATIENT';
-    this.patientDossier.code = `DP-${codeBase}-001`;
-    // Exemple de léger ajustement des données pour varier selon le patient
-    this.patientDossier.createdAt = new Date().toISOString();
-    // Si aucun patient n'est sélectionné, ne pas charger de données fictives (évite l'impression
-    // que le premier patient est sélectionné par défaut)
     if (!name) {
+      this.patientDossier.code = '';
+      this.patientDossier.createdAt = '';
       this.patientDossier.antecedents = [];
       this.patientDossier.analyses = [];
       this.patientDossier.hospitalisations = [];
@@ -665,26 +940,82 @@ export class ConsultationsNewComponent {
       this.patientDossier.documents = [];
       return;
     }
-    if (name.toLowerCase().includes('jean')) {
-      this.patientDossier.antecedents = [
-        { type: 'Hypertension', libelle: 'HTA', description: 'Sous IEC depuis 2022' },
-      ];
-      this.patientDossier.analyses = [
-        { name: 'Glycémie', date: '2024-05-12', result: 'Légèrement élevée' },
-      ];
-      this.patientDossier.hospitalisations = [];
-      this.patientDossier.prescriptions = [
-        { id: 'PR-2024-212', date: '2024-05-12', description: 'Antihypertenseur' },
-      ];
-      this.patientDossier.documents = [{ name: 'ECG_Jean_2024.pdf' }];
-    } else {
-      // Valeurs par défaut (Alice)
-      // Autres patients: garder des données minimales ou vides
+    const selected = this.patientsMap.get(name);
+    if (!selected) {
+      this.patientDossier.code = '';
+      this.patientDossier.createdAt = '';
       this.patientDossier.antecedents = [];
       this.patientDossier.analyses = [];
       this.patientDossier.hospitalisations = [];
       this.patientDossier.prescriptions = [];
       this.patientDossier.documents = [];
+      return;
     }
+    this.dossierService.getByPublicId(selected.dossierPublicId).subscribe((dossier) => {
+      if (!dossier) return;
+      // Infos de base du dossier
+      this.patientDossier.code = dossier.code;
+      this.patientDossier.createdAt = dossier.dateCreation;
+
+      // Antécédents du dossier via service dédié (filtrés par code dossier)
+      this.antecedentsService.getAll().subscribe((list) => {
+        const data = list || [];
+        this.patientDossier.antecedents = data
+          .filter((a) => a.codeDossierPatient === dossier.code)
+          .map((a) => ({
+            type: a.libelleTypeAntecedant,
+            libelle: a.libelleTypeAntecedant,
+            description: a.description,
+          }));
+      });
+
+      // Agrégations depuis les consultations pour analyses, prescriptions et hospitalisations
+      this.service.getAll().subscribe((rows) => {
+        const mine = (rows || []).filter((c) => c.patient === name);
+
+        // Analyses
+        const analyses: { name: string; date: string; result?: string }[] = [];
+        mine.forEach((c) => {
+          (c.analyses || []).forEach((an) => {
+            analyses.push({
+              name: an.nomAnalyse,
+              date: an.dateAnalyse,
+              result: an.description || '',
+            });
+          });
+        });
+        this.patientDossier.analyses = analyses;
+
+        // Hospitalisations
+        const hospitalisations: { motif: string; debut: string; fin?: string }[] = [];
+        mine.forEach((c) => {
+          (c.hospitalisations || []).forEach((h) => {
+            hospitalisations.push({
+              motif: h.motif || '',
+              debut: h.dateAdmission,
+              fin: h.dateSortie,
+            });
+          });
+        });
+        this.patientDossier.hospitalisations = hospitalisations;
+
+        // Prescriptions
+        const prescriptions: { id: string; date: string; description: string }[] = [];
+        mine.forEach((c) => {
+          let idx = 0;
+          (c.prescriptions || []).forEach((p) => {
+            prescriptions.push({
+              id: `CONS-${c.id}-PR-${++idx}`,
+              date: p.date,
+              description: p.description || p.motif || '',
+            });
+          });
+        });
+        this.patientDossier.prescriptions = prescriptions;
+
+        // Documents (non fournis pour l’instant)
+        this.patientDossier.documents = [];
+      });
+    });
   }
 }

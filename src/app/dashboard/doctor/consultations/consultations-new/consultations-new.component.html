@@ -4,13 +4,16 @@
       <div>
         <h2 class="text-xl font-bold text-gray-800">Nouvelle consultation</h2>
         <div class="mt-3 text-sm text-gray-700 space-y-1">
-          <div><span class="font-semibold">Patient :</span> {{ form.value.patient }}</div>
+          <div>
+            <span class="font-semibold">Patient :</span>
+            {{ form.value.patient || 'Selectionnez un patient' }}
+          </div>
           <div><span class="font-semibold">Médecin traitant :</span> {{ doctorName }}</div>
         </div>
       </div>
       <div class="text-sm text-gray-600 text-left md:text-right">
         <div>
-          <span class="font-semibold">Date & Heure :</span>
+          <span class="font-semibold">Date et Heure :</span>
           {{ form.value.date | date : 'dd-MM-yyyy HH:mm' }}
         </div>
       </div>
@@ -162,7 +165,7 @@
               *ngFor="let a of patientDossier.antecedents"
               class="flex justify-between items-center"
             >
-              <span>{{ a.type }} - {{ a.libelle }}</span>
+              <span>{{ a.libelle }}</span>
               <span class="text-gray-500">{{ a.description }}</span>
             </div>
           </div>
@@ -269,7 +272,7 @@
           type="text"
           class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm placeholder:text-gray-600"
           formControlName="tension"
-          placeholder="12/8"
+          placeholder="12,8"
         />
       </div>
     </div>
@@ -1117,7 +1120,7 @@
   </div>
 
   <!-- Pièces Jointes -->
-  <div class="bg-white border border-neutral-300 rounded">
+  <!-- <div class="bg-white border border-neutral-300 rounded">
     <div class="px-5 py-4 border-b border-neutral-300">
       <h3 class="font-semibold text-gray-800">Pièces Jointes</h3>
     </div>
@@ -1131,15 +1134,16 @@
         Resultats_sanguins_Alice_2024.pdf
       </div>
     </div>
-  </div>
+  </div> -->
 
   <div class="flex flex-col md:flex-row gap-3 md:gap-4 justify-between items-center text-sm">
     <div class="flex gap-3">
       <button
+        type="submit"
         class="px-5 py-2.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-        [disabled]="!form.get('patient')?.value"
+        [disabled]="!form.get('patient')?.value || form.invalid"
       >
-        Finaliser & signer
+        Finaliser
       </button>
     </div>
   </div>

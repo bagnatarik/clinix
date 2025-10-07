@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { ConsultationsService } from '../consultations.service';
-import { Consultation } from '../../../../core/interfaces/medical';
+import { ConsultationResponse } from '../../../../core/interfaces/medical';
 import { DataTableComponent } from '../../../../shared/data-table-component/data-table-component';
 import { Column } from '../../../../core/interfaces/column';
 
@@ -15,18 +15,22 @@ import { Column } from '../../../../core/interfaces/column';
 })
 export class ConsultationsListComponent implements OnInit {
   columns: Column[] = [
-    { key: 'id', label: 'ID', sortable: true },
-    { key: 'date', label: 'Date', sortable: true },
-    { key: 'typeConsultation', label: 'Type consultation', sortable: true },
-    { key: 'description', label: 'Description', sortable: true },
-    { key: 'statut', label: 'Statut', sortable: true },
-    { key: 'cout', label: 'Coût', sortable: true },
+    // { key: 'publicId', label: 'ID', sortable: true },
+    { key: 'consultationDate', label: 'Date', sortable: true },
+    { key: 'consultationType', label: 'Type consultation', sortable: true },
+    { key: 'consultationDescription', label: 'Description', sortable: true },
+    { key: 'consultationStatus', label: 'Statut', sortable: true },
+    { key: 'coutConsultation', label: 'Coût', sortable: true },
     { key: 'poids', label: 'Poids', sortable: true },
     { key: 'temperature', label: 'Température', sortable: true },
     { key: 'tension', label: 'Tension', sortable: true },
+    { key: 'codeDossierPatient', label: 'Code dossier patient', sortable: true },
+    { key: 'nomPersonnel', label: 'Personnel', sortable: true },
     { key: 'actions', label: 'Actions', sortable: false },
   ];
-  dataSource: Consultation[] = [];
+  dataSource: ConsultationResponse[] = [];
+  confirmDeleteOpen = false;
+  rowToDelete?: ConsultationResponse;
 
   constructor(private service: ConsultationsService, private router: Router) {}
 
@@ -35,18 +39,33 @@ export class ConsultationsListComponent implements OnInit {
   }
 
   refresh() {
-    this.service.getAll().subscribe((data) => (this.dataSource = data));
+    this.service.getAllV2().subscribe((data) => (this.dataSource = data));
   }
 
   addNew() {
     this.router.navigate(['/dashboard/doctor/consultations/new']);
   }
 
-  edit(row: Consultation) {
-    this.router.navigate(['/dashboard/doctor/consultations', row.id]);
+  edit(row: ConsultationResponse) {
+    this.router.navigate(['/dashboard/doctor/consultations', row.publicId]);
   }
 
-  delete(row: Consultation) {
-    this.service.delete(row.id).subscribe(() => this.refresh());
+  delete(row: ConsultationResponse) {
+    this.rowToDelete = row;
+    this.confirmDeleteOpen = true;
+  }
+
+  confirmDelete() {
+    if (!this.rowToDelete) return;
+    this.service.deleteByPublicId(this.rowToDelete.publicId).subscribe(() => {
+      this.confirmDeleteOpen = false;
+      this.rowToDelete = undefined;
+      this.refresh();
+    });
+  }
+
+  cancelDelete() {
+    this.confirmDeleteOpen = false;
+    this.rowToDelete = undefined;
   }
 }

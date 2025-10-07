@@ -28,7 +28,7 @@
           />
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1">Coût (€)</label>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Coût</label>
           <input
             type="number"
             step="0.01"
@@ -159,6 +159,9 @@
             type="button"
             class="px-3 py-2 border rounded bg-blue-600 text-white hover:bg-blue-700 transition text-xs"
             (click)="openDiagnosticModal()"
+            [disabled]="!form.get('patient')?.value"
+            [class.opacity-50]="!form.get('patient')?.value"
+            [class.cursor-not-allowed]="!form.get('patient')?.value"
           >
             Ajouter un diagnostic
           </button>
@@ -171,7 +174,9 @@
             >
               <div class="flex-1">
                 <div class="font-medium text-gray-800">{{ d.get('maladie')?.value }}</div>
-                <div class="text-xs text-gray-600">Gravité: {{ d.get('gravite')?.value || '—' }}</div>
+                <div class="text-xs text-gray-600">
+                  Gravité: {{ d.get('gravite')?.value || '—' }}
+                </div>
                 <div class="mt-1 text-gray-700">{{ d.get('details')?.value }}</div>
               </div>
               <div class="flex items-center gap-3">
@@ -179,6 +184,9 @@
                   type="button"
                   class="text-blue-600 hover:underline"
                   (click)="openDiagnosticModal(i)"
+                  [disabled]="!form.get('patient')?.value"
+                  [class.opacity-50]="!form.get('patient')?.value"
+                  [class.cursor-not-allowed]="!form.get('patient')?.value"
                 >
                   Modifier
                 </button>
@@ -186,6 +194,9 @@
                   type="button"
                   class="px-2 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700 transition"
                   (click)="removeDiagnostic(i)"
+                  [disabled]="!form.get('patient')?.value"
+                  [class.opacity-50]="!form.get('patient')?.value"
+                  [class.cursor-not-allowed]="!form.get('patient')?.value"
                 >
                   Supprimer
                 </button>
@@ -205,9 +216,9 @@
             type="button"
             class="px-3 py-2 border rounded bg-blue-600 text-white hover:bg-blue-700 transition text-xs"
             (click)="openAnalysisModal()"
-            [disabled]="!hasDiagnostics"
-            [class.opacity-50]="!hasDiagnostics"
-            [class.cursor-not-allowed]="!hasDiagnostics"
+            [disabled]="!hasDiagnostics || !form.get('patient')?.value"
+            [class.opacity-50]="!hasDiagnostics || !form.get('patient')?.value"
+            [class.cursor-not-allowed]="!hasDiagnostics || !form.get('patient')?.value"
           >
             Ajouter une analyse
           </button>
@@ -221,7 +232,8 @@
               <div class="flex-1">
                 <div class="font-medium text-gray-800">{{ an.get('nomAnalyse')?.value }}</div>
                 <div class="text-xs text-gray-600">
-                  Type: {{ an.get('typeAnalyse')?.value || '—' }} • Diagnostic: {{ an.get('diagnosticRef')?.value || '—' }}
+                  Type: {{ an.get('typeAnalyse')?.value || '—' }} • Diagnostic:
+                  {{ an.get('diagnosticRef')?.value || '—' }}
                 </div>
                 <div class="text-xs text-gray-600">
                   Date: {{ an.get('dateAnalyse')?.value | date : 'dd/MM/yyyy' }}
@@ -233,7 +245,7 @@
                   type="button"
                   class="text-blue-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:no-underline"
                   (click)="openAnalysisModal(i)"
-                  [disabled]="!hasDiagnostics"
+                  [disabled]="!hasDiagnostics || !form.get('patient')?.value"
                 >
                   Modifier
                 </button>
@@ -258,16 +270,16 @@
     <div class="bg-white border border-neutral-300 rounded mt-6">
       <div class="px-5 py-4 border-b border-neutral-300 flex items-center justify-between">
         <h3 class="font-semibold text-gray-800">Prescriptions</h3>
-        <button
-          type="button"
-          class="px-3 py-2 border rounded bg-blue-600 text-white hover:bg-blue-700 transition text-xs"
-          (click)="openPrescriptionModal()"
-          [disabled]="!hasDiagnostics"
-          [class.opacity-50]="!hasDiagnostics"
-          [class.cursor-not-allowed]="!hasDiagnostics"
-        >
-          Ajouter une prescription
-        </button>
+          <button
+            type="button"
+            class="px-3 py-2 border rounded bg-blue-600 text-white hover:bg-blue-700 transition text-xs"
+            (click)="openPrescriptionModal()"
+            [disabled]="!hasDiagnostics || !form.get('patient')?.value"
+            [class.opacity-50]="!hasDiagnostics || !form.get('patient')?.value"
+            [class.cursor-not-allowed]="!hasDiagnostics || !form.get('patient')?.value"
+          >
+            Ajouter une prescription
+          </button>
       </div>
       <div class="p-5 space-y-3 text-sm text-gray-700">
         <div *ngIf="prescriptions.length > 0; else noPrescriptions" class="space-y-2">
@@ -276,8 +288,12 @@
             *ngFor="let pr of prescriptions.controls; let i = index"
           >
             <div class="flex-1">
-              <div class="text-xs text-gray-600">Diagnostic: {{ pr.get('diagnosticRef')?.value || '—' }}</div>
-              <div class="text-xs text-gray-600">Date: {{ pr.get('date')?.value | date : 'dd/MM/yyyy' }}</div>
+              <div class="text-xs text-gray-600">
+                Diagnostic: {{ pr.get('diagnosticRef')?.value || '—' }}
+              </div>
+              <div class="text-xs text-gray-600">
+                Date: {{ pr.get('date')?.value | date : 'dd/MM/yyyy' }}
+              </div>
               <div class="text-xs text-gray-600">Motif: {{ pr.get('motif')?.value || '—' }}</div>
               <div class="mt-1 text-gray-700">{{ pr.get('description')?.value }}</div>
             </div>
@@ -286,7 +302,7 @@
                 type="button"
                 class="text-blue-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:no-underline"
                 (click)="openPrescriptionModal(i)"
-                [disabled]="!hasDiagnostics"
+                [disabled]="!hasDiagnostics || !form.get('patient')?.value"
               >
                 Modifier
               </button>
@@ -310,33 +326,37 @@
     <div class="bg-white border border-neutral-300 rounded mt-6">
       <div class="px-5 py-4 border-b border-neutral-300 flex items-center justify-between">
         <h3 class="font-semibold text-gray-800">Hospitalisations</h3>
-        <button
-          type="button"
-          class="px-3 py-2 border rounded bg-blue-600 text-white hover:bg-blue-700 transition text-xs"
-          (click)="openHospitalisationModal()"
-          [disabled]="!hasDiagnostics"
-          [class.opacity-50]="!hasDiagnostics"
-          [class.cursor-not-allowed]="!hasDiagnostics"
-        >
-          Ajouter une hospitalisation
-        </button>
+          <button
+            type="button"
+            class="px-3 py-2 border rounded bg-blue-600 text-white hover:bg-blue-700 transition text-xs"
+            (click)="openHospitalisationModal()"
+            [disabled]="!hasDiagnostics || !form.get('patient')?.value"
+            [class.opacity-50]="!hasDiagnostics || !form.get('patient')?.value"
+            [class.cursor-not-allowed]="!hasDiagnostics || !form.get('patient')?.value"
+          >
+            Ajouter une hospitalisation
+          </button>
       </div>
       <div class="p-5 space-y-3 text-sm text-gray-700">
-        <div
-          *ngIf="hospitalisations.length > 0; else noHospitalisations"
-          class="space-y-2"
-        >
+        <div *ngIf="hospitalisations.length > 0; else noHospitalisations" class="space-y-2">
           <div
             class="flex justify-between items-start gap-4"
             *ngFor="let h of hospitalisations.controls; let i = index"
           >
             <div class="flex-1">
-              <div class="text-xs text-gray-600">Diagnostic: {{ h.get('diagnosticRef')?.value || '—' }}</div>
+              <div class="text-xs text-gray-600">
+                Diagnostic: {{ h.get('diagnosticRef')?.value || '—' }}
+              </div>
               <div class="text-xs text-gray-600">
                 Admission: {{ h.get('dateAdmission')?.value | date : 'dd/MM/yyyy' }}
               </div>
               <div class="text-xs text-gray-600">
-                Sortie: {{ h.get('dateSortie')?.value ? (h.get('dateSortie')?.value | date : 'dd/MM/yyyy') : '—' }}
+                Sortie:
+                {{
+                  h.get('dateSortie')?.value
+                    ? (h.get('dateSortie')?.value | date : 'dd/MM/yyyy')
+                    : '—'
+                }}
               </div>
               <div class="text-xs text-gray-600">Motif: {{ h.get('motif')?.value || '—' }}</div>
             </div>
@@ -345,7 +365,7 @@
                 type="button"
                 class="text-blue-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:no-underline"
                 (click)="openHospitalisationModal(i)"
-                [disabled]="!hasDiagnostics"
+                [disabled]="!hasDiagnostics || !form.get('patient')?.value"
               >
                 Modifier
               </button>
@@ -380,14 +400,14 @@
         </div>
       </div>
     </div>
-    <!-- Bouton de mise à jour global -->
+    <!-- Bouton de signature -->
     <div class="mt-6 flex justify-end gap-3">
       <button
         type="button"
-        (click)="updateConsultation()"
+        (click)="signer()"
         class="px-5 py-2.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm"
       >
-        Mettre à jour
+        Signer
       </button>
     </div>
     <!-- Modal Diagnostic (style consultations-new) -->

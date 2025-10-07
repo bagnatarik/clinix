@@ -5,6 +5,12 @@ import { ReactiveFormsModule, FormBuilder, Validators, FormGroup, FormArray } fr
 import { FormsModule } from '@angular/forms';
 import { PatientsService } from '../patients.service';
 import { toast } from 'ngx-sonner';
+import { AntecedentsService } from '../../../doctor/consultations/antecedents.service';
+import { TypesAntecedantService } from '../../../types-antecedant/types-antecedant.service';
+import { TypeAntecedant } from '../../../../core/interfaces/admin';
+import { DossierPatientService } from '../../../doctor/consultations/dossier-patient.service';
+import { of, forkJoin } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-patients-new-nurse',
@@ -41,8 +47,8 @@ import { toast } from 'ngx-sonner';
                 class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 focus:outline-none text-sm"
                 formControlName="sexe"
               >
-                <option value="H">Homme</option>
-                <option value="F">Femme</option>
+                <option value="Masculin">Masculin</option>
+                <option value="Feminin">Feminin</option>
               </select>
             </div>
             <div>
@@ -150,18 +156,18 @@ import { toast } from 'ngx-sonner';
                       <button
                         type="button"
                         class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
-                        *ngFor="let t of filteredTypes; let ti = index"
+                        *ngFor="let opt of filteredTypeOptions; let ti = index"
                         (mouseenter)="typeActiveIndex = ti"
                         [class.bg-blue-50]="
-                          typeActiveIndex === ti || group.get('type')?.value === t
+                          typeActiveIndex === ti || group.get('type')?.value === opt.label
                         "
-                        (click)="selectType(i, t)"
+                        (click)="selectType(i, opt)"
                       >
-                        {{ t }}
+                        {{ opt.label }}
                       </button>
 
                       <div
-                        *ngIf="filteredTypes.length === 0"
+                        *ngIf="filteredTypeOptions.length === 0"
                         class="px-3 py-2 text-xs text-neutral-500"
                       >
                         Aucun type trouvé
@@ -220,11 +226,18 @@ import { toast } from 'ngx-sonner';
 export class PatientsNewNurseComponent {
   form: FormGroup;
 
-  constructor(private fb: FormBuilder, private service: PatientsService, private router: Router) {
+  constructor(
+    private fb: FormBuilder,
+    private service: PatientsService,
+    private antecedentService: AntecedentsService,
+    private dossierService: DossierPatientService,
+    private typeService: TypesAntecedantService,
+    private router: Router
+  ) {
     this.form = this.fb.group({
       nom: ['', Validators.required],
       prenom: ['', Validators.required],
-      sexe: ['H', Validators.required],
+      sexe: ['Masculin', Validators.required],
       dateNaissance: [''],
       telephone: [''],
       email: ['', [Validators.required, Validators.email]],
@@ -233,6 +246,14 @@ export class PatientsNewNurseComponent {
       antecedents: this.fb.array([]),
     });
     this.form.get('motDePasse')?.setValue(this.generatePassword());
+
+    // Charger les types d'antécédent depuis le service (pattern Chambres)
+    this.typeService.getAll().subscribe({
+      next: (types: TypeAntecedant[]) => {
+        this.typeOptions = types.map((t) => ({ id: t.publicId, label: t.libelle }));
+      },
+      error: () => toast.error('Erreur lors du chargement des types d’antécédent'),
+    });
   }
 
   regeneratePassword(doNotShow = false) {
@@ -253,12 +274,12 @@ export class PatientsNewNurseComponent {
   typeDropdownOpenIndex: number | null = null;
   typeSearch = '';
   typeActiveIndex = -1;
-  typesAntecedent: string[] = ['Allergie', 'Médical', 'Chirurgical', 'Familial', 'Autre'];
-
-  get filteredTypes(): string[] {
+  // Options et filtrage façon Chambres
+  typeOptions: { id: string; label: string }[] = [];
+  get filteredTypeOptions(): { id: string; label: string }[] {
     const q = this.typeSearch.trim().toLowerCase();
-    if (!q) return this.typesAntecedent;
-    return this.typesAntecedent.filter((t) => t.toLowerCase().includes(q));
+    if (!q) return this.typeOptions;
+    return this.typeOptions.filter((t) => t.label.toLowerCase().includes(q));
   }
 
   toggleTypeDropdown(i: number) {
@@ -267,8 +288,10 @@ export class PatientsNewNurseComponent {
     this.typeActiveIndex = -1;
   }
 
-  selectType(i: number, type: string) {
-    (this.antecedents.at(i) as FormGroup).get('type')?.setValue(type);
+  selectType(i: number, option: { id: string; label: string }) {
+    const group = this.antecedents.at(i) as FormGroup;
+    group.get('type')?.setValue(option.label);
+    group.get('typeId')?.setValue(option.id);
     this.typeDropdownOpenIndex = null;
   }
 
@@ -279,7 +302,8 @@ export class PatientsNewNurseComponent {
   addAntecedent() {
     this.antecedents.push(
       this.fb.group({
-        type: [''],
+        type: [''], // libellé pour affichage
+        typeId: [''], // UUID du type pour envoi API
         description: [''],
       })
     );
@@ -291,10 +315,78 @@ export class PatientsNewNurseComponent {
 
   submit() {
     if (this.form.invalid) return;
-    const payload = { ...(this.form.value as any), statut: 'actif' };
-    this.service.create(payload).subscribe(() => {
-      toast.success('Patient créé');
-      this.router.navigate(['/dashboard/infirmier/patients/list']);
+    const formValue = this.form.value as any;
+    const payload = {
+      ...formValue,
+      sexe:
+        formValue.sexe === 'Masculin'
+          ? 'Masculin'
+          : formValue.sexe === 'Feminin'
+          ? 'Feminin'
+          : formValue.sexe,
+      statut: 'actif',
+    };
+
+    this.service.create(payload).subscribe({
+      next: (result) => {
+        const antecedentsList: { description: string; typeId: string }[] = (
+          this.antecedents.value || []
+        ).map((a: any) => ({ description: a.description, typeId: a.typeId }));
+
+        if (!antecedentsList.length) {
+          toast.success('Patient créé');
+          this.router.navigate(['/dashboard/infirmier/patients/list']);
+          return;
+        }
+
+        const dossierId$ = result?.dossierPublicId
+          ? of(result.dossierPublicId)
+          : this.dossierService
+              .getByPublicId(result.publicId)
+              .pipe(map((d) => (d ? (d as any).publicId : '')));
+
+        dossierId$.subscribe({
+          next: (dossierId) => {
+            if (!dossierId) {
+              toast.error("Dossier patient introuvable pour l'enregistrement des antécédents");
+              this.router.navigate(['/dashboard/infirmier/patients/list']);
+              return;
+            }
+
+            const calls = antecedentsList
+              .filter((a) => a.description && a.typeId)
+              .map((a) =>
+                this.antecedentService.create({
+                  description: a.description,
+                  idTypeAntecedant: a.typeId,
+                  dossierPatient: dossierId,
+                })
+              );
+
+            if (!calls.length) {
+              toast.success('Patient créé');
+              this.router.navigate(['/dashboard/infirmier/patients/list']);
+              return;
+            }
+
+            forkJoin(calls).subscribe({
+              next: () => {
+                toast.success('Patient et antécédents créés');
+                this.router.navigate(['/dashboard/infirmier/patients/list']);
+              },
+              error: () => {
+                toast.error("Erreur lors de l'enregistrement des antécédents");
+                this.router.navigate(['/dashboard/infirmier/patients/list']);
+              },
+            });
+          },
+          error: () => {
+            toast.error('Erreur lors de la récupération du dossier patient');
+            this.router.navigate(['/dashboard/infirmier/patients/list']);
+          },
+        });
+      },
+      error: () => toast.error('Erreur lors de la création du patient'),
     });
   }
 }

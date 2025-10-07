@@ -6,7 +6,8 @@ import { Ordonnance, Prescription } from '../../../../core/interfaces/medical';
 import { DataTableComponent } from '../../../../shared/data-table-component/data-table-component';
 import { Column } from '../../../../core/interfaces/column';
 import { PrescriptionsService } from '../../prescriptions/prescriptions.service';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-ordonnances-list',
@@ -37,8 +38,11 @@ export class OrdonnancesListComponent implements OnInit {
 
   ngOnInit(): void { this.refresh(); }
   refresh() {
-    forkJoin([this.service.getAll(), this.prescriptionsService.getAll()]).subscribe(([ordonnances, prescriptions]) => {
-      this.dataSource = ordonnances.map((o) => {
+    forkJoin({
+      ordonnances: this.service.getAll().pipe(catchError(() => of([] as Ordonnance[]))),
+      prescriptions: this.prescriptionsService.getAll().pipe(catchError(() => of([] as Prescription[]))),
+    }).subscribe(({ ordonnances, prescriptions }) => {
+      this.dataSource = (ordonnances as Ordonnance[]).map((o) => {
         const produits = o.produits ?? [];
         const computedTotal = produits.reduce((sum, p) => sum + (p.prixProduit ?? p.cout ?? 0), 0);
         const lib = o.libelle ?? (o as any).contenu ?? 'Sans libellé';
