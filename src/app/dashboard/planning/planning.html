@@ -46,10 +46,10 @@
     <div class="grid grid-cols-1 gap-3">
       <div class="space-y-3">
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1">Description</label>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Libellé</label>
           <textarea
-            [(ngModel)]="planningForm.description"
-            placeholder="Décrire le planning..."
+            [(ngModel)]="planningForm.libelle"
+            placeholder="Libellé du planning..."
             rows="3"
             class="w-full border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none"
           ></textarea>
@@ -63,7 +63,7 @@
             (click)="toggleGardeDropdown()"
             [attr.aria-expanded]="gardeDropdownOpen"
           >
-            <span>{{ planningForm.garde || 'Sélectionner une garde' }}</span>
+            <span>{{ getGardeLabel(planningForm.idGarde) || 'Sélectionner une garde' }}</span>
             <svg
               class="size-4 text-neutral-500"
               viewBox="0 0 24 24"
@@ -99,10 +99,10 @@
                 type="button"
                 class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
                 *ngFor="let g of filteredGardes"
-                [class.bg-blue-50]="planningForm.garde === g"
+                [class.bg-blue-50]="planningForm.idGarde === g.id"
                 (click)="selectGarde(g)"
               >
-                {{ g }}
+                {{ g.label }}
               </button>
 
               <div *ngIf="filteredGardes.length === 0" class="px-3 py-2 text-xs text-neutral-500">
@@ -121,7 +121,7 @@
             (click)="togglePersonnelDropdown()"
             [attr.aria-expanded]="personnelDropdownOpen"
           >
-            <span>{{ planningForm.personnel || 'Sélectionner un personnel' }}</span>
+            <span>{{ getPersonnelLabel(planningForm.idPersonnel) || 'Sélectionner un personnel' }}</span>
             <svg
               class="size-4 text-neutral-500"
               viewBox="0 0 24 24"
@@ -157,10 +157,10 @@
                 type="button"
                 class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
                 *ngFor="let p of filteredPersonnels"
-                [class.bg-blue-50]="planningForm.personnel === p"
+                [class.bg-blue-50]="planningForm.idPersonnel === p.id"
                 (click)="selectPersonnel(p)"
               >
-                {{ p }}
+                {{ p.label }}
               </button>
 
               <div
@@ -223,10 +223,10 @@
     <div class="grid grid-cols-1 gap-3">
       <div class="space-y-3">
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1">Description</label>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Libellé</label>
           <textarea
-            [(ngModel)]="planningForm.description"
-            placeholder="Décrire le planning..."
+            [(ngModel)]="planningForm.libelle"
+            placeholder="Libellé du planning..."
             rows="3"
             class="w-full border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none"
           ></textarea>
@@ -240,7 +240,7 @@
             (click)="toggleGardeDropdown()"
             [attr.aria-expanded]="gardeDropdownOpen"
           >
-            <span>{{ planningForm.garde || 'Sélectionner une garde' }}</span>
+            <span>{{ getGardeLabel(planningForm.idGarde) || 'Sélectionner une garde' }}</span>
             <svg
               class="size-4 text-neutral-500"
               viewBox="0 0 24 24"
@@ -276,10 +276,10 @@
                 type="button"
                 class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
                 *ngFor="let g of filteredGardes"
-                [class.bg-blue-50]="planningForm.garde === g"
+                [class.bg-blue-50]="planningForm.idGarde === g.id"
                 (click)="selectGarde(g)"
               >
-                {{ g }}
+                {{ g.label }}
               </button>
 
               <div *ngIf="filteredGardes.length === 0" class="px-3 py-2 text-xs text-neutral-500">
@@ -298,7 +298,7 @@
             (click)="togglePersonnelDropdown()"
             [attr.aria-expanded]="personnelDropdownOpen"
           >
-            <span>{{ planningForm.personnel || 'Sélectionner un personnel' }}</span>
+            <span>{{ getPersonnelLabel(planningForm.idPersonnel) || 'Sélectionner un personnel' }}</span>
             <svg
               class="size-4 text-neutral-500"
               viewBox="0 0 24 24"
@@ -334,10 +334,10 @@
                 type="button"
                 class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
                 *ngFor="let p of filteredPersonnels"
-                [class.bg-blue-50]="planningForm.personnel === p"
+                [class.bg-blue-50]="planningForm.idPersonnel === p.id"
                 (click)="selectPersonnel(p)"
               >
-                {{ p }}
+                {{ p.label }}
               </button>
 
               <div

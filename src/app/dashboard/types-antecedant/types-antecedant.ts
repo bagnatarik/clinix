@@ -1,8 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DataTableComponent } from '../../shared/data-table-component/data-table-component';
 import { Column } from '../../core/interfaces/column';
 import { toast } from 'ngx-sonner';
+import { TypesAntecedantService } from './types-antecedant.service';
+import { TypeAntecedant } from '../../core/interfaces/admin';
 
 @Component({
   selector: 'app-types-antecedant',
@@ -10,9 +12,9 @@ import { toast } from 'ngx-sonner';
   templateUrl: './types-antecedant.html',
   styleUrl: './types-antecedant.css'
 })
-export class TypesAntecedant {
+export class TypesAntecedant implements OnInit {
   columns: Column[] = [
-    { key: 'id', label: 'ID', sortable: true },
+    // { key: 'publicId', label: 'ID', sortable: true },
     { key: 'libelle', label: 'Libellé', sortable: true },
     { key: 'actions', label: 'Actions', sortable: false },
   ];
@@ -21,11 +23,19 @@ export class TypesAntecedant {
   showEditModal = false;
   showDeleteModal = false;
 
-  currentType: any = null;
+  currentType: TypeAntecedant | null = null;
 
   typeForm = {
     libelle: '',
   };
+
+  constructor(private service: TypesAntecedantService) {}
+
+  ngOnInit(): void {
+    this.refresh();
+  }
+
+  typesAntecedant: TypeAntecedant[] = [];
 
   handleNew() {
     this.typeForm = { libelle: '' };
@@ -33,12 +43,12 @@ export class TypesAntecedant {
   }
 
   handleRefresh() {
-    toast.info('Actualisation des types d’antécédant');
+    this.refresh();
   }
 
   handleEdit(type: any) {
-    this.currentType = type;
-    this.typeForm = { libelle: type.libelle };
+    this.currentType = type as TypeAntecedant;
+    this.typeForm = { libelle: (type as TypeAntecedant).libelle };
     this.showEditModal = true;
   }
 
@@ -51,33 +61,44 @@ export class TypesAntecedant {
     console.log('Row clicked:', type);
   }
 
+  private refresh() {
+    this.service.getAll().subscribe({
+      next: (data) => (this.typesAntecedant = data),
+      error: () => toast.error('Erreur lors du chargement des types d’antécédent'),
+    });
+  }
+
   createType() {
-    const newItem = {
-      id: `TAN${Math.floor(Math.random() * 1000)}`,
-      libelle: this.typeForm.libelle
-    };
-    this.typesAntecedant = [newItem, ...this.typesAntecedant];
-    this.showCreateModal = false;
+    const { libelle } = this.typeForm;
+    this.service.create(libelle!).subscribe(() => {
+      toast.success('Type d’antécédent créé avec succès');
+      this.showCreateModal = false;
+      this.refresh();
+    });
   }
 
   updateType() {
     if (this.currentType) {
-      const index = this.typesAntecedant.findIndex((t) => t.id === this.currentType.id);
-      if (index !== -1) this.typesAntecedant[index] = { ...this.currentType, ...this.typeForm };
+      const { libelle } = this.typeForm;
+      this.service.update(this.currentType.publicId, { libelle }).subscribe(() => {
+        toast.success('Type d’antécédent mis à jour avec succès');
+        this.showEditModal = false;
+        this.refresh();
+      });
+    } else {
+      this.showEditModal = false;
     }
-    this.showEditModal = false;
   }
 
   deleteType() {
     if (this.currentType) {
-      this.typesAntecedant = this.typesAntecedant.filter((t) => t.id !== this.currentType.id);
+      this.service.delete(this.currentType.publicId).subscribe(() => {
+        toast.success('Type d’antécédent supprimé avec succès');
+        this.showDeleteModal = false;
+        this.refresh();
+      });
+    } else {
+      this.showDeleteModal = false;
     }
-    this.showDeleteModal = false;
   }
-
-  typesAntecedant = [
-    { id: 'TAN001', libelle: 'Allergie' },
-    { id: 'TAN002', libelle: 'Chirurgie' },
-    { id: 'TAN003', libelle: 'Maladie chronique' },
-  ];
 }

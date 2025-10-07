@@ -3,6 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { DataTableComponent } from '../../shared/data-table-component/data-table-component';
 import { Column } from '../../core/interfaces/column';
 import { toast } from 'ngx-sonner';
+import { GardesService } from './gardes.service';
+import { Garde } from '../../core/interfaces/admin';
 
 @Component({
   selector: 'app-gardes',
@@ -12,11 +14,11 @@ import { toast } from 'ngx-sonner';
 })
 export class Gardes {
   columns: Column[] = [
-    { key: 'id', label: 'ID', sortable: true },
+    // { key: 'publicId', label: 'ID', sortable: true },
     { key: 'dateDebut', label: 'Date début', sortable: true },
-    { key: 'heureDebut', label: 'Heure début', sortable: true },
+    // { key: 'heureDebut', label: 'Heure début', sortable: true },
     { key: 'dateFin', label: 'Date fin', sortable: true },
-    { key: 'heureFin', label: 'Heure fin', sortable: true },
+    // { key: 'heureFin', label: 'Heure fin', sortable: true },
     { key: 'actions', label: 'Actions', sortable: false },
   ];
 
@@ -24,107 +26,110 @@ export class Gardes {
   showEditModal = false;
   showDeleteModal = false;
 
-  currentGarde: any = null;
+  currentGarde: Garde | null = null;
 
   gardeForm = {
-    id: '',
     dateDebut: '',
-    heureDebut: '',
+    // heureDebut: '',
     dateFin: '',
-    heureFin: '',
+    // heureFin: '',
   };
+
+  gardes: Garde[] = [];
+
+  constructor(private gardesService: GardesService) {}
+
+  ngOnInit() {
+    this.refresh();
+  }
 
   handleNew() {
     this.gardeForm = {
-      id: '',
       dateDebut: '',
-      heureDebut: '',
+      // heureDebut: '',
       dateFin: '',
-      heureFin: '',
+      // heureFin: '',
     };
     this.showCreateModal = true;
   }
 
   handleRefresh() {
-    toast.info('Actualisation des gardes');
+    this.refresh();
   }
 
-  handleEdit(garde: any) {
+  handleEdit(garde: Garde) {
     this.currentGarde = garde;
     this.gardeForm = {
-      id: garde.id ?? '',
       dateDebut: garde.dateDebut ?? '',
-      heureDebut: garde.heureDebut ?? '',
+      // heureDebut: garde.heureDebut ?? '',
       dateFin: garde.dateFin ?? '',
-      heureFin: garde.heureFin ?? '',
+      // heureFin: garde.heureFin ?? '',
     };
     this.showEditModal = true;
   }
 
-  handleDelete(garde: any) {
+  handleDelete(garde: Garde) {
     this.currentGarde = garde;
     this.showDeleteModal = true;
   }
 
-  handleRowClick(garde: any) {
+  handleRowClick(garde: Garde) {
     console.log('Row clicked:', garde);
   }
 
   createGarde() {
-    const newItem = {
-      id: `GRD${Math.floor(Math.random() * 1000)}`,
-      dateDebut: this.gardeForm.dateDebut,
-      heureDebut: this.gardeForm.heureDebut,
-      dateFin: this.gardeForm.dateFin,
-      heureFin: this.gardeForm.heureFin,
-    };
-    this.gardes = [newItem, ...this.gardes];
-    this.showCreateModal = false;
+    this.gardesService
+      .create({
+        dateDebut: this.gardeForm.dateDebut,
+        // heureDebut: this.gardeForm.heureDebut,
+        dateFin: this.gardeForm.dateFin,
+        // heureFin: this.gardeForm.heureFin,
+      })
+      .subscribe({
+        next: () => {
+          toast.success('Garde créée');
+          this.showCreateModal = false;
+          this.refresh();
+        },
+        error: () => toast.error('Échec de la création de la garde'),
+      });
   }
 
   updateGarde() {
-    if (this.currentGarde) {
-      const index = this.gardes.findIndex((t) => t.id === this.currentGarde.id);
-      if (index !== -1)
-        this.gardes[index] = {
-          ...this.currentGarde,
-          dateDebut: this.gardeForm.dateDebut,
-          heureDebut: this.gardeForm.heureDebut,
-          dateFin: this.gardeForm.dateFin,
-          heureFin: this.gardeForm.heureFin,
-        };
-    }
-    this.showEditModal = false;
+    if (!this.currentGarde) return;
+    this.gardesService
+      .update(this.currentGarde.publicId, {
+        dateDebut: this.gardeForm.dateDebut,
+        // heureDebut: this.gardeForm.heureDebut,
+        dateFin: this.gardeForm.dateFin,
+        // heureFin: this.gardeForm.heureFin,
+      })
+      .subscribe({
+        next: () => {
+          toast.success('Garde mise à jour');
+          this.showEditModal = false;
+          this.refresh();
+        },
+        error: () => toast.error('Échec de la mise à jour'),
+      });
   }
 
   deleteGarde() {
-    if (this.currentGarde) {
-      this.gardes = this.gardes.filter((t) => t.id !== this.currentGarde.id);
-    }
-    this.showDeleteModal = false;
+    if (!this.currentGarde) return;
+    this.gardesService.delete(this.currentGarde.publicId).subscribe({
+      next: () => {
+        toast.success('Garde supprimée');
+        this.showDeleteModal = false;
+        this.refresh();
+      },
+      error: () => toast.error('Échec de la suppression'),
+    });
   }
 
-  gardes = [
-    {
-      id: 'GRD001',
-      dateDebut: '2025-10-04',
-      heureDebut: '08:00',
-      dateFin: '2025-10-04',
-      heureFin: '16:00',
-    },
-    {
-      id: 'GRD002',
-      dateDebut: '2025-10-05',
-      heureDebut: '16:00',
-      dateFin: '2025-10-06',
-      heureFin: '00:00',
-    },
-    {
-      id: 'GRD003',
-      dateDebut: '2025-10-06',
-      heureDebut: '00:00',
-      dateFin: '2025-10-06',
-      heureFin: '08:00',
-    },
-  ];
+  private refresh() {
+    this.gardesService.getAll().subscribe({
+      next: (items) => (this.gardes = items),
+      error: () => toast.error('Échec du chargement des gardes'),
+    });
+  }
 }

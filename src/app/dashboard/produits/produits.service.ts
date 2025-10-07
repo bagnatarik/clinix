@@ -2,22 +2,29 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Produit } from '../../core/interfaces/admin';
-import { AuthenticationService } from '../../authentication/services/authentication-service';
 import { API_BASE_URL } from '../../core/services/api';
 
 @Injectable({ providedIn: 'root' })
 export class ProduitsService {
-  private baseUrl = `${API_BASE_URL}/produits`;
-  constructor(private http: HttpClient, private auth: AuthenticationService) {}
+  private baseUrl = `${API_BASE_URL}/produit`;
+  constructor(private http: HttpClient) {}
 
-  getAll(): Observable<Produit[]> { return this.http.get<Produit[]>(this.baseUrl); }
-  create(item: Omit<Produit, 'id' | 'updatedBy'> & { id?: string }): Observable<Produit> {
-    const user = this.auth.getCurrentUser();
-    return this.http.post<Produit>(this.baseUrl, { ...item, updatedBy: user?.name });
+  getAll(): Observable<Produit[]> {
+    return this.http.get<Produit[]>(this.baseUrl + '/all');
+  }
+  create(item: Produit): Observable<Produit> {
+    return this.http.post<Produit>(this.baseUrl + '/save', {
+      nom: item.nom,
+      description: item.description,
+      cout: item.cout,
+    });
   }
   update(id: string, changes: Partial<Produit>): Observable<Produit | null> {
-    const user = this.auth.getCurrentUser();
-    return this.http.put<Produit | null>(`${this.baseUrl}/${id}`, { ...changes, updatedBy: user?.name });
+    return this.http.put<Produit | null>(`${this.baseUrl}/update/${id}`, {
+      ...changes,
+    });
   }
-  delete(id: string): Observable<void> { return this.http.delete<void>(`${this.baseUrl}/${id}`); }
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/delete/${id}`);
+  }
 }

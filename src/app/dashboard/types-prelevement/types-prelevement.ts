@@ -1,8 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DataTableComponent } from '../../shared/data-table-component/data-table-component';
 import { Column } from '../../core/interfaces/column';
 import { toast } from 'ngx-sonner';
+import { TypesPrelevementService } from './types-prelevement.service';
+import { TypePrelevement } from '../../core/interfaces/admin';
 
 @Component({
   selector: 'app-types-prelevement',
@@ -10,9 +12,9 @@ import { toast } from 'ngx-sonner';
   templateUrl: './types-prelevement.html',
   styleUrl: './types-prelevement.css'
 })
-export class TypesPrelevement {
+export class TypesPrelevement implements OnInit {
   columns: Column[] = [
-    { key: 'id', label: 'ID', sortable: true },
+    // { key: 'publicId', label: 'ID', sortable: true },
     { key: 'libelle', label: 'Libellé', sortable: true },
     { key: 'actions', label: 'Actions', sortable: false },
   ];
@@ -21,11 +23,19 @@ export class TypesPrelevement {
   showEditModal = false;
   showDeleteModal = false;
 
-  currentType: any = null;
+  currentType: TypePrelevement | null = null;
 
   typeForm = {
     libelle: '',
   };
+
+  constructor(private service: TypesPrelevementService) {}
+
+  ngOnInit(): void {
+    this.refresh();
+  }
+
+  types: TypePrelevement[] = [];
 
   handleNew() {
     this.typeForm = { libelle: '' };
@@ -33,12 +43,12 @@ export class TypesPrelevement {
   }
 
   handleRefresh() {
-    toast.info('Actualisation des types de prélèvements');
+    this.refresh();
   }
 
   handleEdit(type: any) {
-    this.currentType = type;
-    this.typeForm = { libelle: type.libelle };
+    this.currentType = type as TypePrelevement;
+    this.typeForm = { libelle: (type as TypePrelevement).libelle };
     this.showEditModal = true;
   }
 
@@ -51,33 +61,44 @@ export class TypesPrelevement {
     console.log('Row clicked:', type);
   }
 
+  private refresh() {
+    this.service.getAll().subscribe({
+      next: (data) => (this.types = data),
+      error: () => toast.error('Erreur lors du chargement des types de prélèvement'),
+    });
+  }
+
   createType() {
-    const newItem = {
-      id: `TPR${Math.floor(Math.random() * 1000)}`,
-      libelle: this.typeForm.libelle
-    };
-    this.types = [newItem, ...this.types];
-    this.showCreateModal = false;
+    const { libelle } = this.typeForm;
+    this.service.create(libelle!).subscribe(() => {
+      toast.success('Type de prélèvement créé avec succès');
+      this.showCreateModal = false;
+      this.refresh();
+    });
   }
 
   updateType() {
     if (this.currentType) {
-      const index = this.types.findIndex((t) => t.id === this.currentType.id);
-      if (index !== -1) this.types[index] = { ...this.currentType, ...this.typeForm };
+      const { libelle } = this.typeForm;
+      this.service.update(this.currentType.publicId, { libelle }).subscribe(() => {
+        toast.success('Type de prélèvement mis à jour avec succès');
+        this.showEditModal = false;
+        this.refresh();
+      });
+    } else {
+      this.showEditModal = false;
     }
-    this.showEditModal = false;
   }
 
   deleteType() {
     if (this.currentType) {
-      this.types = this.types.filter((t) => t.id !== this.currentType.id);
+      this.service.delete(this.currentType.publicId).subscribe(() => {
+        toast.success('Type de prélèvement supprimé avec succès');
+        this.showDeleteModal = false;
+        this.refresh();
+      });
+    } else {
+      this.showDeleteModal = false;
     }
-    this.showDeleteModal = false;
   }
-
-  types = [
-    { id: 'SANG', libelle: 'Sang' },
-    { id: 'URIN', libelle: 'Urines' },
-    { id: 'SAL', libelle: 'Salive' },
-  ];
 }

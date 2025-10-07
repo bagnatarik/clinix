@@ -13,6 +13,42 @@ export interface Specialite {
   libelle: string;
 }
 
+export interface Etage {
+  publicId: string;
+  libelle: string;
+}
+
+export interface TypeChambre {
+  publicId: string;
+  libelle: string;
+}
+
+export interface TypePrelevement {
+  publicId: string;
+  libelle: string;
+}
+
+export interface TypeAntecedant {
+  publicId: string;
+  libelle: string;
+}
+
+export interface Analyse {
+  publicId: string;
+  libelle: string;
+  cout: number;
+}
+
+export type LocalDate = string;
+
+export interface Garde {
+  publicId: string;
+  dateDebut: LocalDate;
+  heureDebut: string;
+  dateFin: LocalDate;
+  heureFin: string;
+}
+
 export interface Personnel {
   id: string;
   nom: string;
@@ -48,4 +84,36 @@ export interface Produit {
   description: string;
   cout: number;
   updatedBy?: string;
+}
+
+export interface Chambre {
+  publicId: string;
+  nomChambre: string;
+  nombreLit: number;
+  cout: number;
+  libelleTypeChambre: string;
+  libelleEtage: string;
+}
+
+export interface ChambreRequest {
+  nomChambre: string;
+  nombreLit: number;
+  cout: number;
+  idTypeChambre: string; // UUID
+  idEtage: string; // UUID
+}
+
+// Planning
+export interface PlanningResponse {
+  publicId: string;
+  libelle: string;
+  nomPersonnel: string;
+  dateDebutGarde: LocalDate;
+  dateFinGarde: LocalDate;
+}
+
+export interface PlanningRequest {
+  libelle: string;
+  idPersonnel: string; // UUID
+  idGarde: string; // UUID
 }

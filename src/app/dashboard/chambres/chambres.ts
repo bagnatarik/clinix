@@ -1,9 +1,13 @@
-import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataTableComponent } from '../../shared/data-table-component/data-table-component';
 import { Column } from '../../core/interfaces/column';
 import { toast } from 'ngx-sonner';
+import { ChambresService } from './chambres.service';
+import { TypesChambreService } from '../types-chambre/types-chambre.service';
+import { EtagesService } from '../etages/etages.service';
+import { Chambre, ChambreRequest } from '../../core/interfaces/admin';
 
 @Component({
   selector: 'app-chambres',
@@ -11,12 +15,13 @@ import { toast } from 'ngx-sonner';
   templateUrl: './chambres.html',
   styleUrl: './chambres.css',
 })
-export class Chambres {
+export class Chambres implements OnInit {
   columns: Column[] = [
-    { key: 'id', label: 'ID', sortable: true },
-    { key: 'etageLabel', label: 'Étages', sortable: true },
-    { key: 'typeLabel', label: 'Type de chambre', sortable: true },
-    { key: 'nbLits', label: 'Nombre de lits', sortable: true },
+    // { key: 'publicId', label: 'ID', sortable: true },
+    { key: 'nomChambre', label: 'Nom', sortable: true },
+    { key: 'libelleEtage', label: 'Étage', sortable: true },
+    { key: 'libelleTypeChambre', label: 'Type de chambre', sortable: true },
+    { key: 'nombreLit', label: 'Nombre de lits', sortable: true },
     { key: 'cout', label: 'Coût', sortable: true },
     { key: 'actions', label: 'Actions', sortable: false },
   ];
@@ -25,30 +30,19 @@ export class Chambres {
   showEditModal = false;
   showDeleteModal = false;
 
-  currentRoom: any = null;
+  currentRoom: Chambre | null = null;
 
-  roomForm = {
-    id: '',
-    nbLits: 0,
+  roomForm: ChambreRequest = {
+    nomChambre: '',
+    nombreLit: 0,
     cout: 0,
-    etageId: '',
-    etageLabel: '',
-    typeId: '',
-    typeLabel: '',
+    idTypeChambre: '',
+    idEtage: '',
   };
 
   // Dropdown data sources
-  etageOptions: { id: string; label: string }[] = [
-    { id: 'E1', label: 'Étage 1' },
-    { id: 'E2', label: 'Étage 2' },
-    { id: 'E3', label: 'Étage 3' },
-  ];
-
-  typeOptions: { id: string; label: string }[] = [
-    { id: 'STD', label: 'Standard' },
-    { id: 'DEL', label: 'Deluxe' },
-    { id: 'SUITE', label: 'Suite' },
-  ];
+  etageOptions: { id: string; label: string }[] = [];
+  typeOptions: { id: string; label: string }[] = [];
 
   // Dropdown states and search
   etageDropdownOpen = false;
@@ -91,14 +85,12 @@ export class Chambres {
   }
 
   selectEtage(option: { id: string; label: string }) {
-    this.roomForm.etageId = option.id;
-    this.roomForm.etageLabel = option.label;
+    this.roomForm.idEtage = option.id;
     this.etageDropdownOpen = false;
   }
 
   selectType(option: { id: string; label: string }) {
-    this.roomForm.typeId = option.id;
-    this.roomForm.typeLabel = option.label;
+    this.roomForm.idTypeChambre = option.id;
     this.typeDropdownOpen = false;
   }
 
@@ -106,104 +98,143 @@ export class Chambres {
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
     if (this.etageDropdownOpen) {
-      const inEtage = this.etageTrigger?.nativeElement.contains(target) || this.etageMenu?.nativeElement.contains(target);
+      const inEtage =
+        this.etageTrigger?.nativeElement.contains(target) ||
+        this.etageMenu?.nativeElement.contains(target);
       if (!inEtage) this.etageDropdownOpen = false;
     }
     if (this.typeDropdownOpen) {
-      const inType = this.typeTrigger?.nativeElement.contains(target) || this.typeMenu?.nativeElement.contains(target);
+      const inType =
+        this.typeTrigger?.nativeElement.contains(target) ||
+        this.typeMenu?.nativeElement.contains(target);
       if (!inType) this.typeDropdownOpen = false;
     }
   }
 
   handleNew() {
     this.roomForm = {
-      id: '',
-      nbLits: 0,
+      nomChambre: '',
+      nombreLit: 0,
       cout: 0,
-      etageId: '',
-      etageLabel: '',
-      typeId: '',
-      typeLabel: '',
+      idEtage: '',
+      idTypeChambre: '',
     };
     this.showCreateModal = true;
   }
 
   handleRefresh() {
-    toast.info('Actualisation des chambres');
+    this.refresh();
   }
 
-  handleEdit(room: any) {
+  handleEdit(room: Chambre) {
     this.currentRoom = room;
     this.roomForm = {
-      id: room.id ?? '',
-      nbLits: room.nbLits ?? 0,
+      nomChambre: room.nomChambre ?? '',
+      nombreLit: room.nombreLit ?? 0,
       cout: room.cout ?? 0,
-      etageId: room.etageId ?? '',
-      etageLabel: room.etageLabel ?? '',
-      typeId: room.typeId ?? '',
-      typeLabel: room.typeLabel ?? '',
+      idEtage: '',
+      idTypeChambre: '',
     };
+
+    const etage = this.etageOptions.find((e) => e.label === room.libelleEtage);
+    const type = this.typeOptions.find((t) => t.label === room.libelleTypeChambre);
+    if (etage) this.roomForm.idEtage = etage.id;
+    if (type) this.roomForm.idTypeChambre = type.id;
+
     this.showEditModal = true;
   }
 
-  handleDelete(room: any) {
+  handleDelete(room: Chambre) {
     this.currentRoom = room;
     this.showDeleteModal = true;
   }
 
-  handleRowClick(room: any) {
+  handleRowClick(room: Chambre) {
     console.log('Row clicked:', room);
   }
 
   createRoom() {
-    const newItem = { ...this.roomForm };
-    if (!newItem.id) newItem.id = `CH${Math.floor(Math.random() * 1000)}`;
-    this.chambres = [newItem, ...this.chambres];
-    this.showCreateModal = false;
+    const payload: ChambreRequest = { ...this.roomForm };
+    this.service.create(payload).subscribe({
+      next: () => {
+        toast.success('Chambre créée avec succès');
+        this.showCreateModal = false;
+        this.refresh();
+        this.roomForm = { nomChambre: '', nombreLit: 0, cout: 0, idEtage: '', idTypeChambre: '' };
+      },
+      error: () => toast.error('Erreur lors de la création de la chambre'),
+    });
   }
 
   updateRoom() {
     if (this.currentRoom) {
-      const index = this.chambres.findIndex((t) => t.id === this.currentRoom.id);
-      if (index !== -1) this.chambres[index] = { ...this.currentRoom, ...this.roomForm };
+      const payload: ChambreRequest = { ...this.roomForm };
+      this.service.update(this.currentRoom.publicId, payload).subscribe({
+        next: () => {
+          toast.success('Chambre mise à jour avec succès');
+          this.showEditModal = false;
+          this.refresh();
+        },
+        error: () => toast.error('Erreur lors de la mise à jour de la chambre'),
+      });
+    } else {
+      this.showEditModal = false;
     }
-    this.showEditModal = false;
   }
 
   deleteRoom() {
     if (this.currentRoom) {
-      this.chambres = this.chambres.filter((t) => t.id !== this.currentRoom.id);
+      this.service.delete(this.currentRoom.publicId).subscribe({
+        next: () => {
+          toast.success('Chambre supprimée avec succès');
+          this.showDeleteModal = false;
+          this.refresh();
+        },
+        error: () => toast.error('Erreur lors de la suppression de la chambre'),
+      });
+    } else {
+      this.showDeleteModal = false;
     }
-    this.showDeleteModal = false;
   }
 
-  chambres = [
-    {
-      id: 'CH101',
-      nbLits: 2,
-      cout: 35000,
-      etageId: 'E1',
-      etageLabel: 'Étage 1',
-      typeId: 'STD',
-      typeLabel: 'Standard',
-    },
-    {
-      id: 'CH102',
-      nbLits: 1,
-      cout: 28000,
-      etageId: 'E1',
-      etageLabel: 'Étage 1',
-      typeId: 'DEL',
-      typeLabel: 'Deluxe',
-    },
-    {
-      id: 'CH201',
-      nbLits: 3,
-      cout: 50000,
-      etageId: 'E2',
-      etageLabel: 'Étage 2',
-      typeId: 'SUITE',
-      typeLabel: 'Suite',
-    },
-  ];
+  chambres: Chambre[] = [];
+
+  constructor(
+    private service: ChambresService,
+    private typesService: TypesChambreService,
+    private etagesService: EtagesService
+  ) {}
+
+  ngOnInit(): void {
+    this.refresh();
+    this.loadOptions();
+  }
+
+  private refresh() {
+    this.service.getAll().subscribe({
+      next: (data) => (this.chambres = data),
+      error: () => toast.error('Erreur lors du chargement des chambres'),
+    });
+  }
+
+  private loadOptions() {
+    this.etagesService.getAll().subscribe({
+      next: (etages) =>
+        (this.etageOptions = etages.map((e) => ({ id: e.publicId, label: e.libelle }))),
+      error: () => (this.etageOptions = []),
+    });
+    this.typesService.getAll().subscribe({
+      next: (types) =>
+        (this.typeOptions = types.map((t) => ({ id: t.publicId, label: t.libelle }))),
+      error: () => (this.typeOptions = []),
+    });
+  }
+
+  getEtageLabel(id: string): string {
+    return this.etageOptions.find((e) => e.id === id)?.label || '';
+  }
+
+  getTypeLabel(id: string): string {
+    return this.typeOptions.find((t) => t.id === id)?.label || '';
+  }
 }

@@ -10,11 +10,11 @@ import { Produit } from '../../core/interfaces/admin';
   selector: 'app-produits',
   imports: [DataTableComponent, FormsModule],
   templateUrl: './produits.html',
-  styleUrl: './produits.css'
+  styleUrl: './produits.css',
 })
 export class Produits implements OnInit {
   columns: Column[] = [
-    { key: 'id', label: 'ID', sortable: true },
+    // { key: 'id', label: 'ID', sortable: true },
     { key: 'nom', label: 'Nom du produit', sortable: true },
     { key: 'description', label: 'Description', sortable: false },
     { key: 'cout', label: 'Coût', sortable: true },
@@ -25,10 +25,10 @@ export class Produits implements OnInit {
   showEditModal = false;
   showDeleteModal = false;
 
-  currentProduct: any = null;
+  currentProduct: any | null = null;
 
   productForm = {
-    id: '',
+    // id: '',
     nom: '',
     description: '',
     cout: 0,
@@ -39,7 +39,10 @@ export class Produits implements OnInit {
   constructor(private service: ProduitsService) {}
 
   private refresh() {
-    this.service.getAll().subscribe((data) => (this.produits = data));
+    this.service.getAll().subscribe({
+      next: (data) => (this.produits = data),
+      error: () => toast.error('Échec du chargement des produits'),
+    });
   }
 
   ngOnInit(): void {
@@ -47,48 +50,53 @@ export class Produits implements OnInit {
   }
 
   handleNew() {
-    this.productForm = { id: '', nom: '', description: '', cout: 0 };
+    this.productForm = { nom: '', description: '', cout: 0 };
     this.showCreateModal = true;
   }
 
-  handleRefresh() { this.refresh(); }
+  handleRefresh() {
+    this.refresh();
+  }
 
-  handleEdit(prod: any) {
+  handleEdit(prod: Produit) {
     this.currentProduct = prod;
     this.productForm = { ...prod };
     this.showEditModal = true;
   }
 
-  handleDelete(prod: any) {
+  handleDelete(prod: Produit) {
     this.currentProduct = prod;
     this.showDeleteModal = true;
   }
 
-  handleRowClick(prod: any) {
+  handleRowClick(prod: Produit) {
     console.log('Row clicked:', prod);
   }
 
   createProduct() {
     const { nom, description, cout } = this.productForm;
-    this.service
-      .create({ nom: nom!, description: description!, cout: cout! })
-      .subscribe(() => {
+
+    this.service.create({ nom: nom, description: description, cout: cout } as Produit).subscribe({
+      next: () => {
         toast.success('Produit créé avec succès');
         this.showCreateModal = false;
         this.refresh();
-      });
+      },
+      error: () => toast.error('Échec de la création du produit'),
+    });
   }
 
   updateProduct() {
     if (this.currentProduct) {
       const { nom, description, cout } = this.productForm;
-      this.service
-        .update(this.currentProduct.id, { nom, description, cout })
-        .subscribe(() => {
+      this.service.update(this.currentProduct.publicId, { nom, description, cout }).subscribe({
+        next: () => {
           toast.success('Produit mis à jour avec succès');
           this.showEditModal = false;
           this.refresh();
-        });
+        },
+        error: () => toast.error('Échec de la mise à jour du produit'),
+      });
     } else {
       this.showEditModal = false;
     }
@@ -96,10 +104,13 @@ export class Produits implements OnInit {
 
   deleteProduct() {
     if (this.currentProduct) {
-      this.service.delete(this.currentProduct.id).subscribe(() => {
-        toast.success('Produit supprimé avec succès');
-        this.showDeleteModal = false;
-        this.refresh();
+      this.service.delete(this.currentProduct.publicId).subscribe({
+        next: () => {
+          toast.success('Produit supprimé avec succès');
+          this.showDeleteModal = false;
+          this.refresh();
+        },
+        error: () => toast.error('Échec de la suppression du produit'),
       });
     } else {
       this.showDeleteModal = false;
