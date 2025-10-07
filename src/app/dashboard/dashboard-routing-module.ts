@@ -5,6 +5,7 @@ import { Home } from './home/home';
 import { UserAccount } from './user-account/user-account';
 import { UserRole } from './user-role/user-role';
 import { Specialites } from './specialites/specialites';
+import { Rubriques } from './rubrique/rubrique';
 import { Professions } from './professions/professions';
 import { Etages } from './etages/etages';
 import { TypesChambre } from './types-chambre/types-chambre';
@@ -49,6 +50,12 @@ export const routes: Routes = [
       {
         path: 'specialites',
         component: Specialites,
+        canActivate: [roleGuard],
+        data: { roles: ['admin'] },
+      },
+      {
+        path: 'rubriques',
+        component: Rubriques,
         canActivate: [roleGuard],
         data: { roles: ['admin'] },
       },

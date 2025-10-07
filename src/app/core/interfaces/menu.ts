@@ -273,10 +273,12 @@ export const MENUS_BY_ROLE: MenusByRole = {
           route: '/dashboard/departements',
         },
         { label: 'Spécialités', route: '/dashboard/specialites' },
+
         { label: 'Professions', route: '/dashboard/professions' },
         { label: 'Personnels', route: '/dashboard/personnels' },
       ],
     },
+    { label: 'Rubriques', slug: 'admin-facture-rubrique', route: '/dashboard/rubriques' },
     {
       label: 'Hospitalisation',
       slug: 'admin-hospitalisation',

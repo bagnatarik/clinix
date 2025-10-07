@@ -13,6 +13,11 @@ export interface Specialite {
   libelle: string;
 }
 
+export interface Rubrique {
+  publicId: string;
+  libelle: string;
+}
+
 export interface Etage {
   publicId: string;
   libelle: string;
