@@ -20,7 +20,10 @@
   class="fixed inset-0 bg-black/10 flex items-center justify-center z-50"
   (click)="showCreateModal = false"
 >
-  <div class="bg-white rounded p-5 w-96 shadow-md" (click)="$event.stopPropagation()">
+  <div
+    class="bg-white rounded p-5 w-96 shadow-md max-h-[80vh] overflow-auto"
+    (click)="$event.stopPropagation()"
+  >
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-lg font-medium text-gray-800">Ajouter un personnel</h2>
       <button
@@ -54,7 +57,7 @@
           (click)="toggleUserDropdown()"
           [attr.aria-expanded]="userDropdownOpen"
         >
-          <span>{{ personnelForm.utilisateur || 'Sélectionner un utilisateur' }}</span>
+          <span>{{ selectedUser || 'Sélectionner un utilisateur' }}</span>
           <svg
             class="size-4 text-neutral-500"
             viewBox="0 0 24 24"
@@ -90,13 +93,13 @@
           <div class="max-h-44 overflow-y-auto">
             <button
               type="button"
-              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 hover:cursor-pointer rounded"
               *ngFor="let u of filteredUsersCandidates; let i = index"
               (mouseenter)="userActiveIndex = i"
-              [class.bg-blue-50]="userActiveIndex === i || personnelForm.utilisateur === u.name"
-              (click)="selectUser(u.name)"
+              [class.bg-blue-50]="selectedUser === u.email"
+              (click)="selectUser(u.email, u.publicId, i)"
             >
-              {{ u.name }} <span class="text-xs text-gray-400">({{ u.role }})</span>
+              {{ u.email }} <span class="text-xs text-gray-400">({{ roleLabel(u.role) }})</span>
             </button>
             <div
               *ngIf="filteredUsersCandidates.length === 0"
@@ -108,71 +111,82 @@
         </div>
         }
       </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Nom</label>
+        <input
+          type="text"
+          [(ngModel)]="personnelForm.nom"
+          [ngModelOptions]="{ standalone: true }"
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          placeholder="Entrez le nom"
+        />
+      </div>
 
-      <div class="relative">
-        <label class="block text-xs font-medium text-gray-600 mb-1">Spécialité</label>
-        <button
-          #specialiteTrigger
-          type="button"
-          class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 text-left text-sm flex items-center justify-between hover:bg-neutral-50"
-          (click)="toggleSpecialiteDropdown()"
-          [attr.aria-expanded]="specialiteDropdownOpen"
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Prénom</label>
+        <input
+          type="text"
+          [(ngModel)]="personnelForm.prenom"
+          [ngModelOptions]="{ standalone: true }"
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          placeholder="Entrez le prénom"
+        />
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Email</label>
+        <input
+          type="email"
+          [(ngModel)]="personnelForm.email"
+          [ngModelOptions]="{ standalone: true }"
+          readonly
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-gray-200"
+          placeholder="-"
+        />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Date de naissance</label>
+        <input
+          type="date"
+          [(ngModel)]="personnelForm.dateNaissance"
+          [ngModelOptions]="{ standalone: true }"
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+        />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Téléphone</label>
+        <input
+          type="tel"
+          [(ngModel)]="personnelForm.telephone"
+          [ngModelOptions]="{ standalone: true }"
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          placeholder="Entrez le numéro de téléphone"
+        />
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Adresse</label>
+        <textarea
+          [(ngModel)]="personnelForm.adresse"
+          [ngModelOptions]="{ standalone: true }"
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          placeholder="Entrez l'adresse"
+          rows="2"
+        ></textarea>
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Sexe</label>
+        <select
+          [(ngModel)]="personnelForm.sexe"
+          [ngModelOptions]="{ standalone: true }"
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
         >
-          <span>{{ personnelForm.specialite || 'Sélectionner une spécialité' }}</span>
-          <svg
-            class="size-4 text-neutral-500"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </button>
-
-        @if (specialiteDropdownOpen) {
-        <div
-          #specialiteMenu
-          class="absolute left-0 top-full mt-2 w-full bg-white border border-neutral-300 rounded shadow-sm p-2 z-50"
-          (click)="$event.stopPropagation()"
-          (mousedown)="$event.stopPropagation()"
-        >
-          <input
-            type="text"
-            #specialiteSearchInput
-            [(ngModel)]="specialiteSearch"
-            [ngModelOptions]="{ standalone: true }"
-            placeholder="Rechercher une spécialité…"
-            class="w-full border border-neutral-300 rounded px-3 py-2 text-sm mb-2 focus:outline-none"
-            (click)="$event.stopPropagation()"
-            (mousedown)="$event.stopPropagation()"
-            (keydown.enter)="$event.preventDefault()"
-          />
-
-          <div class="max-h-44 overflow-y-auto">
-            <button
-              type="button"
-              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
-              *ngFor="let s of filteredSpecialites; let i = index"
-              (mouseenter)="specialiteActiveIndex = i"
-              [class.bg-blue-50]="
-                specialiteActiveIndex === i || personnelForm.specialite === s.libelle
-              "
-              (click)="selectSpecialite(s.libelle)"
-            >
-              {{ s.libelle }}
-            </button>
-            <div
-              *ngIf="filteredSpecialites.length === 0"
-              class="px-3 py-2 text-xs text-neutral-500"
-            >
-              Aucune spécialité trouvée
-            </div>
-          </div>
-        </div>
-        }
+          <option value="" disabled selected>Sélectionner un sexe</option>
+          <option value="Masculin">Masculin</option>
+          <option value="Feminin">Feminin</option>
+          <option value="Autre">Autre</option>
+        </select>
       </div>
 
       <div class="relative">
@@ -184,7 +198,7 @@
           (click)="toggleDepartementDropdown()"
           [attr.aria-expanded]="departementDropdownOpen"
         >
-          <span>{{ personnelForm.departement || 'Sélectionner un département' }}</span>
+          <span>{{ selectedDepartement || 'Sélectionner un département' }}</span>
           <svg
             class="size-4 text-neutral-500"
             viewBox="0 0 24 24"
@@ -220,13 +234,11 @@
           <div class="max-h-44 overflow-y-auto">
             <button
               type="button"
-              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 hover:cursor-pointer rounded"
               *ngFor="let d of filteredDepartements; let i = index"
               (mouseenter)="departementActiveIndex = i"
-              [class.bg-blue-50]="
-                departementActiveIndex === i || personnelForm.departement === d.libelle
-              "
-              (click)="selectDepartement(d.libelle)"
+              [class.bg-blue-50]="selectedDepartement === d.libelle"
+              (click)="selectDepartement(d.libelle, d.publicId, i)"
             >
               {{ d.libelle }}
             </button>
@@ -242,6 +254,70 @@
       </div>
 
       <div class="relative">
+        <label class="block text-xs font-medium text-gray-600 mb-1">Spécialité</label>
+        <button
+          #specialiteTrigger
+          type="button"
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 text-left text-sm flex items-center justify-between hover:bg-neutral-50"
+          (click)="toggleSpecialiteDropdown()"
+          [attr.aria-expanded]="specialiteDropdownOpen"
+        >
+          <span>{{ selectedSpecialite || 'Sélectionner une spécialité' }}</span>
+          <svg
+            class="size-4 text-neutral-500"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+
+        @if (specialiteDropdownOpen) {
+        <div
+          #specialiteMenu
+          class="absolute left-0 top-full mt-2 w-full bg-white border border-neutral-300 rounded shadow-sm p-2 z-50"
+          (click)="$event.stopPropagation()"
+          (mousedown)="$event.stopPropagation()"
+        >
+          <input
+            type="text"
+            #specialiteSearchInput
+            [(ngModel)]="specialiteSearch"
+            [ngModelOptions]="{ standalone: true }"
+            placeholder="Rechercher une spécialité…"
+            class="w-full border border-neutral-300 rounded px-3 py-2 text-sm mb-2 focus:outline-none"
+            (click)="$event.stopPropagation()"
+            (mousedown)="$event.stopPropagation()"
+            (keydown.enter)="$event.preventDefault()"
+          />
+
+          <div class="max-h-44 overflow-y-auto">
+            <button
+              type="button"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 hover:cursor-pointer rounded"
+              *ngFor="let s of filteredSpecialites; let i = index"
+              (mouseenter)="specialiteActiveIndex = i"
+              [class.bg-blue-50]="selectedSpecialite === s.libelle"
+              (click)="selectSpecialite(s.libelle, s.publicId, i)"
+            >
+              {{ s.libelle }}
+            </button>
+            <div
+              *ngIf="filteredSpecialites.length === 0"
+              class="px-3 py-2 text-xs text-neutral-500"
+            >
+              Aucune spécialité trouvée
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+
+      <div class="relative">
         <label class="block text-xs font-medium text-gray-600 mb-1">Profession</label>
         <button
           #professionTrigger
@@ -250,7 +326,7 @@
           (click)="toggleProfessionDropdown()"
           [attr.aria-expanded]="professionDropdownOpen"
         >
-          <span>{{ personnelForm.profession || 'Sélectionner une profession' }}</span>
+          <span>{{ selectedProfession || 'Sélectionner une profession' }}</span>
           <svg
             class="size-4 text-neutral-500"
             viewBox="0 0 24 24"
@@ -286,13 +362,11 @@
           <div class="max-h-44 overflow-y-auto">
             <button
               type="button"
-              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 hover:cursor-pointer rounded"
               *ngFor="let p of filteredProfessions; let i = index"
               (mouseenter)="professionActiveIndex = i"
-              [class.bg-blue-50]="
-                professionActiveIndex === i || personnelForm.profession === p.libelle
-              "
-              (click)="selectProfession(p.libelle)"
+              [class.bg-blue-50]="selectedProfession === p.libelle"
+              (click)="selectProfession(p.libelle, p.publicId, i)"
             >
               {{ p.libelle }}
             </button>
@@ -331,7 +405,10 @@
   class="fixed inset-0 bg-black/10 flex items-center justify-center z-50"
   (click)="showEditModal = false"
 >
-  <div class="bg-white rounded p-5 w-96 shadow-md" (click)="$event.stopPropagation()">
+  <div
+    class="bg-white rounded p-5 w-96 shadow-md max-h-[80vh] overflow-auto"
+    (click)="$event.stopPropagation()"
+  >
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-lg font-medium text-gray-800">Modifier le personnel</h2>
       <button
@@ -365,7 +442,7 @@
           (click)="toggleUserDropdown()"
           [attr.aria-expanded]="userDropdownOpen"
         >
-          <span>{{ personnelForm.utilisateur || 'Sélectionner un utilisateur' }}</span>
+          <span>{{ selectedUser || 'Sélectionner un utilisateur' }}</span>
           <svg
             class="size-4 text-neutral-500"
             viewBox="0 0 24 24"
@@ -401,13 +478,13 @@
           <div class="max-h-44 overflow-y-auto">
             <button
               type="button"
-              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 hover:cursor-pointer rounded"
               *ngFor="let u of filteredUsersCandidates; let i = index"
               (mouseenter)="userActiveIndex = i"
-              [class.bg-blue-50]="userActiveIndex === i || personnelForm.utilisateur === u.name"
-              (click)="selectUser(u.name)"
+              [class.bg-blue-50]="selectedUser === u.email"
+              (click)="selectUser(u.email, u.publicId, i)"
             >
-              {{ u.name }} <span class="text-xs text-gray-400">({{ u.role }})</span>
+              {{ u.email }} <span class="text-xs text-gray-400">({{ roleLabel(u.role) }})</span>
             </button>
             <div
               *ngIf="filteredUsersCandidates.length === 0"
@@ -420,72 +497,83 @@
         }
       </div>
 
-      <div class="relative">
-        <label class="block text-xs font-medium text-gray-600 mb-1">Spécialité</label>
-        <button
-          #specialiteTrigger
-          type="button"
-          class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 text-left text-sm flex items-center justify-between hover:bg-neutral-50"
-          (click)="toggleSpecialiteDropdown()"
-          [attr.aria-expanded]="specialiteDropdownOpen"
-        >
-          <span>{{ personnelForm.specialite || 'Sélectionner une spécialité' }}</span>
-          <svg
-            class="size-4 text-neutral-500"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </button>
-
-        @if (specialiteDropdownOpen) {
-        <div
-          #specialiteMenu
-          class="absolute left-0 top-full mt-2 w-full bg-white border border-neutral-300 rounded shadow-sm p-2 z-50"
-          (click)="$event.stopPropagation()"
-          (mousedown)="$event.stopPropagation()"
-        >
-          <input
-            type="text"
-            #specialiteSearchInput
-            [(ngModel)]="specialiteSearch"
-            [ngModelOptions]="{ standalone: true }"
-            placeholder="Rechercher une spécialité…"
-            class="w-full border border-neutral-300 rounded px-3 py-2 text-sm mb-2 focus:outline-none"
-            (click)="$event.stopPropagation()"
-            (mousedown)="$event.stopPropagation()"
-            (keydown.enter)="$event.preventDefault()"
-          />
-
-          <div class="max-h-44 overflow-y-auto">
-            <button
-              type="button"
-              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
-              *ngFor="let s of filteredSpecialites; let i = index"
-              (mouseenter)="specialiteActiveIndex = i"
-              [class.bg-blue-50]="
-                specialiteActiveIndex === i || personnelForm.specialite === s.libelle
-              "
-              (click)="selectSpecialite(s.libelle)"
-            >
-              {{ s.libelle }}
-            </button>
-            <div
-              *ngIf="filteredSpecialites.length === 0"
-              class="px-3 py-2 text-xs text-neutral-500"
-            >
-              Aucune spécialité trouvée
-            </div>
-          </div>
-        </div>
-        }
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Nom</label>
+        <input
+          type="text"
+          [(ngModel)]="personnelForm.nom"
+          [ngModelOptions]="{ standalone: true }"
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          placeholder="Entrez le nom"
+        />
       </div>
 
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Prénom</label>
+        <input
+          type="text"
+          [(ngModel)]="personnelForm.prenom"
+          [ngModelOptions]="{ standalone: true }"
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          placeholder="Entrez le prénom"
+        />
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Email</label>
+        <input
+          type="email"
+          [(ngModel)]="personnelForm.email"
+          [ngModelOptions]="{ standalone: true }"
+          readonly
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-gray-200"
+          placeholder="-"
+        />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Date de naissance</label>
+        <input
+          type="date"
+          [(ngModel)]="personnelForm.dateNaissance"
+          [ngModelOptions]="{ standalone: true }"
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+        />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Téléphone</label>
+        <input
+          type="tel"
+          [(ngModel)]="personnelForm.telephone"
+          [ngModelOptions]="{ standalone: true }"
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          placeholder="Entrez le numéro de téléphone"
+        />
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Adresse</label>
+        <textarea
+          [(ngModel)]="personnelForm.adresse"
+          [ngModelOptions]="{ standalone: true }"
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          placeholder="Entrez l'adresse"
+          rows="2"
+        ></textarea>
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Sexe</label>
+        <select
+          [(ngModel)]="personnelForm.sexe"
+          [ngModelOptions]="{ standalone: true }"
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+        >
+          <option value="" disabled selected>Sélectionner un sexe</option>
+          <option value="Masculin">Masculin</option>
+          <option value="Feminin">Feminin</option>
+          <option value="Autre">Autre</option>
+        </select>
+      </div>
       <div class="relative">
         <label class="block text-xs font-medium text-gray-600 mb-1">Département</label>
         <button
@@ -495,7 +583,7 @@
           (click)="toggleDepartementDropdown()"
           [attr.aria-expanded]="departementDropdownOpen"
         >
-          <span>{{ personnelForm.departement || 'Sélectionner un département' }}</span>
+          <span>{{ selectedDepartement || 'Sélectionner un département' }}</span>
           <svg
             class="size-4 text-neutral-500"
             viewBox="0 0 24 24"
@@ -531,13 +619,11 @@
           <div class="max-h-44 overflow-y-auto">
             <button
               type="button"
-              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 hover:cursor-pointer rounded"
               *ngFor="let d of filteredDepartements; let i = index"
               (mouseenter)="departementActiveIndex = i"
-              [class.bg-blue-50]="
-                departementActiveIndex === i || personnelForm.departement === d.libelle
-              "
-              (click)="selectDepartement(d.libelle)"
+              [class.bg-blue-50]="selectedDepartement === d.libelle"
+              (click)="selectDepartement(d.libelle, d.publicId, i)"
             >
               {{ d.libelle }}
             </button>
@@ -546,6 +632,69 @@
               class="px-3 py-2 text-xs text-neutral-500"
             >
               Aucun département trouvé
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+      <div class="relative">
+        <label class="block text-xs font-medium text-gray-600 mb-1">Spécialité</label>
+        <button
+          #specialiteTrigger
+          type="button"
+          class="w-full border border-neutral-300 rounded px-3 py-2 text-gray-800 text-left text-sm flex items-center justify-between hover:bg-neutral-50"
+          (click)="toggleSpecialiteDropdown()"
+          [attr.aria-expanded]="specialiteDropdownOpen"
+        >
+          <span>{{ selectedSpecialite || 'Sélectionner une spécialité' }}</span>
+          <svg
+            class="size-4 text-neutral-500"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+
+        @if (specialiteDropdownOpen) {
+        <div
+          #specialiteMenu
+          class="absolute left-0 top-full mt-2 w-full bg-white border border-neutral-300 rounded shadow-sm p-2 z-50"
+          (click)="$event.stopPropagation()"
+          (mousedown)="$event.stopPropagation()"
+        >
+          <input
+            type="text"
+            #specialiteSearchInput
+            [(ngModel)]="specialiteSearch"
+            [ngModelOptions]="{ standalone: true }"
+            placeholder="Rechercher une spécialité…"
+            class="w-full border border-neutral-300 rounded px-3 py-2 text-sm mb-2 focus:outline-none"
+            (click)="$event.stopPropagation()"
+            (mousedown)="$event.stopPropagation()"
+            (keydown.enter)="$event.preventDefault()"
+          />
+
+          <div class="max-h-44 overflow-y-auto">
+            <button
+              type="button"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 hover:cursor-pointer rounded"
+              *ngFor="let s of filteredSpecialites; let i = index"
+              (mouseenter)="specialiteActiveIndex = i"
+              [class.bg-blue-50]="selectedSpecialite === s.libelle"
+              (click)="selectSpecialite(s.libelle, s.publicId, i)"
+            >
+              {{ s.libelle }}
+            </button>
+            <div
+              *ngIf="filteredSpecialites.length === 0"
+              class="px-3 py-2 text-xs text-neutral-500"
+            >
+              Aucune spécialité trouvée
             </div>
           </div>
         </div>
@@ -561,7 +710,7 @@
           (click)="toggleProfessionDropdown()"
           [attr.aria-expanded]="professionDropdownOpen"
         >
-          <span>{{ personnelForm.profession || 'Sélectionner une profession' }}</span>
+          <span>{{ selectedProfession || 'Sélectionner une profession' }}</span>
           <svg
             class="size-4 text-neutral-500"
             viewBox="0 0 24 24"
@@ -597,13 +746,11 @@
           <div class="max-h-44 overflow-y-auto">
             <button
               type="button"
-              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 hover:cursor-pointer rounded"
               *ngFor="let p of filteredProfessions; let i = index"
               (mouseenter)="professionActiveIndex = i"
-              [class.bg-blue-50]="
-                professionActiveIndex === i || personnelForm.profession === p.libelle
-              "
-              (click)="selectProfession(p.libelle)"
+              [class.bg-blue-50]="selectedProfession === p.libelle"
+              (click)="selectProfession(p.libelle, p.publicId, i)"
             >
               {{ p.libelle }}
             </button>

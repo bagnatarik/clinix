@@ -387,52 +387,52 @@ export class InMemoryDatabaseService {
   ];
 
   // Admin: Personnels
-  private personnels: Personnel[] = [
-    {
-      id: 'DUPJE01',
-      nom: 'Dupont',
-      prenom: 'Jean',
-      email: 'jean.dupont@clinix.com',
-      telephone: '+33 6 12 34 56 78',
-      specialite: 'Cardiologie',
-      departement: 'Médecine',
-      profession: 'Docteur',
-      adresse: '12 rue de la Santé, Paris',
-    },
-    {
-      id: 'MARAN02',
-      nom: 'Martin',
-      prenom: 'Anne',
-      email: 'anne.martin@clinix.com',
-      telephone: '+33 6 98 76 54 32',
-      specialite: 'Pédiatrie',
-      departement: 'Médecine',
-      profession: 'Docteur',
-      adresse: '5 avenue des Enfants, Lyon',
-    },
-    {
-      id: 'LECPI03',
-      nom: 'Leclerc',
-      prenom: 'Pierre',
-      email: 'pierre.leclerc@clinix.com',
-      telephone: '+33 7 11 22 33 44',
-      specialite: 'Soins infirmiers',
-      departement: 'Soins',
-      profession: 'Infirmier',
-      adresse: '10 boulevard de la Paix, Marseille',
-    },
-    {
-      id: 'DURMA04',
-      nom: 'Durand',
-      prenom: 'Marie',
-      email: 'marie.durand@clinix.com',
-      telephone: '+33 6 55 66 77 88',
-      specialite: 'Analyses',
-      departement: 'Laboratoire',
-      profession: 'Laborantin',
-      adresse: '22 chemin des Sciences, Toulouse',
-    },
-  ];
+  // private personnels: Personnel[] = [
+  //   {
+  //     id: 'DUPJE01',
+  //     nom: 'Dupont',
+  //     prenom: 'Jean',
+  //     email: 'jean.dupont@clinix.com',
+  //     telephone: '+33 6 12 34 56 78',
+  //     specialite: 'cardio',
+  //     departement: 'CARD',
+  //     profession: 'med',
+  //     adresse: '12 rue de la Santé, Paris',
+  //   },
+  //   {
+  //     id: 'MARAN02',
+  //     nom: 'Martin',
+  //     prenom: 'Anne',
+  //     email: 'anne.martin@clinix.com',
+  //     telephone: '+33 6 98 76 54 32',
+  //     specialite: 'pediatrie',
+  //     departement: 'PED',
+  //     profession: 'med',
+  //     adresse: '5 avenue des Enfants, Lyon',
+  //   },
+  //   {
+  //     id: 'LECPI03',
+  //     nom: 'Leclerc',
+  //     prenom: 'Pierre',
+  //     email: 'pierre.leclerc@clinix.com',
+  //     telephone: '+33 7 11 22 33 44',
+  //     specialite: 'soins_infirmiers',
+  //     departement: 'ONC',
+  //     profession: 'inf',
+  //     adresse: '10 boulevard de la Paix, Marseille',
+  //   },
+  //   {
+  //     id: 'DURMA04',
+  //     nom: 'Durand',
+  //     prenom: 'Marie',
+  //     email: 'marie.durand@clinix.com',
+  //     telephone: '+33 6 55 66 77 88',
+  //     specialite: 'analyses_bio',
+  //     departement: 'ONC',
+  //     profession: 'tech',
+  //     adresse: '22 chemin des Sciences, Toulouse',
+  //   },
+  // ];
 
   // Admin: Produits
   private produits: Produit[] = [
@@ -643,7 +643,7 @@ export class InMemoryDatabaseService {
 
   // Personnels
   getPersonnels(): Observable<Personnel[]> {
-    return of([...this.personnels]);
+    return of([]);
   }
   createPersonnel(
     item: Omit<Personnel, 'id'> & { id?: string; updatedBy?: string }
@@ -653,19 +653,19 @@ export class InMemoryDatabaseService {
       id: item.id ?? `${base}${Math.floor(Math.random() * 1000)}`,
       ...item,
     } as Personnel;
-    this.personnels = [newItem, ...this.personnels];
+    // this.personnels = [];
     return of(newItem);
   }
   updatePersonnel(id: string, changes: Partial<Personnel>): Observable<Personnel | null> {
-    const idx = this.personnels.findIndex((p) => p.id === id);
-    if (idx === -1) return of(null);
-    this.personnels[idx] = { ...this.personnels[idx], ...changes };
-    return of(this.personnels[idx]);
+    // const idx = this.personnels.findIndex((p) => p.id === id);
+    // if (idx === -1) return of(null);
+    // this.personnels[idx] = { ...this.personnels[idx], ...changes };
+    return of();
   }
   deletePersonnel(id: string): Observable<boolean> {
-    const initial = this.personnels.length;
-    this.personnels = this.personnels.filter((p) => p.id !== id);
-    return of(this.personnels.length < initial);
+    // const initial = this.personnels.length;
+    // this.personnels = this.personnels.filter((p) => p.id !== id);
+    return of(true);
   }
 
   // Produits

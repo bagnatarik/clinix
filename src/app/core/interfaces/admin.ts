@@ -19,13 +19,27 @@ export interface Personnel {
   prenom: string;
   email: string;
   telephone: string;
-  specialite: string;
-  departement: string;
-  profession: string;
+  publicId: string;
+  libelleProfession: string;
+  libelleSpecialite: string;
+  libelleDepartement: string;
   // Optionnel: planning associé au personnel
   planning?: string;
   adresse: string;
   updatedBy?: string;
+}
+
+export interface PersonnelRequest {
+  nom: string;
+  prenom: string;
+  dateNaissance: string; // ISO date string (YYYY-MM-DD)
+  sexe: 'M' | 'F';
+  telephone: string;
+  email: string;
+  adresse: string;
+  idProfession: string; // UUID
+  idSpecialite: string; // UUID
+  idDepartement: string; // UUID
 }
 
 export interface Produit {

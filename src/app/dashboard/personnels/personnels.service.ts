@@ -1,21 +1,24 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Personnel } from '../../core/interfaces/admin';
-import { InMemoryDatabaseService } from '../../core/services/in-memory-database.service';
-import { AuthenticationService } from '../../authentication/services/authentication-service';
+import { Personnel, PersonnelRequest } from '../../core/interfaces/admin';
+import { HttpClient } from '@angular/common/http';
+import { API_BASE_URL } from '../../core/services/api';
 
 @Injectable({ providedIn: 'root' })
 export class PersonnelsService {
-  constructor(private db: InMemoryDatabaseService, private auth: AuthenticationService) {}
+  private readonly baseUrl = `${API_BASE_URL}/personnel`;
+  constructor(private http: HttpClient) {}
 
-  getAll(): Observable<Personnel[]> { return this.db.getPersonnels(); }
-  create(item: Omit<Personnel, 'id' | 'updatedBy'> & { id?: string }): Observable<Personnel> {
-    const user = this.auth.getCurrentUser();
-    return this.db.createPersonnel({ ...item, updatedBy: user?.name });
+  getAll(): Observable<Personnel[]> {
+    return this.http.get<Personnel[]>(this.baseUrl + '/all');
   }
-  update(id: string, changes: Partial<Personnel>): Observable<Personnel | null> {
-    const user = this.auth.getCurrentUser();
-    return this.db.updatePersonnel(id, { ...changes, updatedBy: user?.name });
+  create(item: PersonnelRequest): Observable<Personnel> {
+    return this.http.post<Personnel>(this.baseUrl + '/save', item);
   }
-  delete(id: string): Observable<boolean> { return this.db.deletePersonnel(id); }
+  update(id: string, changes: Partial<PersonnelRequest>): Observable<Personnel | null> {
+    return this.http.put<Personnel | null>(`${this.baseUrl}/update/${id}`, { ...changes });
+  }
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/delete/${id}`);
+  }
 }

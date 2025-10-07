@@ -3,13 +3,16 @@ import { HttpClient } from '@angular/common/http';
 // import { v4 as uuidv4 } from 'uuid';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from './api';
+import { Personnel } from '../interfaces/admin';
 
 export interface UserAccountItem {
   id: string;
+  publicId: string;
   nom: string;
   prenom: string;
   email: string;
   username: string;
+  fullName: string;
   telephone: string;
   statut: string;
   enable: boolean;
@@ -19,6 +22,7 @@ export interface UserAccountItem {
   createdAt: Date;
   sexe: string;
   adresse: string;
+  personnel?: Personnel;
 }
 
 export interface CreateUserPayload {

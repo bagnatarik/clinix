@@ -5,11 +5,22 @@ import { DataTableComponent } from '../../shared/data-table-component/data-table
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { PersonnelsService } from './personnels.service';
-import { Personnel, Departement, Profession, Specialite } from '../../core/interfaces/admin';
+import {
+  Personnel,
+  Departement,
+  Profession,
+  Specialite,
+  PersonnelRequest,
+} from '../../core/interfaces/admin';
 import { DepartementsService } from '../departements/departements.service';
 import { ProfessionsService } from '../professions/professions.service';
 import { SpecialitesService } from '../specialites/specialites.service';
-import { AuthenticationService } from '../../authentication/services/authentication-service';
+import { Role } from '../../core/interfaces/role-type';
+import { UsersService } from '../../core/services/users.service';
+import {
+  AuthenticationService,
+  UserInfo,
+} from '../../authentication/services/authentication-service';
 
 @Component({
   selector: 'app-personnels',
@@ -21,9 +32,11 @@ export class Personnels implements OnInit {
   // Colonnes: uniquement les attributs demandés
   columns: Column[] = [
     { key: 'utilisateur', label: 'Utilisateur', sortable: true },
-    { key: 'specialite', label: 'Spécialité', sortable: true },
-    { key: 'departement', label: 'Département', sortable: true },
-    { key: 'profession', label: 'Profession', sortable: true },
+    { key: 'dateNaissance', label: 'Date de naissance', sortable: true },
+    { key: 'sexe', label: 'Sexe', sortable: true },
+    { key: 'libelleSpecialite', label: 'Spécialité', sortable: true },
+    { key: 'libelleDepartement', label: 'Département', sortable: true },
+    { key: 'libelleProfession', label: 'Profession', sortable: true },
     { key: 'actions', label: 'Actions', sortable: false },
   ];
 
@@ -37,10 +50,17 @@ export class Personnels implements OnInit {
 
   // Formulaire limité aux attributs requis
   personnelForm = {
-    utilisateur: '',
-    specialite: '',
-    departement: '',
-    profession: '',
+    nom: '',
+    prenom: '',
+    dateNaissance: '',
+    sexe: '',
+    telephone: '',
+    email: '',
+    adresse: '',
+    idProfession: '',
+    idSpecialite: '',
+    idDepartement: '',
+    idUser: '',
   };
 
   // Données pour affichage du tableau (avec champs calculés)
@@ -52,7 +72,14 @@ export class Personnels implements OnInit {
   specialitesList: Specialite[] = [];
 
   // Utilisateurs (exclure patients)
-  usersCandidates: { name: string; role: string }[] = [];
+  usersCandidates: {
+    id: string;
+    publicId: string;
+    email: string;
+    name: string;
+    role: Role;
+    personnel?: Personnel;
+  }[] = [];
 
   // Recherche pour selects
   userSearch = '';
@@ -65,6 +92,12 @@ export class Personnels implements OnInit {
   specialiteDropdownOpen = false;
   departementDropdownOpen = false;
   professionDropdownOpen = false;
+
+  // Selected values
+  selectedUser = '';
+  selectedSpecialite = '';
+  selectedDepartement = '';
+  selectedProfession = '';
 
   userActiveIndex = -1;
   specialiteActiveIndex = -1;
@@ -93,8 +126,17 @@ export class Personnels implements OnInit {
     private departementsService: DepartementsService,
     private professionsService: ProfessionsService,
     private specialitesService: SpecialitesService,
-    private auth: AuthenticationService
+    private userService: UsersService,
+    private authenticationService: AuthenticationService
   ) {}
+
+  roles: Array<{ id: string; libelle: string }> = [
+    { id: 'admin', libelle: 'Admin' },
+    { id: 'doctor', libelle: 'Docteur' },
+    { id: 'nurse', libelle: 'Infirmière' },
+    { id: 'laborant', libelle: 'Laborantin' },
+    { id: 'patient', libelle: 'Patient' },
+  ];
 
   personnels: Personnel[] = [];
 
@@ -108,8 +150,10 @@ export class Personnels implements OnInit {
       }));
     });
   }
+  currentUser: UserInfo | null = null;
 
   ngOnInit(): void {
+    this.currentUser = this.authenticationService.getCurrentUser();
     this.refresh();
     this.departementsService
       .getAll()
@@ -120,18 +164,34 @@ export class Personnels implements OnInit {
     this.specialitesService
       .getAll()
       .subscribe((list: Specialite[]) => (this.specialitesList = list));
-    this.auth.getAllUsers().subscribe((users) => {
-      this.usersCandidates = users.map((u) => ({ name: u.name, role: u.role as string }));
+    this.userService.getAll().subscribe((users) => {
+      this.usersCandidates = users.map((u) => {
+        return {
+          id: u.id,
+          publicId: u.publicId,
+          email: u.username,
+          name: u.fullName,
+          role: u.roles.toLowerCase() as Role,
+          personnel: u.personnel,
+        };
+      });
     });
   }
 
   // Event handlers
   handleNew() {
     this.personnelForm = {
-      utilisateur: '',
-      specialite: '',
-      departement: '',
-      profession: '',
+      nom: '',
+      prenom: '',
+      dateNaissance: '',
+      sexe: '',
+      telephone: '',
+      email: '',
+      adresse: '',
+      idProfession: '',
+      idSpecialite: '',
+      idDepartement: '',
+      idUser: '',
     };
     this.showCreateModal = true;
   }
@@ -142,14 +202,32 @@ export class Personnels implements OnInit {
 
   handleEdit(personnel: any) {
     this.currentPersonnel = personnel;
-    // Pré-remplir à partir du personnel existant
     this.personnelForm = {
-      utilisateur: `${personnel?.prenom ?? ''} ${personnel?.nom ?? ''}`.trim(),
-      specialite: personnel?.specialite ?? '',
-      departement: personnel?.departement ?? '',
-      profession: personnel?.profession ?? '',
+      nom: personnel?.nom ?? '',
+      prenom: personnel?.prenom ?? '',
+      dateNaissance: personnel?.dateNaissance ?? '',
+      sexe: personnel?.sexe ?? '',
+      telephone: personnel?.telephone ?? '',
+      email: personnel?.email ?? '',
+      adresse: personnel?.adresse ?? '',
+      idProfession: personnel?.idProfession ?? '',
+      idSpecialite: personnel?.idSpecialite ?? '',
+      idDepartement: personnel?.idDepartement ?? '',
+      idUser:
+        this.filteredUsersCandidates.find((u) => u.email === personnel?.email)?.publicId || '',
     };
+
+    this.selectedDepartement = this.currentPersonnel.libelleDepartement || '';
+    this.selectedProfession = this.currentPersonnel.libelleProfession || '';
+    this.selectedSpecialite = this.currentPersonnel.libelleSpecialite || '';
+    this.selectedUser = this.currentPersonnel.email || '';
+
     this.showEditModal = true;
+  }
+
+  roleLabel(roleId: string): string {
+    const found = this.roles.find((r) => r.id === roleId);
+    return found?.libelle || roleId || '';
   }
 
   handleDelete(personnel: any) {
@@ -166,14 +244,17 @@ export class Personnels implements OnInit {
     this.userDropdownOpen = !this.userDropdownOpen;
     if (this.userDropdownOpen) {
       const list = this.filteredUsersCandidates;
-      const current = this.personnelForm.utilisateur || '';
+      const current = this.personnelForm.email || '';
       const idx = list.findIndex((u) => u.name === current);
       this.userActiveIndex = idx >= 0 ? idx : list.length ? 0 : -1;
       setTimeout(() => this.userSearchRef?.nativeElement.focus(), 0);
     }
   }
-  selectUser(name: string) {
-    this.personnelForm.utilisateur = name;
+  selectUser(email: string, id: string, index: number) {
+    this.selectedUser = email;
+    this.personnelForm.email = email;
+    this.personnelForm.idUser = id;
+    this.userActiveIndex = index;
     this.userDropdownOpen = false;
   }
 
@@ -181,14 +262,16 @@ export class Personnels implements OnInit {
     this.specialiteDropdownOpen = !this.specialiteDropdownOpen;
     if (this.specialiteDropdownOpen) {
       const list = this.filteredSpecialites;
-      const current = this.personnelForm.specialite || '';
+      const current = this.personnelForm.idSpecialite || '';
       const idx = list.findIndex((s) => s.libelle === current);
       this.specialiteActiveIndex = idx >= 0 ? idx : list.length ? 0 : -1;
       setTimeout(() => this.specialiteSearchRef?.nativeElement.focus(), 0);
     }
   }
-  selectSpecialite(label: string) {
-    this.personnelForm.specialite = label;
+  selectSpecialite(label: string, id: string, index: number) {
+    this.personnelForm.idSpecialite = id;
+    this.selectedSpecialite = label;
+    this.specialiteActiveIndex = index;
     this.specialiteDropdownOpen = false;
   }
 
@@ -196,14 +279,16 @@ export class Personnels implements OnInit {
     this.departementDropdownOpen = !this.departementDropdownOpen;
     if (this.departementDropdownOpen) {
       const list = this.filteredDepartements;
-      const current = this.personnelForm.departement || '';
+      const current = this.personnelForm.idDepartement || '';
       const idx = list.findIndex((d) => d.libelle === current);
       this.departementActiveIndex = idx >= 0 ? idx : list.length ? 0 : -1;
       setTimeout(() => this.departementSearchRef?.nativeElement.focus(), 0);
     }
   }
-  selectDepartement(label: string) {
-    this.personnelForm.departement = label;
+  selectDepartement(label: string, id: string, index: number) {
+    this.personnelForm.idDepartement = id;
+    this.selectedDepartement = label;
+    this.departementActiveIndex = index;
     this.departementDropdownOpen = false;
   }
 
@@ -211,14 +296,16 @@ export class Personnels implements OnInit {
     this.professionDropdownOpen = !this.professionDropdownOpen;
     if (this.professionDropdownOpen) {
       const list = this.filteredProfessions;
-      const current = this.personnelForm.profession || '';
+      const current = this.personnelForm.idProfession || '';
       const idx = list.findIndex((p) => p.libelle === current);
       this.professionActiveIndex = idx >= 0 ? idx : list.length ? 0 : -1;
       setTimeout(() => this.professionSearchRef?.nativeElement.focus(), 0);
     }
   }
-  selectProfession(label: string) {
-    this.personnelForm.profession = label;
+  selectProfession(label: string, id: string, index: number) {
+    this.personnelForm.idProfession = id;
+    this.selectedProfession = label;
+    this.professionActiveIndex = index;
     this.professionDropdownOpen = false;
   }
 
@@ -253,38 +340,112 @@ export class Personnels implements OnInit {
 
   // CRUD operations
   createPersonnel() {
-    const { utilisateur, specialite, departement, profession } = this.personnelForm;
-    const parts = (utilisateur || '').trim().split(' ');
-    const prenom = parts[0] || '';
-    const nom = parts.slice(1).join(' ') || '';
+    const {
+      nom,
+      prenom,
+      dateNaissance,
+      sexe,
+      telephone,
+      email,
+      adresse,
+      idProfession,
+      idSpecialite,
+      idDepartement,
+      idUser,
+    } = this.personnelForm;
+
     this.service
       .create({
         nom,
         prenom,
-        email: '',
-        telephone: '',
-        specialite: specialite!,
-        departement: departement!,
-        profession: profession!,
-        adresse: '',
-      })
+        email,
+        telephone,
+        idSpecialite,
+        idDepartement,
+        idProfession,
+        adresse,
+        dateNaissance,
+        sexe,
+        idCompte: idUser,
+      } as PersonnelRequest)
       .subscribe(() => {
+        toast.success('Personnel créé avec succès');
         this.showCreateModal = false;
         this.refresh();
+
+        this.personnelForm = {
+          nom: '',
+          prenom: '',
+          dateNaissance: '',
+          sexe: '',
+          telephone: '',
+          email: '',
+          adresse: '',
+          idProfession: '',
+          idSpecialite: '',
+          idDepartement: '',
+          idUser: '',
+        };
+        this.selectedUser = '';
+        this.selectedSpecialite = '';
+        this.selectedDepartement = '';
+        this.selectedProfession = '';
       });
   }
 
   updatePersonnel() {
     if (this.currentPersonnel) {
-      const { utilisateur, specialite, departement, profession } = this.personnelForm;
-      const parts = (utilisateur || '').trim().split(' ');
-      const prenom = parts[0] || '';
-      const nom = parts.slice(1).join(' ') || '';
+      const {
+        nom,
+        prenom,
+        dateNaissance,
+        sexe,
+        telephone,
+        email,
+        adresse,
+        idProfession,
+        idSpecialite,
+        idDepartement,
+        idUser,
+      } = this.personnelForm;
+
       this.service
-        .update(this.currentPersonnel.id, { nom, prenom, specialite, departement, profession })
+        .update(this.currentPersonnel.publicId, {
+          nom,
+          prenom,
+          email,
+          telephone,
+          idSpecialite,
+          idDepartement,
+          idProfession,
+          adresse,
+          dateNaissance,
+          sexe,
+          idCompte: idUser,
+        } as PersonnelRequest)
         .subscribe(() => {
+          toast.success('Personnel modifié avec succès');
           this.showEditModal = false;
           this.refresh();
+
+          this.personnelForm = {
+            nom: '',
+            prenom: '',
+            dateNaissance: '',
+            sexe: '',
+            telephone: '',
+            email: '',
+            adresse: '',
+            idProfession: '',
+            idSpecialite: '',
+            idDepartement: '',
+            idUser: '',
+          };
+          this.selectedUser = '';
+          this.selectedSpecialite = '';
+          this.selectedDepartement = '';
+          this.selectedProfession = '';
+          this.currentPersonnel = null;
         });
     } else {
       this.showEditModal = false;
@@ -293,7 +454,8 @@ export class Personnels implements OnInit {
 
   deletePersonnel() {
     if (this.currentPersonnel) {
-      this.service.delete(this.currentPersonnel.id).subscribe(() => {
+      this.service.delete(this.currentPersonnel.publicId).subscribe(() => {
+        toast.success('Personnel supprimé avec succès');
         this.showDeleteModal = false;
         this.refresh();
       });
@@ -305,11 +467,16 @@ export class Personnels implements OnInit {
   // Filtres pour les listes de sélection
   get filteredUsersCandidates() {
     const q = this.userSearch.toLowerCase();
+
     return this.usersCandidates.filter(
-      (u) => u.role !== 'patient' && u.name.toLowerCase().includes(q)
+      (u) =>
+        u.role !== 'patient' &&
+        u.email !== this.currentUser?.email &&
+        u.personnel === undefined &&
+        u.email.toLowerCase().includes(q)
     );
   }
-  get filteredSpecialites() {
+  get filteredSpecialites(): Specialite[] {
     const q = this.specialiteSearch.toLowerCase();
     return this.specialitesList.filter((s) => s.libelle.toLowerCase().includes(q));
   }

@@ -5,7 +5,7 @@ import { tap } from 'rxjs/operators';
 import { Role } from '../../core/interfaces/role-type';
 import { API_BASE_URL } from '../../core/services/api';
 
-interface UserInfo {
+export interface UserInfo {
   id: string;
   email: string;
   name: string;
