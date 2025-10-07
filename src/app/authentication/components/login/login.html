@@ -37,14 +37,28 @@
           >{{ 'Mot de passe oublié?' }}</a
         >
       </div>
-      <input
-        formControlName="password"
-        type="password"
-        id="password"
-        class="w-full border border-neutral-200 rounded p-2 text-sm placeholder:text-neutral-600 outline-none focus:border-blue-600 transition-colors duration-300"
-        autocomplete="password"
-        placeholder="{{ '••••••••••••' }}"
-      />
+      <div class="relative">
+        <input
+          formControlName="password"
+          [type]="showPasswordLogin ? 'text' : 'password'"
+          id="password"
+          class="w-full border border-neutral-200 rounded p-2 pr-9 text-sm placeholder:text-neutral-600 outline-none focus:border-blue-600 transition-colors duration-300"
+          autocomplete="password"
+          placeholder="{{ '••••••••••••' }}"
+        />
+        <button
+          type="button"
+          (click)="toggleShowPasswordLogin()"
+          class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-neutral-100"
+          aria-label="{{ showPasswordLogin ? 'Masquer le mot de passe' : 'Afficher le mot de passe' }}"
+        >
+          @if (showPasswordLogin) {
+            <span class="lucide lucide-eye-off-icon lucide-eye-off size-4 stroke-neutral-600"></span>
+          } @else {
+            <span class="lucide lucide-eye-icon lucide-eye size-4 stroke-neutral-600"></span>
+          }
+        </button>
+      </div>
       @if (formGroup.get('password')?.invalid && formGroup.get('password')?.touched) {
       <div class="w-full">
         <small class="text-red-500">

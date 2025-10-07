@@ -28,8 +28,7 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'home',
-        pathMatch: 'full',
+        component: DoctorPlaceholder,
       },
       {
         path: 'home',

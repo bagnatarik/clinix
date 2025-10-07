@@ -79,6 +79,12 @@ export class UserAccount implements OnInit {
     confirmPassword: '',
   };
 
+  // Visibilité des champs mot de passe
+  showPasswordCreate = false;
+  showCurrentPassword = false;
+  showNewPassword = false;
+  showConfirmPassword = false;
+
   // Event handlers
   handleNew() {
     this.userForm = {
@@ -266,6 +272,16 @@ export class UserAccount implements OnInit {
           toast.error('Erreur lors de la mise à jour du mot de passe');
         },
       });
+  }
+
+  // Toggle helpers
+  toggleShowPasswordCreate() {
+    this.showPasswordCreate = !this.showPasswordCreate;
+  }
+  toggleShowPassword(field: 'current' | 'new' | 'confirm') {
+    if (field === 'current') this.showCurrentPassword = !this.showCurrentPassword;
+    if (field === 'new') this.showNewPassword = !this.showNewPassword;
+    if (field === 'confirm') this.showConfirmPassword = !this.showConfirmPassword;
   }
 
   generatePassword(): string {

@@ -11,11 +11,11 @@ export type MenusByRole = Record<string, MenuItem[]>;
 
 export const MENUS_BY_ROLE: MenusByRole = {
   doctor: [
-    {
-      label: 'Dashboard',
-      slug: 'dashboard',
-      route: '/dashboard/home',
-    },
+    // {
+    //   label: 'Dashboard',
+    //   slug: 'dashboard',
+    //   route: '/dashboard/home',
+    // },
     {
       label: 'Consultations',
       slug: 'doctor-consultations',
@@ -85,11 +85,11 @@ export const MENUS_BY_ROLE: MenusByRole = {
   ],
 
   nurse: [
-    {
-      label: 'Dashboard',
-      slug: 'dashboard',
-      route: '/dashboard/home',
-    },
+    // {
+    //   label: 'Dashboard',
+    //   slug: 'dashboard',
+    //   route: '/dashboard/home',
+    // },
     {
       label: 'Patients',
       slug: 'infirmier-patients',
@@ -147,11 +147,11 @@ export const MENUS_BY_ROLE: MenusByRole = {
   ],
 
   laborant: [
-    {
-      label: 'Dashboard',
-      slug: 'dashboard',
-      route: '/dashboard/home',
-    },
+    // {
+    //   label: 'Dashboard',
+    //   slug: 'dashboard',
+    //   route: '/dashboard/home',
+    // },
     // {
     //   label: 'Diagnostics',
     //   slug: 'laborant-diagnostics',
@@ -196,11 +196,11 @@ export const MENUS_BY_ROLE: MenusByRole = {
   ],
 
   patient: [
-    {
-      label: 'Dashboard',
-      slug: 'dashboard',
-      route: '/dashboard',
-    },
+    // {
+    //   label: 'Dashboard',
+    //   slug: 'dashboard',
+    //   route: '/dashboard',
+    // },
     {
       label: 'Mon dossier',
       slug: 'patient-dossier',
@@ -249,11 +249,11 @@ export const MENUS_BY_ROLE: MenusByRole = {
     // },
   ],
   admin: [
-    {
-      label: 'Dashboard',
-      slug: 'dashboard',
-      route: '/dashboard/home',
-    },
+    // {
+    //   label: 'Dashboard',
+    //   slug: 'dashboard',
+    //   route: '/dashboard/home',
+    // },
     {
       label: 'Utilisateurs',
       slug: 'admin-user',
